@@ -51,8 +51,8 @@ export const LoginPage = () => {
     if (Object.keys(newErrors).length === 0) {
       // Handle successful login
       console.log('Login attempted:', formData);
-      // You would typically redirect to dashboard here
-      window.location.href = '/compliance';
+      // Use the full URL to ensure it works in production
+      window.location.href = window.location.origin + '/compliance';
     }
   };
   
