@@ -85,7 +85,6 @@ export const Navigation: React.FC = () => {
             src="/wisecomply-logo.png" 
             alt="WiseComply Logo" 
             className="h-14 w-auto" 
-            style={{ background: 'black', padding: '4px', borderRadius: '4px' }}
           />
         </Link>
       </div>
