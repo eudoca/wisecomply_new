@@ -32,10 +32,16 @@ export const ComplianceActivitiesPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto"> 
-      {/* Removed commented out header */}
+    <div className="max-w-7xl mx-auto">
+      {/* Title and description at the top */}
+      <div className="mb-6 mt-8">
+        <h1 className="text-2xl font-bold text-gray-900">Compliance Activities</h1>
+        <p className="mt-2 text-gray-600">
+          Track and manage your organisation's compliance activities and ensure adherence to the Incorporated Societies Act 2022
+        </p>
+      </div>
       
-      {/* Content from source App.tsx structure */}
+      {/* Society details and metrics */}
       <SocietyDetails />
       <DashboardMetrics />
       <TimelineSummary />
