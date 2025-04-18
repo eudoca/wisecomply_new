@@ -130,7 +130,7 @@ const ComplianceActivities: React.FC = () => {
                 <CardContent>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
-                      <h3 className="font-medium text-base">{activity.title}</h3>
+                      <h3 className="text-sm font-medium">{activity.title}</h3>
                       <Tooltip text={activity.info} position="top" variant="info">
                         <InfoIcon className="w-4 h-4 ml-1.5 text-gray-400" />
                       </Tooltip>
@@ -139,7 +139,7 @@ const ComplianceActivities: React.FC = () => {
                       {getStatusBadge(activity.status)}
                     </div>
                   </div>
-                  <p className="text-gray-600">{activity.description}</p>
+                  <p className="text-xs text-gray-600">{activity.description}</p>
                   <div className="flex justify-between items-center mt-4">
                     <div className="flex items-center text-gray-500">
                       <CalendarIcon className="w-4 h-4 mr-1" />
