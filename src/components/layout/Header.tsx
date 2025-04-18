@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LogOutIcon, SettingsIcon, UserIcon } from 'lucide-react';
+import { LogOutIcon, SettingsIcon } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 export const Header: React.FC = () => {
@@ -19,26 +19,10 @@ export const Header: React.FC = () => {
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">
       <div className="flex items-center space-x-4">
-        <div className="flex-shrink-0">
-          <div className="w-10 h-10 rounded-full bg-brand-light flex items-center justify-center">
-            <span className="text-brand-primary font-medium text-sm">
-              {user.name.split(' ').map(n => n[0]).join('')}
-            </span>
-          </div>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-gray-900">{user.name}</p>
-          <p className="text-xs text-gray-500">{user.organization}</p>
-        </div>
-        <Link 
-          to="/settings/profile" 
-          className="text-sm text-brand-primary hover:text-brand-dark ml-2"
-        >
-          Edit Profile
-        </Link>
+        {/* Left side - empty or could contain page title or breadcrumbs */}
       </div>
       
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-4">
         <Link to="/settings">
           <Button 
             variant="ghost" 
@@ -59,6 +43,20 @@ export const Header: React.FC = () => {
           <LogOutIcon className="w-4 h-4" />
           <span className="hidden sm:inline">Logout</span>
         </Button>
+        
+        <div className="flex items-center space-x-3 pl-3 border-l border-gray-200">
+          <div>
+            <p className="text-sm font-medium text-gray-900 text-right">{user.name}</p>
+            <p className="text-xs text-gray-500 text-right">{user.organization}</p>
+          </div>
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-brand-light flex items-center justify-center">
+              <span className="text-brand-primary font-medium text-sm">
+                {user.name.split(' ').map(n => n[0]).join('')}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
   );
