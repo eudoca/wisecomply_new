@@ -17,7 +17,7 @@ export const Header: React.FC = () => {
   };
   
   return (
-    <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">
+    <header className="bg-brand-primary border-b border-brand-dark h-16 flex items-center justify-between px-6">
       <div className="flex items-center space-x-4">
         {/* Left side - empty or could contain page title or breadcrumbs */}
       </div>
@@ -27,7 +27,7 @@ export const Header: React.FC = () => {
           <Button 
             variant="ghost" 
             size="sm"
-            className="text-gray-500 hover:text-gray-700 flex items-center gap-2"
+            className="text-white hover:text-white hover:bg-brand-dark flex items-center gap-2"
           >
             <SettingsIcon className="w-4 h-4" />
             <span className="hidden sm:inline">Settings</span>
@@ -38,19 +38,19 @@ export const Header: React.FC = () => {
           variant="ghost" 
           size="sm"
           onClick={handleLogout}
-          className="text-gray-500 hover:text-gray-700 flex items-center gap-2"
+          className="text-white hover:text-white hover:bg-brand-dark flex items-center gap-2"
         >
           <LogOutIcon className="w-4 h-4" />
           <span className="hidden sm:inline">Logout</span>
         </Button>
         
-        <div className="flex items-center space-x-3 pl-3 border-l border-gray-200">
+        <div className="flex items-center space-x-3 pl-3 border-l border-brand-dark">
           <div>
-            <p className="text-sm font-medium text-gray-900 text-right">{user.name}</p>
-            <p className="text-xs text-gray-500 text-right">{user.organization}</p>
+            <p className="text-sm font-medium text-white text-right">{user.name}</p>
+            <p className="text-xs text-white text-right opacity-80">{user.organization}</p>
           </div>
           <div className="flex-shrink-0">
-            <div className="w-10 h-10 rounded-full bg-brand-light flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
               <span className="text-brand-primary font-medium text-sm">
                 {user.name.split(' ').map(n => n[0]).join('')}
               </span>
