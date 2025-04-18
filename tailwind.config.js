@@ -9,7 +9,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['DM Sans', ...fontFamily.sans],
+        sans: ['Manrope', ...fontFamily.sans],
       },
       colors: {
         brand: {
