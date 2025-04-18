@@ -81,8 +81,8 @@ export const ConfirmEmailPage = () => {
             Back to sign up
           </Button>
 
-          {/* Logo - Ensure /image.png exists in consolidated-app/public */}
-          <img src="/image.png" alt="WiseComply Logo" className="h-8 mb-8" />
+          {/* Logo - Using the proper logo file */}
+          <img src="/wisecomply-logo_color.png" alt="WiseComply Logo" className="h-10 mb-8" />
 
           <h2 className="text-3xl font-bold text-gray-900">
             Verify your email

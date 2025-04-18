@@ -82,9 +82,12 @@ export const RegisterPage: React.FC = () => {
             </Button>
           </Link>
 
-          <div className="flex items-center space-x-2 mb-8">
-            <span className="bg-brand-primary text-white p-1.5 rounded font-bold">WC</span>
-            <span className="font-bold text-xl text-gray-900">WiseComply</span>
+          <div className="mb-8">
+            <img 
+              src="/wisecomply-logo_color.png" 
+              alt="WiseComply Logo" 
+              className="h-10 w-auto"
+            />
           </div>
           
           <h2 className="text-3xl font-bold text-gray-900">

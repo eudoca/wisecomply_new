@@ -46,7 +46,7 @@ export const ForgotPasswordPage = () => {
             Back to login
           </Button>
 
-          <img src="/logo.png" alt="WiseComply Logo" className="h-16 mb-8" />
+          <img src="/wisecomply-logo_color.png" alt="WiseComply Logo" className="h-10 mb-8" />
 
           {!isSubmitted ? (
             <>
