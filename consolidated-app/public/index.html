@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Minimal React App</title>
+  </head>
+  <body>
+    <div id="root">
+      <!-- If you see this text, React has not successfully mounted -->
+      Loading...
+    </div>
+    <script>
+      // Simple script to ensure the page is accessible
+      document.addEventListener('DOMContentLoaded', () => {
+        const rootDiv = document.getElementById('root');
+        if (!window.React) {
+          rootDiv.innerHTML = '<h1>Static HTML is working!</h1><p>But React is not loading properly.</p>';
+        }
+      });
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

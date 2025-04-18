@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+  /* Remove default browser margins */
+  body {
+    margin: 0;
+    /* Removed specific font-family here to inherit from html */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Consider setting base text color/bg color here or via Tailwind */
+    /* background-color: #f8fafc; */ /* Example: Tailwind slate-50 */
+    /* color: #334155; */ /* Example: Tailwind slate-700 */
+  }
+}
+
+/* Remove default button styles - rely on Tailwind/Component styles */
+/* 
+button {
+  background-color: #8065F2;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+button:hover {
+  background-color: #6c54d8;
+}
+*/
