@@ -81,7 +81,12 @@ export const Navigation: React.FC = () => {
     <nav className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
       <div className="p-5 border-b border-gray-200 flex justify-center">
         <Link to="/" className="flex items-center">
-          <img src="/wisecomply-logo.png" alt="WiseComply Logo" className="h-14 w-auto" />
+          <img 
+            src="/wisecomply-logo.png" 
+            alt="WiseComply Logo" 
+            className="h-14 w-auto" 
+            style={{ background: 'black', padding: '4px', borderRadius: '4px' }}
+          />
         </Link>
       </div>
       
