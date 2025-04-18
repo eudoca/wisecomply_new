@@ -564,11 +564,11 @@ export const Wizard: React.FC = () => {
     
     // Special handling for expenditure threshold (only required if applicable)
     if (stepNumber === 4 && 
-        (!formData.isCharity || formData.isCharity === false) &&
+        (formData.isCharity !== true) &&
         (formData.annualSpending !== '2m-30m' && formData.annualSpending !== 'over30m')) {
       const financialFields = fieldsToCheck.filter(field => field !== 'expenditureOverThreshold');
        return financialFields.every(field => formData[field] !== undefined && formData[field] !== null);
-    } else if (stepNumber === 4 && formData.isCharity && (formData.annualSpending === 'under50k' || formData.annualSpending === '50k-140k')) {
+    } else if (stepNumber === 4 && formData.isCharity === true && (formData.annualSpending === 'under50k' || formData.annualSpending === '50k-140k')) {
         const financialFields = fieldsToCheck.filter(field => field !== 'expenditureOverThreshold');
         return financialFields.every(field => formData[field] !== undefined && formData[field] !== null);
     }
