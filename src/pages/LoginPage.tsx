@@ -52,7 +52,7 @@ export const LoginPage = () => {
       // Handle successful login
       console.log('Login attempted:', formData);
       // You would typically redirect to dashboard here
-      window.location.href = '/dashboard';
+      window.location.href = '/compliance';
     }
   };
   
