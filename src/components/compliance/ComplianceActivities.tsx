@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import StatusIndicator from './StatusIndicator';
 import { CalendarIcon, ArrowRightIcon, FileTextIcon, CheckCircleIcon, InfoIcon } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -6,62 +6,133 @@ import { Card, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Tooltip } from '../ui/Tooltip';
 import { cn } from '../../utils/cn';
+import Step1Planning from './activities/Step1Planning';
+import Step2Committee from './activities/Step2Committee';
+import Step3ContactPerson from './activities/Step3ContactPerson';
+import Step4Membership from './activities/Step4Membership';
+import Step5Registers from './activities/Step5Registers';
+import Step6Constitution from './activities/Step6Constitution';
+import Step7MemberApproval from './activities/Step7MemberApproval';
+import Step8FinalDetails from './activities/Step8FinalDetails';
 
-const complianceActivities = [
+// Define the shape of a single activity item (for clarity)
+interface ComplianceActivityItem {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  dueDate: string;
+  actionLabel: string;
+  actionType: string;
+  info: string;
+}
+
+// No longer needs onViewDetail prop
+// interface ComplianceActivitiesProps {
+//   onViewDetail: (id: number) => void;
+// }
+
+// Corrected array definition with trailing commas
+const complianceActivities: ComplianceActivityItem[] = [
   {
     id: 1,
-    title: 'Initial Compliance Assessment',
-    description: "Complete the initial assessment of your organisation's compliance needs",
-    status: 'completed',
-    dueDate: '15/06/2023',
-    actionLabel: 'View Summary',
-    actionType: 'summary',
-    info: 'The assessment helps identify your compliance obligations under the Incorporated Societies Act 2022'
+    title: 'Pre-requisites & Planning',
+    description: 'Confirm your organisation\'s intent to register and assign responsibilities with a target completion date.',
+    status: 'upcoming',
+    dueDate: 'TBC',
+    actionLabel: 'Start Task',
+    actionType: 'details',
+    info: 'Define the scope and timeline for your registration or re-registration process.',
   },
   {
     id: 2,
-    title: 'Risk Analysis & Gap Identification',
-    description: 'Identify compliance gaps and analyse potential risks',
-    status: 'completed',
-    dueDate: '30/07/2023',
-    actionLabel: 'View Summary',
-    actionType: 'summary',
-    info: 'Understand where your society may be at risk of non-compliance with legal requirements'
+    title: 'Committee Establishment',
+    description: 'Set up your governing committee and ensure all officers meet legal eligibility and consent requirements.',
+    status: 'upcoming',
+    dueDate: 'TBC',
+    actionLabel: 'View Details',
+    actionType: 'details',
+    info: 'A committee of at least 3 eligible officers is mandatory under the 2022 Act.',
   },
   {
     id: 3,
-    title: 'Compliance Strategy Development',
-    description: 'Develop a comprehensive strategy to address compliance requirements',
-    status: 'in-progress',
-    dueDate: '22/09/2023',
-    actionLabel: 'Continue',
-    actionType: 'continue',
-    info: 'Create an action plan to ensure your society meets all obligations under the new Act'
+    title: 'Contact Person Nomination',
+    description: 'Nominate one to three contact persons and ensure their details are correctly recorded.',
+    status: 'upcoming',
+    dueDate: 'TBC',
+    actionLabel: 'View Details',
+    actionType: 'details',
+    info: 'Contact persons are the official communication channel with the Registrar.',
   },
   {
     id: 4,
-    title: 'Implementation of Controls',
-    description: 'Implement necessary controls and procedures',
+    title: 'Membership Confirmation',
+    description: 'Verify your society has at least 10 members and maintain a compliant membership register.',
     status: 'upcoming',
-    dueDate: '15/11/2023',
+    dueDate: 'TBC',
     actionLabel: 'View Details',
     actionType: 'details',
-    info: 'Put processes in place to ensure ongoing compliance and good governance'
+    info: 'The minimum membership requirement is 10 under the 2022 Act.',
   },
   {
     id: 5,
-    title: 'Compliance Verification & Reporting',
-    description: 'Verify compliance status and prepare final reports',
+    title: 'Establish Required Registers',
+    description: 'Set up registers for conflicts of interest and disputes, ensuring good governance practices.',
     status: 'upcoming',
-    dueDate: '10/01/2024',
+    dueDate: 'TBC',
     actionLabel: 'View Details',
     actionType: 'details',
-    info: 'Confirm your society is meeting all requirements and document your compliance status'
-  }
+    info: 'These registers help manage potential governance issues proactively.',
+  },
+  {
+    id: 6,
+    title: 'Constitution Development',
+    description: 'Create or amend your constitution to meet all mandatory requirements under the 2022 Act.',
+    status: 'upcoming',
+    dueDate: 'TBC',
+    actionLabel: 'View Details',
+    actionType: 'details',
+    info: 'Ensure your constitution includes all necessary clauses outlined in the Act.',
+  },
+  {
+    id: 7,
+    title: 'Member Approval Process',
+    description: 'Hold a general meeting to approve the constitution and key operational decisions.',
+    status: 'upcoming',
+    dueDate: 'TBC',
+    actionLabel: 'View Details',
+    actionType: 'details',
+    info: 'Member consent is crucial for adopting the new constitution and meeting requirements.',
+  },
+  {
+    id: 8,
+    title: 'Final Application Details',
+    description: 'Confirm officer, contact, and society details to complete the registration application.',
+    status: 'upcoming',
+    dueDate: 'TBC',
+    actionLabel: 'View Details',
+    actionType: 'details',
+    info: 'Ensure all information provided for the application is accurate and up-to-date.',
+  },
 ];
 
+// Component no longer needs props
 const ComplianceActivities: React.FC = () => {
-  const getButtonProps = (activity: typeof complianceActivities[0]) => {
+  // State to track which activity accordion is open (null = none)
+  const [openActivityId, setOpenActivityId] = useState<number | null>(null);
+
+  // Function to toggle the accordion
+  const toggleAccordion = (id: number) => {
+    setOpenActivityId(prevId => (prevId === id ? null : id));
+  };
+  
+  // Updated completion handler (could be more specific later)
+   const handleCompleteStep = (id: number) => {
+     console.log(`Step ${id} marked complete (placeholder)`);
+     setOpenActivityId(null); // Close accordion on completion
+   };
+
+  const getButtonProps = (activity: ComplianceActivityItem) => {
     let variant: "primary" | "secondary" | "outline" | "ghost" | "link" | "success" = "secondary";
     let className = "";
     let leftIcon: React.ReactNode = null;
@@ -69,19 +140,26 @@ const ComplianceActivities: React.FC = () => {
     switch (activity.actionType) {
       case 'continue':
         variant = "primary";
-        className = "bg-purple-600 hover:bg-purple-700"; // Keep purple for continue
+        className = "bg-purple-600 hover:bg-purple-700"; 
         leftIcon = <ArrowRightIcon className="w-4 h-4" />;
         break;
       case 'summary':
         variant = "success";
         leftIcon = <CheckCircleIcon className="w-4 h-4" />;
         break;
-      case 'details':
+      case 'details': 
         variant = "secondary";
         leftIcon = <FileTextIcon className="w-4 h-4" />;
+        if (activity.actionLabel === 'Start Task') {
+           variant = "primary"; 
+           leftIcon = <ArrowRightIcon className="w-4 h-4" />;
+        }
+         if (activity.actionLabel === 'Submit Application') {
+           variant = "success"; 
+           leftIcon = <CheckCircleIcon className="w-4 h-4" />;
+        }
         break;
     }
-
     return { variant, className, leftIcon };
   };
 
@@ -102,37 +180,35 @@ const ComplianceActivities: React.FC = () => {
     <div className="space-y-6">
       {complianceActivities.map((activity, index) => {
         const buttonProps = getButtonProps(activity);
+        const isOpen = openActivityId === activity.id;
+        
         return (
-          <div key={activity.id} className="relative">
-            {index < complianceActivities.length - 1 && (
-              <div className="absolute left-6 top-12 bottom-0 w-0.5 bg-gray-200"></div>
-            )}
-            <div className="flex">
-              <div className="flex flex-col items-center mr-6 z-10">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
-                    activity.status === 'completed' 
-                      ? 'bg-purple-600 text-white' 
-                      : activity.status === 'in-progress' 
-                        ? 'border-2 border-purple-600 text-purple-600' 
-                        : 'bg-gray-200 text-gray-600'
-                  }`}>
-                  {activity.id}
+          <div key={activity.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+             {/* Card-like header for the activity */}
+             <div className="flex p-4">
+               {/* Timeline connection remains outside the card part */}
+               <div className="relative flex-shrink-0">
+                 {index < complianceActivities.length - 1 && (
+                   <div className="absolute left-6 top-12 -bottom-4 w-0.5 bg-gray-200"></div> // Adjusted length
+                 )}
+                 <div className="flex flex-col items-center mr-6 z-10">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                      activity.status === 'completed' ? 'bg-purple-600 text-white' : 
+                      activity.status === 'in-progress' ? 'border-2 border-purple-600 text-purple-600' : 
+                      'bg-gray-200 text-gray-600'
+                    }`}>
+                    {activity.id}
+                  </div>
                 </div>
-              </div>
-              <Card 
-                className={cn(
-                  "flex-1", 
-                  activity.status === 'completed' ? "bg-green-50 border-green-200" : "",
-                  activity.status === 'in-progress' ? "border-purple-200" : ""
-                )}
-                padding="md"
-              >
-                <CardContent>
+               </div>
+              
+               {/* Content part of the header */}
+               <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
                       <h3 className="text-sm font-medium">{activity.title}</h3>
-                      <Tooltip text={activity.info} position="top" variant="info">
-                        <InfoIcon className="w-4 h-4 ml-1.5 text-gray-400" />
+                       <Tooltip text={activity.info || 'No additional info available.'} position="top" variant="info">
+                         <InfoIcon className="w-4 h-4 ml-1.5 text-gray-400 cursor-help" />
                       </Tooltip>
                     </div>
                     <div className="flex items-center">
@@ -145,18 +221,63 @@ const ComplianceActivities: React.FC = () => {
                       <CalendarIcon className="w-4 h-4 mr-1" />
                       <span className="text-sm">Due: {activity.dueDate}</span>
                     </div>
-                    <Button 
-                      variant={buttonProps.variant as any}
-                      size="sm"
-                      className={cn(buttonProps.className)}
-                      leftIcon={buttonProps.leftIcon}
-                    >
-                      {activity.actionLabel}
-                    </Button>
+                    {/* Update Button to toggle accordion */}
+                     <Button 
+                       variant={buttonProps.variant as any}
+                       size="sm"
+                       className={cn(buttonProps.className)} 
+                       leftIcon={buttonProps.leftIcon}
+                       onClick={() => toggleAccordion(activity.id)} // Toggle on click
+                     >
+                       {/* Change button text based on state? Optional */}
+                       {isOpen ? 'Close Details' : activity.actionLabel}
+                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+               </div>
+             </div>
+            
+            {/* Accordion Content - Render Step1Planning if activity.id is 1 and isOpen */}
+            {isOpen && activity.id === 1 && (
+              <div className="p-6 border-t border-gray-200">
+                <Step1Planning onComplete={() => handleCompleteStep(1)} />
+              </div>
+            )}
+            {isOpen && activity.id === 2 && (
+              <div className="p-6 border-t border-gray-200">
+                <Step2Committee onComplete={() => handleCompleteStep(2)} />
+              </div>
+            )}
+            {isOpen && activity.id === 3 && (
+              <div className="p-6 border-t border-gray-200">
+                <Step3ContactPerson onComplete={() => handleCompleteStep(3)} />
+              </div>
+            )}
+            {isOpen && activity.id === 4 && (
+              <div className="p-6 border-t border-gray-200">
+                <Step4Membership onComplete={() => handleCompleteStep(4)} />
+              </div>
+            )}
+            {isOpen && activity.id === 5 && (
+              <div className="p-6 border-t border-gray-200">
+                <Step5Registers onComplete={() => handleCompleteStep(5)} />
+              </div>
+            )}
+            {isOpen && activity.id === 6 && (
+              <div className="p-6 border-t border-gray-200">
+                <Step6Constitution onComplete={() => handleCompleteStep(6)} />
+              </div>
+            )}
+            {isOpen && activity.id === 7 && (
+              <div className="p-6 border-t border-gray-200">
+                <Step7MemberApproval onComplete={() => handleCompleteStep(7)} />
+              </div>
+            )}
+            {isOpen && activity.id === 8 && (
+              <div className="p-6 border-t border-gray-200">
+                <Step8FinalDetails onComplete={() => handleCompleteStep(8)} />
+              </div>
+            )}
+            {/* Add similar blocks here for other steps if needed */}
           </div>
         );
       })}

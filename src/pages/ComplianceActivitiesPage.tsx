@@ -33,7 +33,6 @@ export const ComplianceActivitiesPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Title and description at the top */}
       <div className="mb-6 mt-8">
         <h1 className="text-2xl font-bold text-gray-900">Compliance Activities</h1>
         <p className="mt-2 text-gray-600">
@@ -41,7 +40,6 @@ export const ComplianceActivitiesPage: React.FC = () => {
         </p>
       </div>
       
-      {/* Society details and metrics */}
       <SocietyDetails />
       <DashboardMetrics />
       <TimelineSummary />
