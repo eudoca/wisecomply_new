@@ -9,7 +9,7 @@ const baseInputClasses = "shadow-sm focus:ring-brand-primary focus:border-brand-
 // Standard Texts
 const standardTransitionalText = `On the date this Constitution is adopted:\n- All persons who were members of the Society under its previous rules shall continue as members under this Constitution, mapped to the equivalent membership category where applicable.\n- All persons holding office as Committee members under the previous rules shall continue in office for the remainder of their term or until the next Annual General Meeting, whichever is earlier, subject to the provisions of this Constitution.\n- Any existing bylaws or regulations made under the previous rules shall continue in force insofar as they are not inconsistent with this Constitution, until amended or repealed by the Committee.`;
 
-const Block9Transitional: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete }) => {
+const Block9Transitional: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete, blockNumber }) => {
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   // Validation logic for Block 9
@@ -37,7 +37,7 @@ const Block9Transitional: React.FC<Omit<StepProps, 'errors'>> = ({ formData, upd
 
     if (isValid) {
       console.log('Block 9 Validation Passed');
-      onComplete();
+      onComplete(blockNumber);
     } else {
       console.log('Block 9 Validation Failed', newErrors);
     }

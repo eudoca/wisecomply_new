@@ -16,7 +16,7 @@ const standardFormalSteps = "If informal resolution fails, a party may provide w
 const standardNoticesText = "Any notice required by this Constitution may be served by sending it by post or electronically to the member's last known address as recorded in the Register of Members, or for notices to the Society, by delivery to the Registered Office or the Secretary.";
 const standardIndemnityText = "Every member of the Committee and officer of the Society shall be indemnified out of the property of the Society against any liability incurred by them in their capacity as Committee member or officer in defending any proceedings, whether civil or criminal, in which judgement is given in their favour or in which they are acquitted or in connection with any application under the Act in which relief is granted to them by the Court.";
 
-const Block7Disputes: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete }) => {
+const Block7Disputes: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete, blockNumber }) => {
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
    // Helper for Checkbox Groups
@@ -83,7 +83,7 @@ const Block7Disputes: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateF
 
     if (isValid) {
       console.log('Block 7 Validation Passed');
-      onComplete();
+      onComplete(blockNumber);
     } else {
       console.log('Block 7 Validation Failed', newErrors);
     }

@@ -11,7 +11,7 @@ const baseInputClasses = "shadow-sm focus:ring-brand-primary focus:border-brand-
 const standardAppealProcessText = "Appeals against significant decisions made under the dispute or disciplinary procedures may be made to [Specify Body, e.g., a specially convened Appeals Panel, the national body, the Sports Tribunal if applicable] within [Number] days of the decision, following the procedures set out by that body.";
 const standardBylawText = "The Committee may make, alter, or rescind bylaws, rules, or regulations for the general management of the Society, provided they are not inconsistent with this Constitution or the Act. Such bylaws shall be binding on members.";
 
-const Block6Amendments: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete }) => {
+const Block6Amendments: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete, blockNumber }) => {
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   // Validation logic for Block 6
@@ -63,7 +63,7 @@ const Block6Amendments: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updat
 
     if (isValid) {
       console.log('Block 6 Validation Passed');
-      onComplete();
+      onComplete(blockNumber);
     } else {
       console.log('Block 6 Validation Failed', newErrors);
     }

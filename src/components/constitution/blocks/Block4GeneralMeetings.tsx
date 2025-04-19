@@ -13,7 +13,7 @@ const checkboxClasses = "h-4 w-4 text-brand-primary border-gray-300 rounded focu
 // Standard AGM Business Text
 const standardAGMBusinessText = `- Confirmation of minutes of the previous General Meeting\n- Receiving the Committee's report on the activities of the Society during the preceding financial year\n- Receiving the Society's financial statements for the preceding financial year\n- Election of Committee members (if applicable)\n- Appointment of Auditor/Reviewer (if applicable)\n- Any other business specified in the notice of meeting`;
 
-const Block4GeneralMeetings: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete }) => {
+const Block4GeneralMeetings: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete, blockNumber }) => {
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   // Helper for Checkbox Groups
@@ -170,7 +170,7 @@ const Block4GeneralMeetings: React.FC<Omit<StepProps, 'errors'>> = ({ formData, 
 
     if (isValid) {
       console.log('Block 4 Validation Passed');
-      onComplete();
+      onComplete(blockNumber);
     } else {
       console.log('Block 4 Validation Failed', newErrors);
     }

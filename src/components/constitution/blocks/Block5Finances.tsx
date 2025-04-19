@@ -14,7 +14,7 @@ const checkboxClasses = "h-4 w-4 text-brand-primary border-gray-300 rounded focu
 const standardApplicationOfIncomeText = "The Society's income and property must be used solely to achieve its purposes. No portion may be paid or transferred directly or indirectly to any member, except for reasonable payment for services rendered, reimbursement of expenses, or for interest on money borrowed from a member.";
 const standardNoFinancialGainText = "No member of the Society, or any person associated with a member, shall participate in or materially influence any decision made by the Society in respect of the payment to or on behalf of that member or associated person of any income, benefit, or advantage whatsoever. Any such income paid shall be reasonable and relative to that which would be paid in an arm's length transaction (being the open market value).";
 
-const Block5Finances: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete }) => {
+const Block5Finances: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete, blockNumber }) => {
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   // Helper for Checkbox Groups
@@ -113,7 +113,7 @@ const Block5Finances: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateF
 
     if (isValid) {
       console.log('Block 5 Validation Passed');
-      onComplete();
+      onComplete(blockNumber);
     } else {
       console.log('Block 5 Validation Failed', newErrors);
     }

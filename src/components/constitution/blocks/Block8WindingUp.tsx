@@ -10,7 +10,7 @@ const baseInputClasses = "shadow-sm focus:ring-brand-primary focus:border-brand-
 // Standard Texts
 const standardDissolutionText = "The Society may be put into liquidation, or removed from the Register of Incorporated Societies, in accordance with the procedures set out in the Incorporated Societies Act 2022.";
 
-const Block8WindingUp: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete }) => {
+const Block8WindingUp: React.FC<Omit<StepProps, 'errors'>> = ({ formData, updateFormData, onComplete, blockNumber }) => {
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   // Validation logic for Block 8
@@ -38,7 +38,7 @@ const Block8WindingUp: React.FC<Omit<StepProps, 'errors'>> = ({ formData, update
 
     if (isValid) {
       console.log('Block 8 Validation Passed');
-      onComplete();
+      onComplete(blockNumber);
     } else {
       console.log('Block 8 Validation Failed', newErrors);
     }
