@@ -1,6 +1,8 @@
 import React from 'react';
 import ConstitutionStatus from '../components/constitution/ConstitutionStatus'; // Adjusted path
-import ComplianceChecks from '../components/constitution/ComplianceChecks'; // Adjusted path
+// Removed ComplianceChecks import
+// import ComplianceChecks from '../components/constitution/ComplianceChecks'; // Adjusted path
+import ConstitutionWizard from '../components/constitution/ConstitutionWizard'; // Added Wizard import
 
 // Renamed component
 export const ConstitutionPage: React.FC = () => {
@@ -16,7 +18,8 @@ export const ConstitutionPage: React.FC = () => {
       </div>
       <div className="space-y-6">
         <ConstitutionStatus />
-        <ComplianceChecks />
+        {/* Replaced ComplianceChecks with ConstitutionWizard */}
+        <ConstitutionWizard /> 
       </div>
     </div>
   );
