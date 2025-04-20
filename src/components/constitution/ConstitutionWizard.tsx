@@ -237,6 +237,10 @@ export interface ConstitutionFormData {
   block10_isReplacingConstitution?: boolean | null; // NEW
   block10_includeTransitionalProvisions?: boolean | null; // NEW - Added
   block10_transitionalProvisionsText?: string; // NEW - Added
+  block10_initialCommittee?: string; // Text area for names/positions
+  block10_firstAGMTiming?: string; // Text input for timing description
+  block10_constitutionAdoptionMethod?: string; // Text input for adoption method
+  block10_customTransitionalProvisions?: string; // Text area for custom clauses
 
   // Block 11: Review Confirmation (Placeholder)
   block11_finalConfirmation?: boolean; // NEW - Added

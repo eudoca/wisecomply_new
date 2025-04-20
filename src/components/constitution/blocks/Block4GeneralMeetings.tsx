@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Tooltip } from "@/components/ui/tooltip";
-import { RadioGroup } from '../../wizard/RadioGroup';
+import { Tooltip } from '@/components/ui/tooltip';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { HelpCircle, AlertCircle } from 'lucide-react';
 import type { StepProps, ConstitutionFormData } from '../ConstitutionWizard';
 import { cn } from '../../../utils/cn';
+import { Label } from '@/components/ui/label';
 
 // Tailwind classes (assuming these are defined similar to other blocks)
 const baseInputClasses = "shadow-sm focus:ring-brand-primary focus:border-brand-primary block w-full sm:text-sm border-gray-300 rounded-md";
@@ -87,7 +88,7 @@ const validateBlock4 = (data: ConstitutionFormData): Record<string, string> => {
   if (data.block4_chairperson === 'Other' && !data.block4_chairpersonOther?.trim()) {
       errors.block4_chairpersonOther = 'Please specify the other chair arrangement.';
   }
-  if (data.block4_chairCastingVoteGm === null) {
+  if (data.block4_chairCastingVoteGm === null || data.block4_chairCastingVoteGm === undefined) {
       errors.block4_chairCastingVoteGm = 'Please specify if the chair has a casting vote.';
   }
 
@@ -101,13 +102,19 @@ const validateBlock4 = (data: ConstitutionFormData): Record<string, string> => {
   if (data.block4_electronicVotingAllowed === true && !data.block4_electronicVotingProcedure?.trim()){
         errors.block4_electronicVotingProcedure = 'Please describe the electronic voting procedure.';
   }
+  if (data.block4_votingMethods?.includes('postal') && (data.block4_postalVotingAllowed === null || data.block4_postalVotingAllowed === undefined)) {
+      errors.block4_postalVotingAllowed = 'Please specify if postal voting is allowed.';
+  }
+  if (data.block4_votingMethods?.includes('electronic') && (data.block4_electronicVotingAllowed === null || data.block4_electronicVotingAllowed === undefined)) {
+      errors.block4_electronicVotingAllowed = 'Please specify if electronic voting is allowed.';
+  }
 
   // Task 4.6 Proxies
-  if (data.block4_proxyAllowed === null) {
+  if (data.block4_proxyAllowed === null || data.block4_proxyAllowed === undefined) {
       errors.block4_proxyAllowed = 'Please specify if proxies are allowed.';
   }
   if (data.block4_proxyAllowed === true) {
-      if (data.block4_proxyFormRequired === null) {
+      if (data.block4_proxyFormRequired === null || data.block4_proxyFormRequired === undefined) {
           errors.block4_proxyFormRequired = 'Please specify if a specific proxy form is required.';
       }
       if (!data.block4_proxyWhoCanBe) {
@@ -122,7 +129,7 @@ const validateBlock4 = (data: ConstitutionFormData): Record<string, string> => {
   }
 
   // Task 4.7 Minutes
-  if (data.block4_minutesRecorded === null) {
+  if (data.block4_minutesRecorded === null || data.block4_minutesRecorded === undefined) {
       errors.block4_minutesRecorded = 'Please confirm minutes will be recorded.';
   }
   if (!data.block4_minuteRequirements?.length) {
@@ -163,8 +170,28 @@ const Block4GeneralMeetings: React.FC<Block4GeneralMeetingsProps> = ({
     setLocalErrors(prev => ({ ...prev, [field]: '' }));
   };
 
-  const handleRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
-    updateFormData(field, value);
+  const handleRadioValueChange = (field: keyof ConstitutionFormData, value: string) => {
+    // Determine if this field should store a boolean
+    const booleanFields: (keyof ConstitutionFormData)[] = [
+      'block4_chairCastingVoteGm',
+      'block4_postalVotingAllowed',
+      'block4_electronicVotingAllowed',
+      'block4_proxyAllowed',
+      'block4_proxyFormRequired',
+      'block4_minutesRecorded'
+    ];
+
+    let processedValue: string | number | boolean | null;
+
+    if (booleanFields.includes(field)) {
+      // Convert "true"/"false" string back to boolean
+      processedValue = value === 'true' ? true : value === 'false' ? false : null;
+    } else {
+      // Keep as string for non-boolean fields (like block4_agmTiming, block4_chairperson, etc.)
+      processedValue = value;
+    }
+
+    updateFormData(field, processedValue);
     setLocalErrors(prev => ({ ...prev, [field]: '' }));
   };
 
@@ -370,12 +397,20 @@ const Block4GeneralMeetings: React.FC<Block4GeneralMeetingsProps> = ({
             <div>
                <label className={labelClass}>Does the meeting Chairperson have a casting vote (in case of a tie)?</label>
                <RadioGroup
-                 label=""
                  name="block4_chairCastingVoteGm"
-                 options={[{ value: true, label: 'Yes' }, { value: false, label: 'No' }]}
-                 value={formData.block4_chairCastingVoteGm}
-                 onChange={(value) => handleRadioChange('block4_chairCastingVoteGm', value as boolean)}
-               />
+                 value={formData.block4_chairCastingVoteGm === true ? 'true' : formData.block4_chairCastingVoteGm === false ? 'false' : ''}
+                 onValueChange={(value) => handleRadioValueChange('block4_chairCastingVoteGm', value)}
+                 className="flex space-x-4 mt-2"
+               >
+                 <div className="flex items-center space-x-2">
+                   <RadioGroupItem value="true" id="b4-cast-yes" />
+                   <Label htmlFor="b4-cast-yes">Yes</Label>
+                 </div>
+                 <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="false" id="b4-cast-no" />
+                    <Label htmlFor="b4-cast-no">No</Label>
+                 </div>
+               </RadioGroup>
                {localErrors.block4_chairCastingVoteGm && <p className={errorClass}>{localErrors.block4_chairCastingVoteGm}</p>}
             </div>
          </div>
@@ -412,12 +447,20 @@ const Block4GeneralMeetings: React.FC<Block4GeneralMeetingsProps> = ({
                     <textarea name="block4_postalVotingProcedure" rows={3} value={formData.block4_postalVotingProcedure || ''} onChange={handleInputChange} className={`${baseInputClasses} ${localErrors.block4_postalVotingProcedure ? 'border-red-500' : ''}`} placeholder="Describe how postal votes are managed (e.g., forms sent, return deadline, verification)." />
                     {localErrors.block4_postalVotingProcedure && <p className={errorClass}>{localErrors.block4_postalVotingProcedure}</p>}
                     <RadioGroup
-                       label="Is postal voting allowed?"
                        name="block4_postalVotingAllowed"
-                       options={[{ value: true, label: 'Yes' }, { value: false, label: 'No' }]}
-                       value={formData.block4_postalVotingAllowed}
-                       onChange={(value) => handleRadioChange('block4_postalVotingAllowed', value as boolean)}
-                    />
+                       value={formData.block4_postalVotingAllowed === true ? 'true' : formData.block4_postalVotingAllowed === false ? 'false' : ''}
+                       onValueChange={(value) => handleRadioValueChange('block4_postalVotingAllowed', value)}
+                       className="flex space-x-4 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                         <RadioGroupItem value="true" id="b4-postal-yes" />
+                         <Label htmlFor="b4-postal-yes">Yes</Label>
+                       </div>
+                       <div className="flex items-center space-x-2">
+                         <RadioGroupItem value="false" id="b4-postal-no" />
+                         <Label htmlFor="b4-postal-no">No</Label>
+                       </div>
+                    </RadioGroup>
                     {localErrors.block4_postalVotingAllowed && <p className={errorClass}>{localErrors.block4_postalVotingAllowed}</p>} 
                  </div>
             )}
@@ -428,12 +471,20 @@ const Block4GeneralMeetings: React.FC<Block4GeneralMeetingsProps> = ({
                     <textarea name="block4_electronicVotingProcedure" rows={3} value={formData.block4_electronicVotingProcedure || ''} onChange={handleInputChange} className={`${baseInputClasses} ${localErrors.block4_electronicVotingProcedure ? 'border-red-500' : ''}`} placeholder="Describe how electronic votes are managed (e.g., platform used, security, verification)." />
                     {localErrors.block4_electronicVotingProcedure && <p className={errorClass}>{localErrors.block4_electronicVotingProcedure}</p>}
                     <RadioGroup
-                       label="Is electronic voting allowed?"
                        name="block4_electronicVotingAllowed"
-                       options={[{ value: true, label: 'Yes' }, { value: false, label: 'No' }]}
-                       value={formData.block4_electronicVotingAllowed}
-                       onChange={(value) => handleRadioChange('block4_electronicVotingAllowed', value as boolean)}
-                    />
+                       value={formData.block4_electronicVotingAllowed === true ? 'true' : formData.block4_electronicVotingAllowed === false ? 'false' : ''}
+                       onValueChange={(value) => handleRadioValueChange('block4_electronicVotingAllowed', value)}
+                       className="flex space-x-4 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                         <RadioGroupItem value="true" id="b4-elec-yes" />
+                         <Label htmlFor="b4-elec-yes">Yes</Label>
+                       </div>
+                       <div className="flex items-center space-x-2">
+                         <RadioGroupItem value="false" id="b4-elec-no" />
+                         <Label htmlFor="b4-elec-no">No</Label>
+                       </div>
+                    </RadioGroup>
                      {localErrors.block4_electronicVotingAllowed && <p className={errorClass}>{localErrors.block4_electronicVotingAllowed}</p>} 
                  </div>
             )}
@@ -454,12 +505,20 @@ const Block4GeneralMeetings: React.FC<Block4GeneralMeetingsProps> = ({
             <div>
               <label className={labelClass}>Are proxy votes allowed at General Meetings?</label>
               <RadioGroup
-                label=""
                 name="block4_proxyAllowed"
-                options={[{ value: true, label: 'Yes' }, { value: false, label: 'No' }]}
-                value={formData.block4_proxyAllowed}
-                onChange={(value) => handleRadioChange('block4_proxyAllowed', value as boolean)}
-              />
+                value={formData.block4_proxyAllowed === true ? 'true' : formData.block4_proxyAllowed === false ? 'false' : ''}
+                onValueChange={(value) => handleRadioValueChange('block4_proxyAllowed', value)}
+                className="flex space-x-4 mt-2"
+              >
+                 <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="true" id="b4-proxy-yes" />
+                    <Label htmlFor="b4-proxy-yes">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="false" id="b4-proxy-no" />
+                    <Label htmlFor="b4-proxy-no">No</Label>
+                  </div>
+              </RadioGroup>
               {localErrors.block4_proxyAllowed && <p className={errorClass}>{localErrors.block4_proxyAllowed}</p>}
             </div>
             {formData.block4_proxyAllowed === true && (
@@ -467,12 +526,20 @@ const Block4GeneralMeetings: React.FC<Block4GeneralMeetingsProps> = ({
                 <div>
                   <label className={labelClass}>Is a specific proxy form required?</label>
                   <RadioGroup
-                    label=""
                     name="block4_proxyFormRequired"
-                    options={[{ value: true, label: 'Yes' }, { value: false, label: 'No' }]}
-                    value={formData.block4_proxyFormRequired}
-                    onChange={(value) => handleRadioChange('block4_proxyFormRequired', value as boolean)}
-                  />
+                    value={formData.block4_proxyFormRequired === true ? 'true' : formData.block4_proxyFormRequired === false ? 'false' : ''}
+                    onValueChange={(value) => handleRadioValueChange('block4_proxyFormRequired', value)}
+                    className="flex space-x-4 mt-2"
+                  >
+                     <div className="flex items-center space-x-2">
+                       <RadioGroupItem value="true" id="b4-proxyform-yes" />
+                       <Label htmlFor="b4-proxyform-yes">Yes</Label>
+                     </div>
+                     <div className="flex items-center space-x-2">
+                       <RadioGroupItem value="false" id="b4-proxyform-no" />
+                       <Label htmlFor="b4-proxyform-no">No</Label>
+                     </div>
+                  </RadioGroup>
                   {localErrors.block4_proxyFormRequired && <p className={errorClass}>{localErrors.block4_proxyFormRequired}</p>}
                 </div>
                 <div>
@@ -517,12 +584,20 @@ const Block4GeneralMeetings: React.FC<Block4GeneralMeetingsProps> = ({
             <div>
                <label className={labelClass}>Confirm minutes will be recorded for all General Meetings?</label>
                 <RadioGroup
-                 label=""
                  name="block4_minutesRecorded"
-                 options={[{ value: true, label: 'Yes' }, { value: false, label: 'No (Not Recommended)' }]}
-                 value={formData.block4_minutesRecorded}
-                 onChange={(value) => handleRadioChange('block4_minutesRecorded', value as boolean)}
-               />
+                 value={formData.block4_minutesRecorded === true ? 'true' : formData.block4_minutesRecorded === false ? 'false' : ''}
+                 onValueChange={(value) => handleRadioValueChange('block4_minutesRecorded', value)}
+                 className="flex space-x-4 mt-2"
+               >
+                 <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="true" id="b4-minutes-yes" />
+                    <Label htmlFor="b4-minutes-yes">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="false" id="b4-minutes-no" />
+                    <Label htmlFor="b4-minutes-no">No (Not Recommended)</Label>
+                  </div>
+               </RadioGroup>
                {localErrors.block4_minutesRecorded && <p className={errorClass}>{localErrors.block4_minutesRecorded}</p>}
             </div>
              <div>

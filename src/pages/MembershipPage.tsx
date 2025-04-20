@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button'; // Standardized path
 import { DownloadIcon, UserPlusIcon } from 'lucide-react'; // Import necessary icons
 import MembershipStats from '../components/membership/MembershipStats'; // Adjusted path
 import MemberDirectory from '../components/membership/MemberDirectory'; // Adjusted path
-import { MemberCard } from '../components/membership/MemberCard';
+import MemberCard from '../components/membership/MemberCard';
+import { PlusCircleIcon } from 'lucide-react';
 
 // Renamed component
 export const MembershipPage: React.FC = () => {

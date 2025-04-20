@@ -6,6 +6,8 @@ import { RadioGroup } from '../../wizard/RadioGroup';
 import { HelpCircle } from 'lucide-react';
 import { ConstitutionFormData, StepProps, ValidationErrors } from '../ConstitutionWizard';
 import { cn } from '../../../utils/cn';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 // Standard Tailwind classes (Consider moving to a shared constants file if reused extensively)
 const baseInputClasses = "shadow-sm focus:ring-brand-primary focus:border-brand-primary block w-full sm:text-sm border-gray-300 rounded-md";
@@ -127,15 +129,11 @@ export const Block8Finances: React.FC<Block8FinancesProps> = ({
         }
     };
 
-    const handleRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
-         updateFormData(field, value);
-         if (localErrors[field]) {
-             setLocalErrors(prev => { const next = {...prev}; delete next[field]; return next; });
-        }
-    };
-
+    // Restore original boolean radio handler
     const handleBooleanRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
-        const booleanValue = value === 'Yes' || value === true ? true : value === 'No' || value === false ? false : null;
+        // The custom component might pass boolean directly, or string "true"/"false", or "Yes"/"No". Adjust as needed.
+        // Assuming it passes string "true"/"false" based on previous errors
+        const booleanValue = value === 'true' ? true : value === 'false' ? false : null;
 
          // Clear conditional fields if 'No' is selected
          if (field === 'block8_bankAccountRequired' && booleanValue === false) {
@@ -148,10 +146,6 @@ export const Block8Finances: React.FC<Block8FinancesProps> = ({
                  return next;
              });
         }
-         if (field === 'block8_borrowingPowers' && value === 'none') {
-            updateFormData('block8_borrowingLimit', null);
-            setLocalErrors(prev => { const next = {...prev}; delete next.block8_borrowingLimit; return next; });
-        }
 
         updateFormData(field, booleanValue);
         if (localErrors[field]) {
@@ -159,7 +153,21 @@ export const Block8Finances: React.FC<Block8FinancesProps> = ({
         }
       };
 
-     const handleCheckboxGroupChange = (field: keyof ConstitutionFormData, value: string, checked: boolean) => {
+    // Restore original string/number radio handler
+    const handleRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
+         // Clear borrowing limit if borrowing power is 'none'
+         if (field === 'block8_borrowingPowers' && value === 'none') {
+            updateFormData('block8_borrowingLimit', null);
+            setLocalErrors(prev => { const next = {...prev}; delete next.block8_borrowingLimit; return next; });
+        }
+
+         updateFormData(field, value);
+         if (localErrors[field]) {
+             setLocalErrors(prev => { const next = {...prev}; delete next[field]; return next; });
+        }
+    };
+
+    const handleCheckboxGroupChange = (field: keyof ConstitutionFormData, value: string, checked: boolean) => {
         const currentValues = (formData[field] as string[] | undefined) || [];
         let newValues = checked ? [...currentValues, value] : currentValues.filter((item) => item !== value);
 
@@ -339,7 +347,7 @@ export const Block8Finances: React.FC<Block8FinancesProps> = ({
         );
     };
 
-    // Renamed helper for string/number based radio groups
+    // Renamed helper for string/number based radio groups (like block8_borrowingPowers)
     const renderStringRadioGroup = (id: keyof ConstitutionFormData, labelText: string, options: { value: string | number; label: string }[], required: boolean = true, tooltipText?: string) => (
         <div className="mb-4">
             <label className={htmlLabelClass}>
@@ -348,19 +356,20 @@ export const Block8Finances: React.FC<Block8FinancesProps> = ({
                     <Tooltip text={tooltipText}><HelpCircle className={helpIconClass} /></Tooltip>
                 )}
             </label>
-            {/* Assuming RadioGroup from ../../wizard/RadioGroup handles options */}
+            {/* Using custom RadioGroup from ../../wizard/RadioGroup */}
             <RadioGroup 
-                label={labelText}
+                label={labelText} // Pass label prop
                 name={id as string}
-                options={options}
-                value={formData[id] as string | number | undefined ?? ''} // Value is string or number
-                onChange={(value) => handleRadioChange(id, value)} // Uses generic handler
+                options={options} // Pass options prop
+                // Explicitly cast value to expected type
+                value={formData[id] as string | number | undefined ?? ''} 
+                onChange={(value) => handleRadioChange(id, value)} // Use original handler
             />
             {localErrors[id] && <p className={errorClass}>{localErrors[id]}</p>}
         </div>
     );
     
-    // New helper for boolean (Yes/No) radio groups
+    // New helper for boolean (Yes/No) radio groups (like block8_bankAccountRequired)
     const renderBooleanRadioGroup = (id: keyof ConstitutionFormData, labelText: string, required: boolean = true, tooltipText?: string) => (
         <div className="mb-4">
             <label className={htmlLabelClass}>
@@ -369,16 +378,14 @@ export const Block8Finances: React.FC<Block8FinancesProps> = ({
                     <Tooltip text={tooltipText}><HelpCircle className={helpIconClass} /></Tooltip>
                 )}
             </label>
-            {/* Assuming RadioGroup from ../../wizard/RadioGroup handles options */}
-            {/* We pass boolean options here, but handle value/onChange specially */}
+            {/* Using custom RadioGroup from ../../wizard/RadioGroup */}
             <RadioGroup 
                 label={labelText} 
                 name={id as string}
-                options={[{ value: true, label: 'Yes' }, { value: false, label: 'No' }]} // Standard Yes/No
-                // Convert boolean formData value to string 'yes'/'no' for the component's value prop
-                value={formData[id] === true ? 'true' : formData[id] === false ? 'false' : ''}
-                // Use the dedicated boolean handler
-                onChange={(value) => handleBooleanRadioChange(id, value)}
+                options={[{ value: true, label: 'Yes' }, { value: false, label: 'No' }]} // Pass boolean options
+                // Pass boolean value directly, explicitly cast
+                value={formData[id] as boolean | undefined}
+                onChange={(value) => handleBooleanRadioChange(id, value)} // Use boolean handler
             />
             {localErrors[id] && <p className={errorClass}>{localErrors[id]}</p>}
         </div>

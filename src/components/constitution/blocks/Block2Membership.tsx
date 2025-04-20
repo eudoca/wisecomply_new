@@ -48,6 +48,25 @@ const Block2Membership: React.FC<Block2MembershipProps> = ({
     setLocalErrors({}); // Clear errors on interaction
   };
 
+  // Handler for RadioGroup changes (handles both boolean and string conversions)
+  const handleRadioValueChange = (field: keyof ConstitutionFormData, value: string) => {
+    const booleanFields: (keyof ConstitutionFormData)[] = [
+      'block2_hasCategories',
+      'block2_canRefuseMembership'
+    ];
+
+    let processedValue: string | boolean | null;
+
+    if (booleanFields.includes(field)) {
+      processedValue = value === 'true' ? true : value === 'false' ? false : null;
+    } else {
+      processedValue = value; // Keep as string for others (e.g., block2_consentMethod)
+    }
+
+    updateFormData(field, processedValue);
+    setLocalErrors(prev => ({ ...prev, [field]: '' })); // Clear error on change
+  };
+
   // Validation logic for Block 2
   const handleSave = () => {
     const newErrors: Record<string, string> = {};
@@ -133,16 +152,16 @@ const Block2Membership: React.FC<Block2MembershipProps> = ({
         <Label className={labelClass}>Will your society have different categories of members?</Label>
         <RadioGroup
             name="block2_hasCategories"
-            value={formData.block2_hasCategories === true ? 'yes' : formData.block2_hasCategories === false ? 'no' : 'yes'} // Default Yes
-            onValueChange={(value: string) => updateFormData('block2_hasCategories', value === 'yes')}
+            value={formData.block2_hasCategories === true ? 'true' : formData.block2_hasCategories === false ? 'false' : 'true'} // Default Yes
+            onValueChange={(value) => handleRadioValueChange('block2_hasCategories', value)}
             className="flex space-x-4 mt-2"
         >
             <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="b2-cat-yes" />
+                <RadioGroupItem value="true" id="b2-cat-yes" />
                 <Label htmlFor="b2-cat-yes">Yes</Label>
             </div>
             <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="b2-cat-no" />
+                <RadioGroupItem value="false" id="b2-cat-no" />
                 <Label htmlFor="b2-cat-no">No</Label>
             </div>
         </RadioGroup>
@@ -213,7 +232,7 @@ const Block2Membership: React.FC<Block2MembershipProps> = ({
                     <RadioGroup
                         name="block2_consentMethod"
                         value={formData.block2_consentMethod || ''}
-                        onValueChange={(value: string) => updateFormData('block2_consentMethod', value)}
+                        onValueChange={(value) => handleRadioValueChange('block2_consentMethod', value)}
                         className="space-y-2 mt-2"
                     >
                          <div className="flex items-center space-x-2">
@@ -273,16 +292,16 @@ const Block2Membership: React.FC<Block2MembershipProps> = ({
                          <Label className={labelClass}>Can membership be refused even if an applicant meets the criteria?</Label>
                          <RadioGroup
                              name="block2_canRefuseMembership"
-                             value={formData.block2_canRefuseMembership === true ? 'yes' : formData.block2_canRefuseMembership === false ? 'no' : ''}
-                             onValueChange={(value: string) => updateFormData('block2_canRefuseMembership', value === 'yes')}
+                             value={formData.block2_canRefuseMembership === true ? 'true' : formData.block2_canRefuseMembership === false ? 'false' : ''}
+                             onValueChange={(value) => handleRadioValueChange('block2_canRefuseMembership', value)}
                              className="flex space-x-4 mt-2"
                          >
                               <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="yes" id="b2-refuse-yes" />
+                                  <RadioGroupItem value="true" id="b2-refuse-yes" />
                                   <Label htmlFor="b2-refuse-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="no" id="b2-refuse-no" />
+                                  <RadioGroupItem value="false" id="b2-refuse-no" />
                                   <Label htmlFor="b2-refuse-no">No</Label>
                               </div>
                          </RadioGroup>

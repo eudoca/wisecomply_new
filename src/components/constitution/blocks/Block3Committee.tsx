@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Tooltip } from "@/components/ui/tooltip";
-import { HelpCircle } from 'lucide-react';
+import { Info, HelpCircle, AlertCircle, AlertTriangle } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { StepProps, ConstitutionFormData } from '../ConstitutionWizard';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip';
 
 // Standard Tailwind classes for inputs
 const baseInputClasses = "shadow-sm focus:ring-brand-primary focus:border-brand-primary block w-full sm:text-sm border-gray-300 rounded-md";

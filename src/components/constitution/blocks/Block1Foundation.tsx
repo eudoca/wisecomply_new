@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { Input } from '../../ui/Input';
-import { Button } from '../../ui/Button';
-import { AlertCircle, HelpCircle, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Tooltip } from '@/components/ui/tooltip';
+import { Info, AlertCircle, HelpCircle, AlertTriangle } from 'lucide-react';
 import { ConstitutionFormData, StepProps } from '../ConstitutionWizard';
-import { Tooltip } from '../../ui/Tooltip';
 import { RadioGroup } from '../../wizard/RadioGroup';
 
 const standardOfficeMethodText = "The Registered Office of the Society shall be at such place as the Committee determines from time to time, and notified to the Registrar of Incorporated Societies.";

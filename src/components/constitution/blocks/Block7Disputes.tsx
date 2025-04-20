@@ -2,10 +2,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from "@/components/ui/tooltip";
-import { RadioGroup } from '../../wizard/RadioGroup';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { HelpCircle } from 'lucide-react';
 import { ConstitutionFormData, StepProps, ValidationErrors } from '../ConstitutionWizard';
 import { cn } from '../../../utils/cn';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 // Standard Tailwind classes
 const baseInputClasses = "shadow-sm focus:ring-brand-primary focus:border-brand-primary block w-full sm:text-sm border-gray-300 rounded-md";
@@ -94,6 +96,55 @@ export const Block7Disputes: React.FC<Block7DisputesProps> = ({
         setLocalErrors(validationErrors);
     }, [formData, validateBlock7]);
 
+    // Updated handler for RadioGroup changes
+    const handleRadioValueChange = (field: keyof ConstitutionFormData, value: string) => {
+      // Determine if this field should store a boolean
+      const booleanFields: (keyof ConstitutionFormData)[] = [
+        'block7_includeNoticesClause', // Assuming this should be boolean based on handleBooleanRadioChange
+        'block7_includeIndemnityClause',
+        'block7_committeeCanArrangeInsurance'
+      ];
+  
+      let processedValue: string | number | boolean | null;
+  
+      if (booleanFields.includes(field)) {
+        // Convert "true"/"false" string back to boolean
+        processedValue = value === 'true' ? true : value === 'false' ? false : null;
+      } else {
+        // Keep as string for non-boolean fields
+        processedValue = value;
+      }
+
+      // Clear conditional fields if 'No' is selected for includeNoticesClause
+       if (field === 'block7_includeNoticesClause' && processedValue === false) {
+          updateFormData('block7_noticesClauseText', '');
+           if (localErrors.block7_noticesClauseText) {
+              setLocalErrors(prev => { const next = {...prev}; delete next.block7_noticesClauseText; return next; });
+          }
+      }
+
+      // Clear fields when dispute procedure changes
+      if (field === 'block7_disputeProcedure') {
+          const clearFields: (keyof ConstitutionFormData)[] = [
+              'block7_informalSteps', 
+              'block7_formalSteps', 
+              'block7_externalOptions', 
+              'block7_externalOptionsOther'
+          ];
+          clearFields.forEach(f => updateFormData(f, ''));
+          setLocalErrors(prev => {
+              const next = {...prev};
+              clearFields.forEach(f => delete next[f]);
+              return next;
+          });
+      }
+  
+      updateFormData(field, processedValue);
+      if (localErrors[field]) {
+           setLocalErrors(prev => { const next = {...prev}; delete next[field]; return next; });
+      }
+    };
+
     // Handlers (copy or adapt)
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -109,60 +160,6 @@ export const Block7Disputes: React.FC<Block7DisputesProps> = ({
             setLocalErrors(prev => { const next = {...prev}; delete next[name as keyof ConstitutionFormData]; return next; });
         }
     };
-
-    const handleRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
-        if (field === 'block7_disputeProcedure') {
-            const clearFields: (keyof ConstitutionFormData)[] = [
-                'block7_informalSteps', 
-                'block7_formalSteps', 
-                'block7_externalOptions', 
-                'block7_externalOptionsOther'
-            ];
-            clearFields.forEach(f => updateFormData(f, ''));
-            setLocalErrors(prev => {
-                const next = {...prev};
-                clearFields.forEach(f => delete next[f]);
-                return next;
-            });
-        }
-        updateFormData(field, value);
-        if (localErrors[field]) {
-             setLocalErrors(prev => { const next = {...prev}; delete next[field]; return next; });
-        }
-    };
-    
-    const handleCheckboxGroupChange = (field: keyof ConstitutionFormData, value: string, checked: boolean) => {
-        const currentValues = (formData[field] as string[] | undefined) || [];
-        let newValues = checked ? [...currentValues, value] : currentValues.filter((item) => item !== value);
-        
-        if (field === 'block7_externalOptions' && value === 'Other (specify)' && !checked) {
-            updateFormData('block7_externalOptionsOther', ''); 
-            if (localErrors.block7_externalOptionsOther) {
-                setLocalErrors(prev => { const next = {...prev}; delete next.block7_externalOptionsOther; return next; });
-            }
-        }
-        updateFormData(field, newValues);
-         if (localErrors[field]) {
-             setLocalErrors(prev => { const next = {...prev}; delete next[field]; return next; });
-        }
-    };
-
-    const handleBooleanRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
-        const booleanValue = value === 'Yes' || value === true ? true : value === 'No' || value === false ? false : null;
-        
-        if (field === 'block7_includeNoticesClause' && booleanValue === false) {
-            updateFormData('block7_noticesClauseText', '');
-             if (localErrors.block7_noticesClauseText) {
-                setLocalErrors(prev => { const next = {...prev}; delete next.block7_noticesClauseText; return next; });
-            }
-        }
-        // No conditional fields for Indemnity/Insurance in this simple version
-
-        updateFormData(field, booleanValue);
-        if (localErrors[field]) {
-             setLocalErrors(prev => { const next = {...prev}; delete next[field]; return next; });
-        }
-      };
 
     const handleSave = () => {
         const validationErrors = validateBlock7(formData);
@@ -194,32 +191,6 @@ export const Block7Disputes: React.FC<Block7DisputesProps> = ({
                 placeholder={placeholder}
                 min={min}
                 step={step}
-            />
-            {localErrors[id] && <p className={errorClass}>{localErrors[id]}</p>}
-        </div>
-    );
-
-    const renderRadioGroup = (id: keyof ConstitutionFormData, labelText: string, options: { value: string | number | boolean; label: string }[], required: boolean = true, tooltipText?: string) => (
-        <div className="mb-4">
-            <label className={htmlLabelClass}>
-                {labelText} {required && requiredMarker}
-                {tooltipText && (
-                    <Tooltip text={tooltipText}><HelpCircle className={helpIconClass} /></Tooltip>
-                )}
-            </label>
-            <RadioGroup
-                label={labelText}
-                name={id as string}
-                options={options}
-                value={typeof formData[id] === 'string' || typeof formData[id] === 'number' || typeof formData[id] === 'boolean' || formData[id] === null || formData[id] === undefined ? formData[id] : undefined}
-                onChange={(value) => {
-                    const isBoolean = options.every(opt => typeof opt.value === 'boolean');
-                    if (isBoolean) {
-                        handleBooleanRadioChange(id, value);
-                    } else {
-                        handleRadioChange(id, value);
-                    }
-                }}
             />
             {localErrors[id] && <p className={errorClass}>{localErrors[id]}</p>}
         </div>
@@ -265,7 +236,7 @@ export const Block7Disputes: React.FC<Block7DisputesProps> = ({
                             name={option}
                             type="checkbox"
                             checked={(formData[id] as string[])?.includes(option) ?? false}
-                            onChange={(e) => handleCheckboxGroupChange(id, option, e.target.checked)}
+                            onChange={(e) => handleRadioValueChange(id, e.target.checked ? option : '')}
                             className={checkboxClasses}
                         />
                         <label htmlFor={`${id}-${option.replace(/\s+/g, '-').toLowerCase()}`} className="ml-2 block text-sm text-gray-900">
@@ -286,7 +257,7 @@ export const Block7Disputes: React.FC<Block7DisputesProps> = ({
                     <Tooltip text={tooltipText}><HelpCircle className={helpIconClass} /></Tooltip>
                 )}
             </label>
-            <textarea
+            <Textarea
                 id={id}
                 name={id}
                 rows={rows}
@@ -315,20 +286,25 @@ export const Block7Disputes: React.FC<Block7DisputesProps> = ({
                 </div>
                 <div className="space-y-4">
                     <RadioGroup
-                        label="Select or define the dispute resolution procedure:"
                         name="block7_disputeProcedure"
-                        options={[
-                            { value: 'standard', label: 'Use Standard Procedure (Recommended - see below)' },
-                            { value: 'custom', label: 'Define Custom Procedure (Editable below)' }
-                        ]}
                         value={formData.block7_disputeProcedure || 'standard'} // Default to standard
-                        onChange={(value) => handleRadioChange('block7_disputeProcedure', value as string)}
-                    />
+                        onValueChange={(value) => handleRadioValueChange('block7_disputeProcedure', value as string)}
+                        className="space-y-2 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="standard" id="b7-disp-standard" />
+                          <Label htmlFor="b7-disp-standard">Use Standard Procedure (Recommended - see below)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="custom" id="b7-disp-custom" />
+                          <Label htmlFor="b7-disp-custom">Define Custom Procedure (Editable below)</Label>
+                      </div>
+                    </RadioGroup>
                     {localErrors.block7_disputeProcedure && <p className={errorClass}>{localErrors.block7_disputeProcedure}</p>}
 
                     <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded text-xs">
                         {formData.block7_disputeProcedure === 'custom' ? (
-                            <textarea 
+                            <Textarea 
                                 id="block7_formalSteps" 
                                 name="block7_formalSteps" 
                                 rows={5} 
@@ -362,14 +338,14 @@ export const Block7Disputes: React.FC<Block7DisputesProps> = ({
                                 type="checkbox" 
                                 className={checkboxClasses} 
                                 checked={formData.block7_includeNoticesClause || false} 
-                                onChange={(e) => handleBooleanRadioChange('block7_includeNoticesClause', e.target.checked)} 
+                                onChange={(e) => handleRadioValueChange('block7_includeNoticesClause', e.target.checked ? 'true' : 'false')} 
                             />
                             Include a clause specifying how formal notices are given?
                         </label>
                     </div>
                     {formData.block7_includeNoticesClause === true && (
                         <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded text-xs">
-                            <textarea 
+                            <Textarea 
                                 id="block7_noticesClauseText" 
                                 name="block7_noticesClauseText" 
                                 rows={4} 
@@ -397,12 +373,20 @@ export const Block7Disputes: React.FC<Block7DisputesProps> = ({
                             <Tooltip text={TOOLTIPS.block7_includeIndemnityClause}><HelpCircle className={helpIconClass} /></Tooltip>
                         </label>
                         <RadioGroup
-                            label=""
                             name="block7_includeIndemnityClause"
-                            options={[{ value: true, label: 'Yes (Recommended - Standard Text Below)' }, { value: false, label: 'No' }]}
-                            value={formData.block7_includeIndemnityClause}
-                            onChange={(value) => handleRadioChange('block7_includeIndemnityClause', value as boolean)}
-                        />
+                            value={formData.block7_includeIndemnityClause === true ? 'true' : formData.block7_includeIndemnityClause === false ? 'false' : ''}
+                            onValueChange={(value) => handleRadioValueChange('block7_includeIndemnityClause', value)}
+                            className="flex space-x-4 mt-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                             <RadioGroupItem value="true" id="b7-indem-yes" />
+                             <Label htmlFor="b7-indem-yes">Yes (Recommended - Standard Text Below)</Label>
+                           </div>
+                           <div className="flex items-center space-x-2">
+                             <RadioGroupItem value="false" id="b7-indem-no" />
+                             <Label htmlFor="b7-indem-no">No</Label>
+                           </div>
+                        </RadioGroup>
                         {localErrors.block7_includeIndemnityClause && <p className={errorClass}>{localErrors.block7_includeIndemnityClause}</p>}
                         {formData.block7_includeIndemnityClause === true && (
                             <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded text-xs">
@@ -416,12 +400,20 @@ export const Block7Disputes: React.FC<Block7DisputesProps> = ({
                             <Tooltip text={TOOLTIPS.block7_committeeCanArrangeInsurance}><HelpCircle className={helpIconClass} /></Tooltip>
                         </label>
                         <RadioGroup
-                            label=""
                             name="block7_committeeCanArrangeInsurance"
-                            options={[{ value: true, label: 'Yes (Recommended)' }, { value: false, label: 'No' }]}
-                            value={formData.block7_committeeCanArrangeInsurance}
-                            onChange={(value) => handleRadioChange('block7_committeeCanArrangeInsurance', value as boolean)}
-                        />
+                            value={formData.block7_committeeCanArrangeInsurance === true ? 'true' : formData.block7_committeeCanArrangeInsurance === false ? 'false' : ''}
+                            onValueChange={(value) => handleRadioValueChange('block7_committeeCanArrangeInsurance', value)}
+                            className="flex space-x-4 mt-2"
+                        >
+                           <div className="flex items-center space-x-2">
+                             <RadioGroupItem value="true" id="b7-insure-yes" />
+                             <Label htmlFor="b7-insure-yes">Yes (Recommended)</Label>
+                           </div>
+                           <div className="flex items-center space-x-2">
+                             <RadioGroupItem value="false" id="b7-insure-no" />
+                             <Label htmlFor="b7-insure-no">No</Label>
+                           </div>
+                        </RadioGroup>
                         {localErrors.block7_committeeCanArrangeInsurance && <p className={errorClass}>{localErrors.block7_committeeCanArrangeInsurance}</p>}
                     </div>
                 </div>

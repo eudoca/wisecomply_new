@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Officer } from '../../types/officer';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 import { cn } from '../../utils/cn';
-import { Alert } from '../ui/Alert';
+import { Alert } from '../ui/alert';
+import { Textarea } from '../ui/textarea';
 import { AlertTriangleIcon } from 'lucide-react';
 
 interface AddOfficerFormProps {
@@ -253,7 +255,7 @@ const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave
             </div>
             <div className="mt-4">
               <label htmlFor="address" className={labelClass}>Physical/Postal Address (Optional)</label>
-              <textarea 
+              <Textarea 
                 id="address" 
                 name="address" 
                 rows={3} 

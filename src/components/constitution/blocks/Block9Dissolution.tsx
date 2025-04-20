@@ -2,10 +2,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from "@/components/ui/tooltip";
-import { RadioGroup } from '../../wizard/RadioGroup';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { HelpCircle } from 'lucide-react';
 import { ConstitutionFormData, StepProps, ValidationErrors } from '../ConstitutionWizard';
 import { cn } from '../../../utils/cn';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 // Standard Tailwind classes
 const baseInputClasses = "shadow-sm focus:ring-brand-primary focus:border-brand-primary block w-full sm:text-sm border-gray-300 rounded-md";
@@ -139,31 +141,34 @@ export const Block9Dissolution: React.FC<Block9DissolutionProps> = ({
        }
     };
 
-     const handleRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
-        updateFormData(field, value);
+    // Updated handler for RadioGroup value changes
+    const handleRadioValueChange = (field: keyof ConstitutionFormData, value: string) => {
+      // Currently, no boolean fields in Block 9 RadioGroups, only strings
+      // If boolean fields are added later, adapt logic like in Block 4/7
+      let processedValue: string | number | boolean | null = value;
 
-         // Clear conditional member request fields if trigger changes
-        if (field === 'block9_dissolutionTrigger' && value !== 'member_request') {
-            updateFormData('block9_dissolutionMemberRequestPercent', null);
-            updateFormData('block9_dissolutionMemberRequestNumber', null);
-             setLocalErrors(prev => {
-                 const next = {...prev};
-                 delete next.block9_dissolutionMemberRequestPercent;
-                 delete next.block9_dissolutionMemberRequestNumber;
-                 return next;
-             });
-        }
-         // Clear quorum value if type is deselected (set to null/empty string)
-         if (field === 'block9_dissolutionQuorumType' && !value) {
-             updateFormData('block9_dissolutionQuorumValue', null);
-             setLocalErrors(prev => { const next = {...prev}; delete next.block9_dissolutionQuorumValue; return next; });
-         }
-          // Clear 'Other' text if main selection changes (handled in handleInputChange now for select)
-        // if (field === 'block5_windingUpDistribution' && value !== 'Other (specify)') { ... }
+      // Clear conditional member request fields if trigger changes
+      if (field === 'block9_dissolutionTrigger' && value !== 'member_request') {
+          updateFormData('block9_dissolutionMemberRequestPercent', null);
+          updateFormData('block9_dissolutionMemberRequestNumber', null);
+           setLocalErrors(prev => {
+               const next = {...prev};
+               delete next.block9_dissolutionMemberRequestPercent;
+               delete next.block9_dissolutionMemberRequestNumber;
+               return next;
+           });
+      }
+       // Clear quorum value if type is deselected (set to null/empty string)
+       if (field === 'block9_dissolutionQuorumType' && !value) {
+           updateFormData('block9_dissolutionQuorumValue', null);
+           setLocalErrors(prev => { const next = {...prev}; delete next.block9_dissolutionQuorumValue; return next; });
+       }
 
-        if (localErrors[field]) {
-             setLocalErrors(prev => { const next = {...prev}; delete next[field]; return next; });
-        }
+      updateFormData(field, processedValue);
+
+      if (localErrors[field]) {
+           setLocalErrors(prev => { const next = {...prev}; delete next[field]; return next; });
+      }
     };
 
     const handleSave = () => {
@@ -212,12 +217,18 @@ export const Block9Dissolution: React.FC<Block9DissolutionProps> = ({
                 )}
             </label>
             <RadioGroup
-                label={labelText}
                 name={id as string}
-                options={options}
-                value={formData[id] as string | number | boolean | undefined ?? ''} // Handle potential undefined
-                onChange={(value) => handleRadioChange(id, value)}
-            />
+                value={formData[id] as string | undefined ?? ''}
+                onValueChange={(value) => handleRadioValueChange(id, value)}
+                className="space-y-2 mt-2"
+            >
+                {options.map(option => (
+                    <div key={option.value.toString()} className="flex items-center space-x-2">
+                        <RadioGroupItem value={option.value.toString()} id={`${id}-${option.value.toString()}`} />
+                        <Label htmlFor={`${id}-${option.value.toString()}`}>{option.label}</Label>
+                    </div>
+                ))}
+            </RadioGroup>
             {localErrors[id] && <p className={errorClass}>{localErrors[id]}</p>}
         </div>
     );
