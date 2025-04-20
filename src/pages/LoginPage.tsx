@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeftIcon, CheckCircleIcon } from 'lucide-react';
-import { Button } from '../components/ui/button.tsx';
+import { Button } from '@/components/ui/button.tsx';
 import { useForm } from 'react-hook-form';
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
