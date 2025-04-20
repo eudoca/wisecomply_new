@@ -31,7 +31,10 @@
     "react-router-dom": "^6.22.3",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "react-hook-form": "^7.52.1",
+    "zod": "^3.23.8",
+    "@hookform/resolvers": "^3.9.0"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.10",
