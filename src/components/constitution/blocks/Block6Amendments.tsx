@@ -7,7 +7,7 @@ import { cn } from '../../../utils/cn';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip } from '../../wizard/Tooltip';
 import { Label } from '@/components/ui/label';
 import { RadioGroup as ShadcnRadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { RadioGroup } from '../../wizard/RadioGroup';

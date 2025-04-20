@@ -3,7 +3,6 @@ import { RadioGroup } from '../../wizard/RadioGroup';
 import { Button } from '@/components/ui/button';
 import type { StepProps, ConstitutionFormData } from '../ConstitutionWizard';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip } from "@/components/ui/tooltip";
 import { Label } from '@/components/ui/label';
 import { InfoIcon } from 'lucide-react';
 

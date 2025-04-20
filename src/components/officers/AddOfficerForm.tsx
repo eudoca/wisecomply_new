@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Officer } from '../../types/officer';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '../../utils/cn';
-import { Alert } from '../ui/alert';
-import { Textarea } from '../ui/textarea';
+import { Alert } from '@/components/ui/alert';
+import { Textarea } from '@/components/ui/textarea';
 import { AlertTriangleIcon } from 'lucide-react';
 
 interface AddOfficerFormProps {

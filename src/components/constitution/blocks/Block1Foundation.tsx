@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Tooltip } from '@/components/ui/tooltip';
+import { Tooltip } from '../../wizard/Tooltip';
 import { Info, AlertCircle, HelpCircle, AlertTriangle } from 'lucide-react';
 import { ConstitutionFormData, StepProps } from '../ConstitutionWizard';
 import { RadioGroup } from '../../wizard/RadioGroup';

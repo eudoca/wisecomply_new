@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip } from '../../wizard/Tooltip';
 import { RadioGroup } from '../../wizard/RadioGroup';
 import { HelpCircle } from 'lucide-react';
 import { ConstitutionFormData, StepProps, ValidationErrors } from '../ConstitutionWizard';

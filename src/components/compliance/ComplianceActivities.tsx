@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 // import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Removed unused import
 import { Card, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge'; // Keep used Badge
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip } from '../wizard/Tooltip';
 import { cn } from '../../utils/cn';
 import Step1Planning from './activities/Step1Planning';
 import Step2Committee from './activities/Step2Committee';
@@ -208,7 +208,7 @@ const ComplianceActivities: React.FC = () => {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
                       <h3 className="text-sm font-medium">{activity.title}</h3>
-                       <Tooltip text={activity.info || 'No additional info available.'} position="top" variant="info">
+                       <Tooltip text={activity.info || 'No additional info available.'}>
                          <InfoIcon className="w-4 h-4 ml-1.5 text-gray-400 cursor-help" />
                       </Tooltip>
                     </div>
