@@ -6,7 +6,7 @@ This directory contains reusable UI components designed to provide a consistent 
 
 ### Button
 ```tsx
-import { Button } from '../components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 <Button variant="primary" size="md">Click Me</Button>
 ```
