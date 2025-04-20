@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import GovernanceTabs from '../components/officers/GovernanceTabs'; // Adjusted path
 import OfficerList from '../components/officers/OfficerList'; // Adjusted path
 import ComplianceActivities from '../components/officers/ComplianceActivities'; // Adjusted path
-import { Button } from '@/components/ui/button'; // Standardized path
+import { Button } from '@/components/ui/button.tsx'; // Added .tsx extension
 import AddOfficerForm from '../components/officers/AddOfficerForm'; // Adjusted path
 import ViewOfficerDetailsModal from '../components/officers/ViewOfficerDetailsModal'; // Import the new modal
 import { Officer } from '../types/officer'; // Assuming a type definition exists or will be created
