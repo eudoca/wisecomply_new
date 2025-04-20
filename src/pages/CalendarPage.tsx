@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, FilterIcon } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { PlusIcon } from 'lucide-react';
 
 export const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());

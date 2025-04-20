@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Button } from '../ui/Button'; // Import shared Button
+import { Button } from '@/components/ui/button'; // Standardized path
+import { Switch } from '@/components/ui/switch'; // Use alias
+import { Label } from '@/components/ui/label';
 
 // Simple toggle component (could be extracted to ui/)
 const ToggleSwitch: React.FC<{ label: string; description: string; defaultChecked?: boolean }> = (

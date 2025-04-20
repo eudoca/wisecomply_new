@@ -1,6 +1,7 @@
+import { Button } from '@/components/ui/button'; // Standardized path
 import React from 'react';
-import { Button } from '../../ui/Button';
-import type { StepProps, ConstitutionFormData } from '../ConstitutionWizard';
+import { AlertCircleIcon } from 'lucide-react';
+import { ConstitutionFormData, StepProps, ValidationErrors } from '../ConstitutionWizard';
 
 // Helper component to display a section of the form data
 const ReviewSection: React.FC<{ title: string; data: Record<string, any> | string | undefined | null | boolean | number | string[]}> = ({ title, data }) => {

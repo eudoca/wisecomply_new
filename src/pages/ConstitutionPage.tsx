@@ -18,8 +18,10 @@ export const ConstitutionPage: React.FC = () => {
       </div>
       <div className="space-y-6">
         <ConstitutionStatus />
-        {/* Replaced ComplianceChecks with ConstitutionWizard */}
-        <ConstitutionWizard /> 
+        {/* Wrap ConstitutionWizard in a styled div and add consistent padding */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm p-6">
+          <ConstitutionWizard /> 
+        </div>
       </div>
     </div>
   );

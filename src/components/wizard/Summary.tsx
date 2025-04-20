@@ -1,6 +1,8 @@
 import React from 'react';
 import { ClipboardList, AlertTriangle, Info, CheckCircle, Download } from 'lucide-react';
-import { Button } from '../ui/Button'; // Import shared Button
+import { Button } from '@/components/ui/button'; // Standardized path
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card'; // Adjust path as needed
+import { DownloadIcon, SendIcon } from 'lucide-react';
 
 interface SummaryProps {
   formData: any; // Consider defining a proper type

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '../../ui/Button'; 
-import { Input } from '../../ui/Input';
+import { Button } from '@/components/ui/button'; // Standardized path
+import { Input } from '@/components/ui/input'; // Standardized path
 import { RadioGroup } from '../../wizard/RadioGroup'; 
-import { Alert } from '../../wizard/Alert'; 
+import { Alert } from '../../wizard/Alert';
 
 interface Step8FinalDetailsProps {
   onComplete: () => void; 
@@ -127,7 +127,7 @@ const Step8FinalDetails: React.FC<Step8FinalDetailsProps> = ({ onComplete }) => 
                id="registeredOfficer"
                name="registeredOfficer"
                value={formData.registeredOfficer || ''} 
-               onChange={(e) => handleChange('registeredOfficer', e.target.value)}
+               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('registeredOfficer', e.target.value)}
                placeholder="Select or enter registered officer name (Placeholder)"
              />
              {errors.registeredOfficer && <p className="mt-1 text-xs text-red-600">{errors.registeredOfficer}</p>}
@@ -141,37 +141,37 @@ const Step8FinalDetails: React.FC<Step8FinalDetailsProps> = ({ onComplete }) => 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                    <label htmlFor="societyName" className="block text-xs font-medium text-gray-700 mb-1">Society Name</label>
-                   <Input id="societyName" name="societyName" value={formData.societyName || ''} onChange={(e) => handleChange('societyName', e.target.value)} />
+                   <Input id="societyName" name="societyName" value={formData.societyName || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('societyName', e.target.value)} />
                     {errors.societyName && <p className="mt-1 text-xs text-red-600">{errors.societyName}</p>}
                  </div>
                  <div>
                      <label htmlFor="financialYearEndDate" className="block text-xs font-medium text-gray-700 mb-1">Financial Year End Date</label>
-                     <Input id="financialYearEndDate" name="financialYearEndDate" type="date" value={formData.financialYearEndDate || ''} onChange={(e) => handleChange('financialYearEndDate', e.target.value)} />
+                     <Input id="financialYearEndDate" name="financialYearEndDate" type="date" value={formData.financialYearEndDate || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('financialYearEndDate', e.target.value)} />
                      {errors.financialYearEndDate && <p className="mt-1 text-xs text-red-600">{errors.financialYearEndDate}</p>}
                  </div>
                  <div className="md:col-span-2">
                      <label htmlFor="physicalAddress" className="block text-xs font-medium text-gray-700 mb-1">Physical Address</label>
-                     <Input id="physicalAddress" name="physicalAddress" value={formData.physicalAddress || ''} onChange={(e) => handleChange('physicalAddress', e.target.value)} />
+                     <Input id="physicalAddress" name="physicalAddress" value={formData.physicalAddress || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('physicalAddress', e.target.value)} />
                      {errors.physicalAddress && <p className="mt-1 text-xs text-red-600">{errors.physicalAddress}</p>}
                  </div>
                  <div className="md:col-span-2">
                      <label htmlFor="postalAddress" className="block text-xs font-medium text-gray-700 mb-1">Postal Address</label>
-                     <Input id="postalAddress" name="postalAddress" value={formData.postalAddress || ''} onChange={(e) => handleChange('postalAddress', e.target.value)} />
+                     <Input id="postalAddress" name="postalAddress" value={formData.postalAddress || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('postalAddress', e.target.value)} />
                      {errors.postalAddress && <p className="mt-1 text-xs text-red-600">{errors.postalAddress}</p>}
                  </div>
                  <div>
                      <label htmlFor="emailAddress" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
-                     <Input id="emailAddress" name="emailAddress" type="email" value={formData.emailAddress || ''} onChange={(e) => handleChange('emailAddress', e.target.value)} />
+                     <Input id="emailAddress" name="emailAddress" type="email" value={formData.emailAddress || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('emailAddress', e.target.value)} />
                      {errors.emailAddress && <p className="mt-1 text-xs text-red-600">{errors.emailAddress}</p>}
                  </div>
                   <div>
                      <label htmlFor="phoneNumber" className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
-                     <Input id="phoneNumber" name="phoneNumber" type="tel" value={formData.phoneNumber || ''} onChange={(e) => handleChange('phoneNumber', e.target.value)} />
+                     <Input id="phoneNumber" name="phoneNumber" type="tel" value={formData.phoneNumber || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('phoneNumber', e.target.value)} />
                      {errors.phoneNumber && <p className="mt-1 text-xs text-red-600">{errors.phoneNumber}</p>}
                  </div>
                   <div>
                      <label htmlFor="memberTotal" className="block text-xs font-medium text-gray-700 mb-1">Total Members</label>
-                     <Input id="memberTotal" name="memberTotal" type="number" min="10" value={formData.memberTotal || ''} onChange={(e) => handleChange('memberTotal', e.target.value)} />
+                     <Input id="memberTotal" name="memberTotal" type="number" min="10" value={formData.memberTotal || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('memberTotal', e.target.value)} />
                       {errors.memberTotal && <p className="mt-1 text-xs text-red-600">{errors.memberTotal}</p>}
                  </div>
             </div>

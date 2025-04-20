@@ -1,17 +1,15 @@
-import React, { useState, ReactNode } from 'react';
+import React, { useState } from 'react';
 import { 
-  HelpCircle, Info, ChevronDown, ChevronUp, BookOpen, RefreshCw, ShieldCheck, 
-  ArrowLeft, ArrowRight, Download, ClipboardList, Flag, Building, Hash, CheckCircle, Clock, AlertTriangle, RefreshCwIcon, GaugeIcon, WandIcon, FileText, Users, UserCog, MessageSquare, Vote, Calendar, Settings, Check, XCircle, Plus, UserCheck, Home, DollarSign, Shield, Briefcase, Lock, FileQuestion, LandPlot, Car, Handshake, User, Database, Banknote
-} from 'lucide-react'; // Added more icons
+  HelpCircle, RefreshCw, ShieldCheck, 
+  ArrowLeft, ArrowRight, Download, ClipboardList, CheckCircle, Plus, UserCheck, Briefcase, FileQuestion
+} from 'lucide-react';
 
 // Import Wizard sub-components
-import { Tooltip } from './Tooltip';
 import { RadioGroup } from './RadioGroup';
 import { Alert } from './Alert';
 import { InfoBox } from './InfoBox';
-import { Expandable } from './Expandable';
-import { Button } from '../ui/Button'; // Import shared Button
-import { useNavigate } from 'react-router-dom'; // Import for final navigation
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 // --- Define NEW formData type --- 
 interface WizardFormData {
@@ -381,7 +379,7 @@ export const Wizard: React.FC = () => {
   const steps = [
     { number: 1, title: 'Organisation Status and Basic Information', icon: UserCheck, component: Step1OrganisationStatus },
     { number: 2, title: 'Assets, Licenses, and Regulatory Obligations', icon: Briefcase, component: Step2AssetsLicensesRegulatory },
-    { number: 3, title: 'Employment, Privacy, and Funding', icon: Users, component: Step3EmploymentPrivacyFunding },
+    { number: 3, title: 'Employment, Privacy, and Funding', icon: UserCheck, component: Step3EmploymentPrivacyFunding },
     { number: 4, title: 'Existing Constitution', icon: FileQuestion, component: Step4ExistingConstitution },
     { number: 5, title: 'Summary', icon: ClipboardList, component: Summary } // Keep Summary as step 5 conceptually
   ];

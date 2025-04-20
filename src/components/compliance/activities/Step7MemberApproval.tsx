@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button } from '../../ui/Button'; 
-import { Input } from '../../ui/Input';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { RadioGroup } from '../../wizard/RadioGroup'; 
 import { Alert } from '../../wizard/Alert'; 
 
@@ -117,7 +117,7 @@ const Step7MemberApproval: React.FC<Step7MemberApprovalProps> = ({ onComplete })
                         type="date"
                         max={today} // Cannot be in the future
                         value={formData.meetingDate || ''}
-                        onChange={(e) => handleChange('meetingDate', e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('meetingDate', e.target.value)}
                     />
                 </div>
                  <div>
@@ -128,7 +128,7 @@ const Step7MemberApproval: React.FC<Step7MemberApprovalProps> = ({ onComplete })
                         type="number"
                         min="0"
                         value={formData.membersPresent || ''}
-                        onChange={(e) => handleChange('membersPresent', e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('membersPresent', e.target.value)}
                         placeholder="e.g., 15"
                     />
                 </div>
@@ -140,7 +140,7 @@ const Step7MemberApproval: React.FC<Step7MemberApprovalProps> = ({ onComplete })
                         type="number"
                         min="0"
                         value={formData.membersInFavor || ''}
-                        onChange={(e) => handleChange('membersInFavor', e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('membersInFavor', e.target.value)}
                         placeholder="e.g., 12"
                     />
                 </div>
@@ -152,7 +152,7 @@ const Step7MemberApproval: React.FC<Step7MemberApprovalProps> = ({ onComplete })
                         type="number"
                         min="1" // Must be at least 1
                         value={formData.membersEligible || ''}
-                        onChange={(e) => handleChange('membersEligible', e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('membersEligible', e.target.value)}
                         placeholder="e.g., 20"
                     />
                 </div>

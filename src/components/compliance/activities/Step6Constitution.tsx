@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../ui/Button'; 
+import { Button } from '@/components/ui/button'; // Standardized path
 import { AlertTriangle } from 'lucide-react'; // Icon for alert
+import { Alert } from '../../wizard/Alert';
 
 interface Step6ConstitutionProps {
   onComplete: () => void; 

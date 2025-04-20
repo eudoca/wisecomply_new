@@ -3,6 +3,8 @@ import { Input } from '../../ui/Input';
 import { Button } from '../../ui/Button';
 import { AlertCircle, HelpCircle, AlertTriangle } from 'lucide-react';
 import { ConstitutionFormData, StepProps } from '../ConstitutionWizard';
+import { Tooltip } from '../../ui/Tooltip';
+import { RadioGroup } from '../../wizard/RadioGroup';
 
 const standardOfficeMethodText = "The Registered Office of the Society shall be at such place as the Committee determines from time to time, and notified to the Registrar of Incorporated Societies.";
 
@@ -97,28 +99,26 @@ export const Block1Foundation: React.FC<Block1Props> = ({ formData, updateFormDa
     }
   };
 
-  // Handler specifically for radio buttons that represent string values
-  const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    updateFormData(name as keyof ConstitutionFormData, value);
-     if (errors[name as keyof ConstitutionFormData]) {
+  // Add type hint for value in RadioGroup onChange
+  const handleRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
+    updateFormData(field, value);
+     if (errors[field]) {
         setErrors(prev => {
             const next = { ...prev };
-            delete next[name as keyof ConstitutionFormData];
+            delete next[field];
             return next;
         });
     }
   };
-
+  
   // Handler specifically for radio buttons representing Yes/No -> true/false/null
-  const handleBooleanRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const booleanValue = value === 'Yes' || value === 'true' ? true : value === 'No' || value === 'false' ? false : null;
-    updateFormData(name as keyof ConstitutionFormData, booleanValue);
-     if (errors[name as keyof ConstitutionFormData]) {
+  const handleBooleanRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
+    const booleanValue = value === 'Yes' || value === true ? true : value === 'No' || value === false ? false : null;
+    updateFormData(field, booleanValue);
+     if (errors[field]) {
         setErrors(prev => {
             const next = { ...prev };
-            delete next[name as keyof ConstitutionFormData];
+            delete next[field];
             return next;
         });
     }
@@ -145,7 +145,6 @@ export const Block1Foundation: React.FC<Block1Props> = ({ formData, updateFormDa
       }
   };
 
-
   const handleSave = () => {
     if (validate()) {
       console.log('Block 1 Validated Data:', {
@@ -171,208 +170,192 @@ export const Block1Foundation: React.FC<Block1Props> = ({ formData, updateFormDa
   };
 
   // Basic class names for styling standard HTML elements
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+  const htmlLabelClass = "block text-sm font-medium text-gray-700 mb-1"; // Renamed for clarity
   const inputClass = "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md";
   const textareaClass = inputClass + " min-h-[80px]"; // Add min-height
-  const radioLabelClass = "ml-2 block text-sm text-gray-900";
   const errorClass = "text-sm text-red-600 mt-1";
-  const helpIconClass = "ml-2 text-gray-500 hover:text-gray-700 inline-block align-middle"; // Class for help icon
+  const helpIconClass = "ml-2 text-gray-500 hover:text-gray-700 inline-block align-middle h-4 w-4 cursor-help"; // Adjusted class for help icon
+  const taskTitleClass = "text-base font-semibold text-gray-800 mb-3";
+  const descriptionClass = "text-sm text-gray-600 mb-4";
+
+  const toggleAccordion = () => {
+    // Implementation of toggleAccordion function
+  };
+
+  const charityStatusTooltip = "Choosing 'Yes' means the society aims to be registered under the Charities Act 2011. This adds specific requirements, like ensuring purposes are exclusively charitable and adding clauses for asset distribution upon dissolution.";
+  const charitablePurposesHelpText = "For guidance on defining charitable purposes, refer to the Charity Commission's guidance (e.g., CC4). Examples: 'Advancement of education', 'Prevention or relief of poverty', 'Advancement of health or the saving of lives'. Purposes must align with categories recognised in the Charities Act.";
+  const unincorporatedHelpText = "An unincorporated association is simpler to run but doesn't have separate legal identity. Members can be personally liable. A Charitable Incorporated Organisation (CIO) offers limited liability but has more formal reporting requirements.";
 
   return (
     <div className="space-y-6">
-      {/* Task 1.1: Society Name */}
-      <div className="space-y-1">
-        <label htmlFor="block1_societyName" className={labelClass}>1.1 What is the proposed name of the society?</label>
-        <Input // Assuming Input component exists and works
-          id="block1_societyName"
-          name="block1_societyName"
-          value={formData.block1_societyName || ''}
-          onChange={handleInputChange}
-          maxLength={100}
-          className={inputClass} // Apply base class
-          aria-invalid={!!errors.block1_societyName}
-          aria-describedby={errors.block1_societyName ? "block1_societyName_error" : undefined}
-        />
-        {errors.block1_societyName && <p id="block1_societyName_error" className={errorClass}>{errors.block1_societyName}</p>}
-      </div>
+        {/* Removed H3 heading */}
+        {/* <h3 className="text-lg font-semibold mb-4 text-gray-800">Foundation & Identity</h3> */}
 
-      {/* Task 1.2: Society Purpose */}
-      <div className="space-y-1">
-        {/* Use standard label */}
-        <label htmlFor="block1_societyPurposes" className={labelClass}>1.2 What is the purpose of the society?</label>
-        {/* Use standard textarea */}
-        <textarea
-          id="block1_societyPurposes" // Corrected ID
-          name="block1_societyPurposes" // Corrected name
-          value={formData.block1_societyPurposes || ''} // Corrected value access
-          onChange={handleInputChange}
-          rows={4}
-          maxLength={500}
-          className={textareaClass} // Use standard class
-          aria-describedby={errors.block1_societyPurposes ? "societyPurposeError" : undefined}
-        />
-        <p className="text-sm text-gray-500">Describe the main aims and objectives (max 500 characters).</p>
-        {/* Corrected error check */}
-        {errors.block1_societyPurposes && <p id="societyPurposeError" className={errorClass}>{errors.block1_societyPurposes}</p>}
-      </div>
-
-      {/* Task 1.3: Charitable Status */}
-      <div className="space-y-2">
-          {/* Use standard label */}
-          <label className={labelClass}>
-              1.3 Is the society intended to be charitable?
-              {/* Basic Tooltip Placeholder (no functionality) */}
-              <span title="Charitable status may affect registration requirements and tax obligations.">
-                  <HelpCircle size={16} className={helpIconClass} />
-              </span>
-          </label>
-          {/* Use standard radio buttons */}
-          <div role="radiogroup" aria-labelledby="charitableStatusLabel">
-              <div className="flex items-center mb-1">
-                  <input
-                      type="radio"
-                      id="charityYes"
-                      name="block1_charitableStatus"
-                      value="Yes"
-                      checked={formData.block1_charitableStatus === 'Yes'}
-                      onChange={handleRadioChange} // Use specific handler for string radios
-                      className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                  />
-                  <label htmlFor="charityYes" className={radioLabelClass}>Yes</label>
-              </div>
-              <div className="flex items-center">
-                  <input
-                      type="radio"
-                      id="charityNo"
-                      name="block1_charitableStatus"
-                      value="No"
-                      checked={formData.block1_charitableStatus === 'No'}
-                      onChange={handleRadioChange}
-                      className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                  />
-                  <label htmlFor="charityNo" className={radioLabelClass}>No</label>
-              </div>
-          </div>
-          {errors.block1_charitableStatus && <p id="charitableStatusError" className={errorClass}>{errors.block1_charitableStatus}</p>}
-          {formData.block1_charitableStatus === 'Yes' && (
-             <div className="space-y-1 mt-2">
-                  {/* Use standard label */}
-                  <label htmlFor="block1_charitablePurposeDetails" className={labelClass}>Please provide details on the charitable purpose:</label>
-                  {/* Use standard textarea */}
-                  <textarea
-                      id="block1_charitablePurposeDetails"
-                      name="block1_charitablePurposeDetails"
-                      value={formData.block1_charitablePurposeDetails || ''}
-                      onChange={handleInputChange}
-                      rows={3}
-                      maxLength={300}
-                      className={textareaClass} // Apply standard class
-                  />
-                  {errors.block1_charitablePurposeDetails && <p className={errorClass}>{errors.block1_charitablePurposeDetails}</p>}
-              </div>
-           )}
-      </div>
-
-      {/* Task 1.4: Location of Meetings */}
-      <div className="space-y-2">
-        {/* Use standard label */}
-        <label className={labelClass}>
-            1.4 How will the location of general meetings be determined?
-            {/* Basic Tooltip Placeholder */}
-            <span title="Choose how meeting locations will be decided (e.g., fixed location, rotating, decided by committee).">
-               <HelpCircle size={16} className={helpIconClass} />
-            </span>
-        </label>
-        {/* Use standard radio buttons */}
-         <div role="radiogroup">
-             <div className="flex items-center mb-1">
-                 <input type="radio" id="locCommittee" name="block1_meetingLocation" value="committee_decision" checked={formData.block1_meetingLocation === 'committee_decision'} onChange={handleRadioChange} className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
-                 <label htmlFor="locCommittee" className={radioLabelClass}>Determined by the committee before each meeting</label>
-             </div>
-             <div className="flex items-center mb-1">
-                 <input type="radio" id="locSpecified" name="block1_meetingLocation" value="specified_address" checked={formData.block1_meetingLocation === 'specified_address'} onChange={handleRadioChange} className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
-                 <label htmlFor="locSpecified" className={radioLabelClass}>Specified address (requires rule amendment to change)</label>
-             </div>
-             <div className="flex items-center">
-                 <input type="radio" id="locRotating" name="block1_meetingLocation" value="rotating_locations" checked={formData.block1_meetingLocation === 'rotating_locations'} onChange={handleRadioChange} className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
-                 <label htmlFor="locRotating" className={radioLabelClass}>Rotating between pre-agreed locations</label>
-             </div>
+        {/* Task 1.1: Society Name */}
+        {/* Corrected title structure */}
+        <div className="flex items-center gap-2 mb-3">
+            <label className={taskTitleClass}>1.1 Society Name (Mandatory)</label>
+            {/* No tooltip needed here */}
         </div>
-        {errors.block1_meetingLocation && <p id="meetingLocationError" className={errorClass}>{errors.block1_meetingLocation}</p>}
-      </div>
-
-      {/* Task 1.5: Registered Office */}
-      <div className="space-y-2">
-        <div className="flex items-center space-x-2">
-           {/* Use standard checkbox */}
-           <input
-             type="checkbox"
-             id="specifyOfficeMethod"
-             name="block1_specifyOfficeMethod" // Add name for potential form submission if needed
-             checked={!!specifyOfficeMethod} // Use local state for checked status
-             onChange={handleSpecifyOfficeMethodChange} // Use defined handler
-             className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-             aria-describedby={errors.block1_specifyOfficeMethod ? "officeMethodError" : undefined}
-           />
-           {/* Use standard label */}
-           <label htmlFor="specifyOfficeMethod" className="text-sm font-medium text-gray-700">
-               1.5 Specify the method for determining the registered office location?
-                {/* Basic Tooltip Placeholder */}
-               <span title="If unchecked, the constitution won't specify how the office location is decided, allowing flexibility.">
-                  <HelpCircle size={16} className={helpIconClass} />
-               </span>
-           </label>
-        </div>
-         {errors.block1_specifyOfficeMethod && <p id="officeMethodError" className={errorClass}>{errors.block1_specifyOfficeMethod}</p>}
-
-        {specifyOfficeMethod && (
-          <div className="pl-6 space-y-1">
-            {/* Use standard label */}
-            <label htmlFor="block1_officeMethodText" className={labelClass}>Method for determining registered office:</label>
-            {/* Use standard textarea */}
-            <textarea
-              id="block1_officeMethodText"
-              name="block1_officeMethodText"
-              value={formData.block1_officeMethodText || standardOfficeMethodText} // Default to standard text?
-              onChange={handleInputChange}
-              rows={3}
-              maxLength={300}
-              className={textareaClass} // Apply standard class
-              aria-describedby={errors.block1_officeMethodText ? "officeMethodTextError" : undefined}
+        <div className="space-y-2">
+            {/* Input needs its own accessible label if the title isn't directly linked */}
+            <label htmlFor="block1_societyName" className="sr-only">Society Name</label> {/* Added screen-reader only label */}
+            <Input 
+              id="block1_societyName" 
+              name="block1_societyName"
+              value={formData.block1_societyName || ''} 
+              onChange={handleInputChange} 
+              className={inputClass + (errors.block1_societyName ? ' border-red-500' : '')}
+              placeholder="Enter the full proposed name"
             />
-             <p className="text-sm text-gray-500">Describe how the registered office location will be decided (max 300 characters).</p>
-            {errors.block1_officeMethodText && <p id="officeMethodTextError" className={errorClass}>{errors.block1_officeMethodText}</p>}
-          </div>
-        )}
-      </div>
+            {errors.block1_societyName && <p className={errorClass}>{errors.block1_societyName}</p>}
+        </div>
 
-      {/* Save Buttons */}
-      <div className="flex justify-end space-x-2 pt-4 border-t">
-          <Button variant="secondary" onClick={handleSaveProgressClick}>Save Progress</Button>
-          <Button onClick={handleSave}>Mark as Complete</Button>
-      </div>
+        <hr className="border-gray-200" />
 
-      {/* Use basic div for validation summary */}
-      {Object.keys(errors).length > 0 && (
-            <div className="p-4 border border-red-400 bg-red-50 rounded-md mt-4">
-                <div className="flex">
-                    <div className="flex-shrink-0">
-                         <AlertTriangle className="h-5 w-5 text-red-400" aria-hidden="true" />
-                    </div>
-                    <div className="ml-3">
-                        <h3 className="text-sm font-medium text-red-800">Validation Errors</h3>
-                        <div className="mt-2 text-sm text-red-700">
-                             <p>Please correct the highlighted fields before marking this section as complete.</p>
-                             {/* Optionally list errors: */}
-                             {/* <ul role="list" className="list-disc pl-5 space-y-1">
-                                {Object.entries(errors).map(([key, msg]) => msg ? <li key={key}>{msg}</li> : null)}
-                             </ul> */}
-                        </div>
-                    </div>
+        {/* Task 1.2: Society Purposes */}
+        {/* Corrected title structure */}
+        <div className="flex items-center gap-2 mb-3">
+            <label className={taskTitleClass}>1.2 Society Purposes (Mandatory)</label>
+            <Tooltip text="Clearly state the main aims and objectives of the society.">
+                <HelpCircle className={helpIconClass} />
+            </Tooltip>
+        </div>
+        <div className="space-y-2">
+             <label htmlFor="block1_societyPurposes" className="sr-only">Society Purposes</label> {/* Added screen-reader only label */}
+            <textarea 
+              id="block1_societyPurposes" 
+              name="block1_societyPurposes"
+              rows={4} 
+              value={formData.block1_societyPurposes || ''} 
+              onChange={handleInputChange} 
+              className={textareaClass + (errors.block1_societyPurposes ? ' border-red-500' : '')}
+              placeholder="e.g., To promote amateur football in the region..."
+            />
+            {errors.block1_societyPurposes && <p className={errorClass}>{errors.block1_societyPurposes}</p>}
+        </div>
+
+        <hr className="border-gray-200" />
+
+        {/* Task 1.3: Charitable Status */}
+         {/* Corrected title structure */}
+        <div className="flex items-center gap-2 mb-3">
+            <label className={taskTitleClass}>1.3 Charitable Status (Mandatory)</label>
+             <Tooltip text={charityStatusTooltip}>
+                 <HelpCircle className={helpIconClass} />
+             </Tooltip>
+        </div>
+        <div className="space-y-3">
+             <RadioGroup 
+                 label="Is the society intended to be charitable?"
+                 name="block1_charitableStatus" 
+                 options={[{ value: 'Yes', label: 'Yes' }, { value: 'No', label: 'No' }]} 
+                 value={formData.block1_charitableStatus} 
+                 onChange={(value: string | number | boolean) => handleRadioChange('block1_charitableStatus', value as string)}
+             />
+            {/* Conditional input for charitable details */} 
+            {formData.block1_charitableStatus === 'Yes' && (
+                <div className="pl-6 space-y-2">
+                    <label htmlFor="block1_charitablePurposeDetails" className={htmlLabelClass}> 
+                        Specify Charitable Purpose Details <span className="text-red-500">*</span> 
+                        <Tooltip text={charitablePurposesHelpText}> 
+                            <HelpCircle className={helpIconClass} /> 
+                        </Tooltip> 
+                    </label> 
+                     <textarea 
+                         id="block1_charitablePurposeDetails" 
+                         name="block1_charitablePurposeDetails" 
+                         rows={3} 
+                         value={formData.block1_charitablePurposeDetails || ''} 
+                         onChange={handleInputChange} 
+                         className={textareaClass + (errors.block1_charitablePurposeDetails ? ' border-red-500' : '')} 
+                         placeholder="Describe how the purposes align with charitable aims..." 
+                     /> 
+                     {errors.block1_charitablePurposeDetails && <p className={errorClass}>{errors.block1_charitablePurposeDetails}</p>} 
+                </div> 
+            )}
+            {/* Display general error for the RadioGroup separately */} 
+            {errors.block1_charitableStatus && <p className={errorClass}>{errors.block1_charitableStatus}</p>} 
+
+        </div>
+
+        <hr className="border-gray-200" />
+
+        {/* Task 1.4: Registered Office / Meeting Location */}
+        {/* Corrected title structure */}
+        <div className="flex items-center gap-2 mb-3">
+            <label className={taskTitleClass}>1.4 Registered Office & Meetings (Mandatory)</label>
+            <Tooltip text="Define how the society determines its official address and where meetings can occur.">
+                 <HelpCircle className={helpIconClass} />
+            </Tooltip>
+        </div>
+        <div className="space-y-3">
+            <p className={descriptionClass}>The Act requires rules about the registered office (Act s27(1)(a)). You can either specify the exact method in the rules or state how meetings will generally occur if the office is determined by the Committee.</p>
+
+            <RadioGroup 
+                 label="Specify the method for determining the registered office in the rules?"
+                 name="block1_specifyOfficeMethod" 
+                 options={[
+                     { value: true, label: 'Yes, specify the method in the rules (editable below)' }, 
+                     { value: false, label: 'No, the Committee will determine it (use standard text)' } 
+                 ]} 
+                 value={formData.block1_specifyOfficeMethod}
+                 onChange={(value: string | number | boolean) => handleBooleanRadioChange('block1_specifyOfficeMethod', value)}
+             />
+             {/* Display general error for the RadioGroup separately */} 
+              {errors.block1_specifyOfficeMethod && <p className={errorClass}>{errors.block1_specifyOfficeMethod}</p>} 
+
+            {/* Conditional sections based on the radio selection */} 
+            {formData.block1_specifyOfficeMethod === true && (
+                <div className="pl-6 space-y-2">
+                    <label htmlFor="block1_officeMethodText" className={htmlLabelClass}> 
+                        Describe Method for Office Address <span className="text-red-500">*</span> 
+                    </label> 
+                    <textarea 
+                        id="block1_officeMethodText" 
+                        name="block1_officeMethodText"
+                        rows={2} 
+                        value={formData.block1_officeMethodText || ''} 
+                        onChange={handleInputChange} 
+                        className={textareaClass + (errors.block1_officeMethodText ? ' border-red-500' : '')} 
+                        placeholder="e.g., The Registered Office shall be at the Secretary's residence..."
+                    />
+                    {errors.block1_officeMethodText && <p className={errorClass}>{errors.block1_officeMethodText}</p>}
                 </div>
-            </div>
-        )}
+            )}
+            {formData.block1_specifyOfficeMethod === false && (
+                <div className="pl-6 p-3 bg-gray-50 border border-gray-200 rounded text-xs">
+                    <p>Standard Clause: &quot;{standardOfficeMethodText}&quot;</p>
+                </div>
+            )}
 
+            {/* Meeting Location Input - Potentially always show or conditionally based on office method choice */} 
+            <div className="pt-3 border-t border-gray-100 space-y-2">
+                <label htmlFor="block1_meetingLocation" className={htmlLabelClass}> 
+                    How is the place for General Meetings determined? {formData.block1_specifyOfficeMethod !== true && <span className="text-red-500">*</span>} 
+                     <Tooltip text="Where will general meetings (like AGMs) typically be held? e.g., Specific venue, location decided by committee, online."> 
+                         <HelpCircle className={helpIconClass} /> 
+                     </Tooltip> 
+                </label> 
+                 <textarea 
+                     id="block1_meetingLocation" 
+                     name="block1_meetingLocation"
+                     rows={2} 
+                     value={formData.block1_meetingLocation || ''} 
+                     onChange={handleInputChange} 
+                     className={textareaClass + (errors.block1_meetingLocation ? ' border-red-500' : '')} 
+                     placeholder="e.g., At the Society's clubrooms, or another place decided by the Committee..."
+                 />
+                 {errors.block1_meetingLocation && <p className={errorClass}>{errors.block1_meetingLocation}</p>}
+            </div>
+
+        </div>
+
+        {/* Action Buttons - Positioning remains relative to this top-level div */}
+        <div className="flex justify-end space-x-3 pt-6">
+            <Button variant="secondary" onClick={handleSaveProgressClick}>Save Progress</Button>
+            <Button onClick={handleSave}>Mark as Complete</Button>
+        </div>
     </div>
   );
 };

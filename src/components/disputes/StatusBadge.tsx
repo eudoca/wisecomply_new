@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '../../utils/cn'; // Corrected path
+import { cn } from '@/utils/cn'; // Use path alias
 
 interface StatusBadgeProps {
   status: string; // Use a broader type or refine based on actual statuses

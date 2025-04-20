@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ActivityLog from './ActivityLog'; // Import from same directory
-import { Button } from '../ui/Button'; // Import shared Button
+import { Button } from '@/components/ui/button'; // Standardized path
 
 // Simple toggle component (copied from NotificationsTab, consider extracting to ui/)
 const ToggleSwitch: React.FC<{ label: string; description: string; defaultChecked?: boolean }> = (

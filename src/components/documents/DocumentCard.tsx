@@ -1,6 +1,6 @@
 import React from 'react';
+import { Button } from '@/components/ui/button';
 import { FileTextIcon, EyeIcon, DownloadIcon } from 'lucide-react';
-import { Button } from '../ui/Button';
 
 // Define the Document interface directly here or import from a types file
 interface Document {

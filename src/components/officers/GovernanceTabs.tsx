@@ -11,10 +11,11 @@ interface GovernanceTabsProps {
   onTabChange: (tabId: string) => void;
 }
 
+// Updated tabs array to remove Committees and Governance Tasks
 const tabs: Tab[] = [
   { id: 'officers', label: 'Officers' },
-  { id: 'committees', label: 'Committees' },
-  { id: 'governance-tasks', label: 'Governance Tasks' },
+  // { id: 'committees', label: 'Committees' },
+  // { id: 'governance-tasks', label: 'Governance Tasks' },
 ];
 
 const GovernanceTabs: React.FC<GovernanceTabsProps> = ({ activeTab, onTabChange }) => {

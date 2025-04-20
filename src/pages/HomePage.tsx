@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon, CheckCircleIcon } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 export const HomePage = () => {
   const benefits = [

@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { RadioGroup } from '../../wizard/RadioGroup';
-import { Button } from '../../ui/Button';
+import { Button } from '@/components/ui/button';
 import type { StepProps, ConstitutionFormData } from '../ConstitutionWizard';
+import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Label } from '@/components/ui/label';
+import { RadioGroup as ShadcnRadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { InfoIcon } from 'lucide-react';
 
 // Standard Tailwind classes
 const baseInputClasses = "shadow-sm focus:ring-brand-primary focus:border-brand-primary block w-full sm:text-sm border-gray-300 rounded-md";

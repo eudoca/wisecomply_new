@@ -1,7 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { LogOutIcon, SettingsIcon } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Link, NavLink } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { BellIcon, SearchIcon, MenuIcon, XIcon, HomeIcon, UsersIcon, CalendarIcon, SettingsIcon, FileTextIcon, ShieldCheckIcon, BookOpenIcon, HelpCircleIcon, LogOutIcon, UserIcon } from 'lucide-react';
+import { useState } from 'react';
 
 export const Header: React.FC = () => {
   // In a real app, this would come from your auth context

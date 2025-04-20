@@ -1,7 +1,9 @@
 import React from 'react';
 import { cn } from '../../utils/cn'; // Corrected path
-import { Button } from '../ui/Button'; // Import shared Button
+import { Button } from '@/components/ui/button'; // Standardized path
 import { CheckCircleIcon, ClockIcon, AlertCircleIcon } from 'lucide-react'; // Icons for status
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/Card'; // Adjust path as needed
+import { UserIcon, MailIcon, PhoneIcon, Trash2Icon, EditIcon } from 'lucide-react';
 
 interface MemberCardProps {
   initials: string;

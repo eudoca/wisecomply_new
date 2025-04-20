@@ -1,11 +1,12 @@
 import React from 'react';
-import { CheckCircleIcon, DownloadIcon } from 'lucide-react';
-import { Button } from '../ui/Button'; // Import the main Button component
+import { Button } from '@/components/ui/button'; // Standardized path
+import StatusBadge from './StatusBadge'; // Import StatusBadge from the same directory
+import { FileCheckIcon, FileEditIcon, AlertTriangleIcon, DownloadIcon, CheckCircleIcon } from 'lucide-react';
 
 const ConstitutionStatus: React.FC = () => {
   // Placeholder for actual data
   const lastUpdated = 'January 15, 2025';
-  const isCompliant = true;
+  const isCompliant = false;
   const constitutionUrl = '/path/to/your/constitution.pdf'; // Replace with actual URL or download logic
 
   const handleDownload = () => {
@@ -54,9 +55,18 @@ const ConstitutionStatus: React.FC = () => {
             </div>
           </div>
         ) : (
-          // Add a section for non-compliant status if needed
           <div className="bg-red-50 border border-red-100 rounded-lg p-4">
-             {/* Add non-compliant status content */}
+            <div className="flex">
+              <AlertTriangleIcon className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="ml-3">
+                <h3 className="text-base font-medium text-red-800">
+                  Not currently compliant with 2022 Act
+                </h3>
+                <p className="mt-1 text-sm text-red-700">
+                  Your constitution does not currently meet the requirements of the Incorporated Societies Act 2022.
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>

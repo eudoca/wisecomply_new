@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AvatarUpload from './AvatarUpload'; // Import from same directory
-import { Button } from '../ui/Button'; // Import shared Button
+import { Button } from '@/components/ui/button'; // Standardized path
 
 const ProfileTab = () => {
   // In a real app, fetch initial profile data

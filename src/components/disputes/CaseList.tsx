@@ -1,126 +1,106 @@
 import React, { useMemo } from 'react';
-import { AlertCircleIcon, ChevronRightIcon } from 'lucide-react';
-import StatusBadge from './StatusBadge'; // Import from same directory
-
-interface Case {
-  id: string;
-  title: string;
-  type: 'complaint' | 'dispute';
-  priority: 'high' | 'medium' | 'low';
-  status: 'investigation' | 'pending' | 'resolved';
-  submittedBy: string;
-  submittedAgainst: string;
-  openedDate: string;
-}
+import type { DisputeCase, CaseStatus, CaseType } from '@/types/dispute'; // Adjust path if needed
+import { cn } from '@/utils/cn'; // Adjust path if needed
+import { Badge } from '@/components/ui/Badge'; // Corrected casing based on linter error
 
 interface CaseListProps {
+  cases: DisputeCase[];
   onSelectCase: (caseId: string) => void;
-  filterTab: string; // Added filterTab prop
-  searchQuery: string; // Added searchQuery prop
+  filterTab: string; // Add filterTab prop
+  searchQuery: string; // Add searchQuery prop
 }
 
-// Sample data - replace with actual data fetching later
-const cases: readonly Case[] = [
-  {
-    id: '1',
-    title: 'Committee Election Process Complaint',
-    type: 'complaint',
-    priority: 'high',
-    status: 'investigation',
-    submittedBy: 'Robert Chen',
-    submittedAgainst: 'Executive Committee',
-    openedDate: '10/03/2025',
-  },
-  {
-    id: '2',
-    title: 'Membership Fee Dispute',
-    type: 'dispute',
-    priority: 'medium',
-    status: 'pending',
-    submittedBy: 'Sarah Johnson',
-    submittedAgainst: 'Treasury Department',
-    openedDate: '08/03/2025',
-  },
-  {
-    id: '3',
-    title: 'Meeting Minutes Accuracy Complaint',
-    type: 'complaint',
-    priority: 'low',
-    status: 'resolved',
-    submittedBy: 'Michael Davis',
-    submittedAgainst: 'Secretary',
-    openedDate: '01/03/2025',
-  },
-];
-
-const CaseList: React.FC<CaseListProps> = ({ onSelectCase, filterTab, searchQuery }) => {
+const CaseList: React.FC<CaseListProps> = ({ cases, onSelectCase, filterTab, searchQuery }) => {
 
   const filteredCases = useMemo(() => {
-    return cases.filter(case_ => {
+    const lowerCaseQuery = searchQuery.toLowerCase().trim();
+    
+    return cases.filter(caseItem => {
       // Filter by Tab
       let matchesTab = false;
       if (filterTab === 'all-cases') {
         matchesTab = true;
-      } else if (filterTab === 'complaints') {
-        matchesTab = case_.type === 'complaint';
       } else if (filterTab === 'disputes') {
-        matchesTab = case_.type === 'dispute';
+        // Map 'disputes' tab to relevant caseType(s)
+        matchesTab = caseItem.caseType === 'dispute_complaint'; 
+      } else if (filterTab === 'complaints') {
+        // Map 'complaints' tab to relevant caseType(s)
+        matchesTab = caseItem.caseType === 'misconduct_allegation';
+      } else if (filterTab === 'resolved') {
+        // Map 'resolved' tab to relevant status(es)
+        matchesTab = caseItem.status === 'closed'; // Example: map resolved to closed
       } else {
-        // Assume tab ID matches status (e.g., 'pending', 'resolved')
-        matchesTab = case_.status === filterTab;
+        // Assume other tab IDs match status directly (e.g., 'pending', 'lodged')
+        matchesTab = caseItem.status === filterTab;
       }
-
-      // Filter by Search Query
-      const lowerCaseQuery = searchQuery.toLowerCase();
+      
+      // Filter by Search Query (if tab matches)
+      if (!matchesTab) return false;
+      if (!lowerCaseQuery) return true; // No search query, just return tab match
+      
       const matchesSearch = 
-        case_.title.toLowerCase().includes(lowerCaseQuery) ||
-        case_.submittedBy.toLowerCase().includes(lowerCaseQuery) ||
-        case_.submittedAgainst.toLowerCase().includes(lowerCaseQuery);
-
-      return matchesTab && matchesSearch;
+        caseItem.id.toLowerCase().includes(lowerCaseQuery) ||
+        caseItem.summary.toLowerCase().includes(lowerCaseQuery) ||
+        caseItem.complainants.some(c => c.toLowerCase().includes(lowerCaseQuery)) ||
+        caseItem.respondents.some(r => r.toLowerCase().includes(lowerCaseQuery)) ||
+        caseItem.status.replace('_', ' ').toLowerCase().includes(lowerCaseQuery) || 
+        caseItem.caseType.replace('_', ' ').toLowerCase().includes(lowerCaseQuery);
+        
+      return matchesSearch;
     });
   }, [cases, filterTab, searchQuery]);
 
+  if (!filteredCases || filteredCases.length === 0) {
+    return <div className="p-6 text-center text-gray-500">No cases found matching your criteria.</div>;
+  }
+
+  // Helper to format arrays for display
+  const formatArray = (arr: string[]) => arr.join(', ');
+
   return (
-    <div className="divide-y divide-gray-200">
-      {filteredCases.length > 0 ? (
-        filteredCases.map((case_) => (
-          <div
-            key={case_.id}
-            className="p-6 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
-            onClick={() => onSelectCase(case_.id)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && onSelectCase(case_.id)}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-3">
-                  <h3 className="text-sm font-medium text-gray-900 truncate">
-                    {case_.title}
-                  </h3>
-                  {case_.priority === 'high' && (
-                    <span className="text-red-600 flex items-center text-xs font-medium">
-                       <AlertCircleIcon className="w-4 h-4 mr-1" /> High Priority
-                    </span>
-                   )}
-                </div>
-                <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500 flex-wrap">
-                  <span>Submitted by {case_.submittedBy}</span>
-                  <span>Opened {case_.openedDate}</span>
-                   <span className="capitalize">Type: {case_.type}</span>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4 ml-4 flex-shrink-0">
-                <StatusBadge status={case_.status} />
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-              </div>
-            </div>
-          </div>
-        ))
-      ) : (
-        <p className="text-center text-gray-500 p-8">No cases found matching your criteria.</p>
-      )}
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case ID</th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Lodged</th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Complainant(s)</th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Respondent(s)</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {filteredCases.map((caseItem) => (
+            <tr 
+              key={caseItem.id}
+              onClick={() => onSelectCase(caseItem.id)}
+              className="hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+            >
+              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{caseItem.id}</td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 capitalize">
+                {caseItem.caseType.replace('_', ' ')}
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                {/* Use a supported Badge variant (e.g., outline) for closed status */}
+                <Badge variant={caseItem.status === 'closed' ? 'outline' : 'default'} className="capitalize">
+                  {caseItem.status.replace('_', ' ')}
+                </Badge>
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                {/* Consider formatting the date string nicer if needed */}
+                {caseItem.dateLodged}
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs" title={formatArray(caseItem.complainants)}>
+                {formatArray(caseItem.complainants)}
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs" title={formatArray(caseItem.respondents)}>
+                {formatArray(caseItem.respondents)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

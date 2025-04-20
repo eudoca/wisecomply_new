@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Button } from '../components/ui/Button'; // Corrected path
+import { Button } from '@/components/ui/button'; // Standardized path
+import React, { useState, useRef } from 'react';
 import { ArrowLeftIcon, CheckCircleIcon } from 'lucide-react';
 
 export const ForgotPasswordPage = () => {

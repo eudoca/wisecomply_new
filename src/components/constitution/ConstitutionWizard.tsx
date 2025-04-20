@@ -1,17 +1,18 @@
+import { Button } from '@/components/ui/button'; // Standardized path
 import React, { useState, useCallback } from 'react';
-import { Button } from '../ui/Button';
 import { InfoIcon, ChevronDown, Circle } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import Block1Foundation from './blocks/Block1Foundation';
 import Block2Membership from './blocks/Block2Membership';
 import Block3Committee from './blocks/Block3Committee';
 import Block4GeneralMeetings from './blocks/Block4GeneralMeetings';
-import Block5Finances from './blocks/Block5Finances';
 import Block6Amendments from './blocks/Block6Amendments';
 import Block7Disputes from './blocks/Block7Disputes';
-import Block8WindingUp from './blocks/Block8WindingUp';
-import Block9Transitional from './blocks/Block9Transitional';
-import Block8Review from './blocks/Block8Review';
+import Block8Finances from './blocks/Block8Finances';
+import Block9Dissolution from './blocks/Block9Dissolution';
+import Block10Transitional from './blocks/Block10Transitional';
+import Block11Review from './blocks/Block11Review';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // Define the structure for the form data collected across all steps
 export interface ConstitutionFormData {
@@ -102,9 +103,11 @@ export interface ConstitutionFormData {
   block3_contactPersonAppointmentOther?: string;
 
   // Block 4 - General Meetings
-  block4_agmTiming?: string; // e.g., 'Within 6 months of financial year end' (Task 4.1)
+  block4_agmTiming?: string; // e.g., 'within_x_months', 'specific_month', 'Other'
+  block4_agmTimingMonths?: number;
+  block4_agmTimingSpecificMonth?: string;
   block4_agmTimingOther?: string;
-  block4_agmNoticePeriod?: number; // Number of days (Task 4.2)
+  block4_agmNoticePeriod?: number;
   block4_agmNoticeMethod?: string[]; // Checkboxes (e.g., email, post, website)
   block4_agmNoticeMethodOther?: string;
   block4_agmQuorumType?: string; // 'percentage' or 'number' (Task 4.3)
@@ -129,6 +132,32 @@ export interface ConstitutionFormData {
   block4_sgmNoticeMethodOther?: string;
   block4_remoteParticipation?: boolean | null; // Task 4.7
   block4_agmStandardBusiness?: string; // Added for Task 4.1 AGM Business
+  block4_sgmRequisitionAuthority?: string[]; // e.g., 'committee', 'members'
+  block4_sgmRequisitionNumberType?: string; // 'percentage' | 'fixed'
+  block4_sgmRequisitionNumberValue?: number;
+  block4_noticeMethods?: string[]; // e.g., 'email', 'post', 'website', 'other'
+  block4_noticeMethodsOther?: string;
+  block4_meetingQuorumType?: string; // 'percentage' | 'fixed'
+  block4_meetingQuorumValue?: number;
+  block4_quorumAdjournmentProcedure?: string;
+  block4_chairperson?: string; // e.g., 'President', 'Elected_for_meeting', 'Other'
+  block4_chairpersonOther?: string;
+  block4_chairCastingVoteGm?: boolean | null;
+  block4_votingMethods?: string[]; // e.g., 'show_hands', 'voice', 'ballot', 'poll', 'postal', 'electronic'
+  block4_postalVotingAllowed?: boolean | null;
+  block4_postalVotingProcedure?: string;
+  block4_electronicVotingAllowed?: boolean | null;
+  block4_electronicVotingProcedure?: string;
+  block4_proxyAllowed?: boolean | null;
+  block4_proxyFormRequired?: boolean | null;
+  block4_proxyWhoCanBe?: string; // e.g., 'any_member', 'chair_only', 'Other'
+  block4_proxyWhoCanBeOther?: string;
+  block4_proxyMaxNumber?: number;
+  block4_proxyLodgementDeadlineOther?: string;
+  block4_minutesRecorded?: boolean | null;
+  block4_minuteRequirements?: string[]; // e.g., ['date_time_location', 'attendees', 'apologies', 'resolutions', 'voting_results']
+  block4_minuteAccess?: string; // e.g., 'available_on_request', 'circulated_after_meeting', 'website', 'Other'
+  block4_minuteAccessOther?: string;
 
   // Block 5 - Finances & Assets
   block5_financialYearEnd?: string; // e.g., '30 June' (Task 5.1)
@@ -146,6 +175,16 @@ export interface ConstitutionFormData {
   block5_windingUpDistribution?: string; // Dropdown (e.g., similar purpose society, specified charity) (Task 5.5)
   block5_windingUpDistributionOther?: string;
   block5_confirmNoFinancialGain?: boolean; // Added for Task 5.2 confirmation
+  block5_fundsSource?: string[]; // e.g., 'Membership fees', 'Grants', 'Donations', 'Fundraising'
+  block5_fundsSourceOther?: string;
+  block5_fundsManagement?: string; // Who controls funds (e.g., Treasurer, Committee)
+  block5_bankAccountRequired?: boolean;
+  block5_accountSignatories?: string; // How many signatories
+  block5_auditorRequired?: boolean;
+  block5_auditThreshold?: number; // Optional threshold for requiring audit
+  block5_auditorAppointmentMethod?: string; // How auditor is appointed (AGM, Committee)
+  block5_surplusDistributionDissolution?: string; // What happens to assets on winding up (crucial for charity status)
+  block5_commonSeal?: boolean; // Does the society need/have a common seal?
 
   // Block 6 - Amendments & Common Seal
   block6_amendmentProcedure?: string; // Dropdown (e.g., SGM 2/3 majority) (Task 6.1)
@@ -172,19 +211,41 @@ export interface ConstitutionFormData {
   block7_includeIndemnityClause?: boolean | null; // Task 7.3
   block7_committeeCanArrangeInsurance?: boolean | null; // Task 7.3
 
-  // Block 8 - Winding Up (NEW - Task 8.1 was in Block 5, Task 8.2 is new)
-  // Note: block5_windingUpDistribution key remains for data, but UI moves to Block 8
-  block8_dissolutionProcedureReference?: boolean | null; // Task 8.2
+  // Block 8: Finances
+  block8_financialYearEnd?: string; // E.g., "31 March", "30 June"
+  block8_financialYearEndDay?: number; // e.g. 31
+  block8_financialYearEndMonth?: number; // e.g. 3 (March)
+  block8_bankAccountRequired?: boolean | null;
+  block8_whoSignsCheques?: string[]; // E.g., ["Treasurer", "Secretary", "Chairperson"]
+  block8_minSignatories?: number; // E.g. 2
+  block8_borrowingPowers?: string; // "committee", "general_meeting", "none"
+  block8_borrowingLimit?: number | null; // Optional limit
+  block8_propertyAndFundsUsage?: string; // Optional text area for specific usage rules
 
-  // Block 9 - Transitional Provisions (NEW)
-  block9_isReplacingConstitution?: boolean | null; // Task 9.1
-  block9_includeTransitionalProvisions?: boolean | null; // Conditional
-  block9_transitionalProvisionsText?: string; // Textarea (conditional)
+  // Block 9: Dissolution (Winding Up)
+  block9_dissolutionTrigger?: string; // 'committee_recommendation', 'member_request', 'specific_event'
+  block9_dissolutionMemberRequestPercent?: number | null; // Required if trigger includes 'member_request'
+  block9_dissolutionMemberRequestNumber?: number | null; // Required if trigger includes 'member_request'
+  block9_dissolutionMeetingType?: string; // 'SGM', 'AGM'
+  block9_dissolutionVoteThreshold?: string; // 'simple_majority', 'two_thirds', 'three_quarters', 'unanimous'
+  block9_dissolutionQuorumType?: string | null; // 'percentage', 'number' (Optional override, otherwise uses standard GM quorum)
+  block9_dissolutionQuorumValue?: number | null; // Optional override value
+  // Use block5_windingUpDistribution & block5_windingUpDistributionOther for asset distribution data
+  block9_recordsCustody?: string; // NEW: Added for custody of records after dissolution
 
-  // Block 4 - Placeholder keys
-  block4_placeholder?: any;
+  // Block 10: Transitional Provisions (New structure)
+  block10_isReplacingConstitution?: boolean | null; // NEW
+  block10_includeTransitionalProvisions?: boolean | null; // NEW - Added
+  block10_transitionalProvisionsText?: string; // NEW - Added
 
-  // ... add keys for all blocks as they are implemented
+  // Block 11: Review Confirmation (Placeholder)
+  block11_finalConfirmation?: boolean; // NEW - Added
+}
+
+// Export the ValidationErrors interface
+export interface ValidationErrors extends Partial<Record<keyof ConstitutionFormData, string>> {
+  // Add specific combined error keys if needed, e.g.:
+  committeeSize?: string;
 }
 
 // Define the structure for each step in the wizard
@@ -209,8 +270,8 @@ export interface StepProps {
 const blocks: WizardStep[] = [
   {
     number: 1,
-    title: 'Foundation & Identity',
-    screenTitle: 'Society Basics',
+    title: 'Block 1: Foundation',
+    screenTitle: 'Foundation & Identity',
     component: Block1Foundation,
     mandatoryFields: [ // Example for Block 1
       'block1_societyName',
@@ -224,8 +285,8 @@ const blocks: WizardStep[] = [
   },
   {
     number: 2,
-    title: 'Membership',
-    screenTitle: 'Membership Structure & Process',
+    title: 'Block 2: Membership',
+    screenTitle: 'Membership Details',
     component: Block2Membership,
     mandatoryFields: [
         // TODO: Populate Block 2 mandatory fields
@@ -240,8 +301,8 @@ const blocks: WizardStep[] = [
   },
   {
     number: 3,
-    title: 'Governance - The Committee',
-    screenTitle: 'Committee Structure & Procedures',
+    title: 'Block 3: Committee',
+    screenTitle: 'Committee Governance',
     component: Block3Committee,
      mandatoryFields: [
         // TODO: Populate Block 3 mandatory fields
@@ -260,8 +321,8 @@ const blocks: WizardStep[] = [
   },
   {
     number: 4,
-    title: 'General Meetings',
-    screenTitle: 'AGMs & SGMs',
+    title: 'Block 4: Meetings',
+    screenTitle: 'General Meetings (AGM/SGM)',
     component: Block4GeneralMeetings,
      mandatoryFields: [
         // TODO: Populate Block 4 mandatory fields
@@ -276,64 +337,67 @@ const blocks: WizardStep[] = [
   },
   {
     number: 5,
-    title: 'Finances & Assets',
-    screenTitle: 'Financial Management',
-    component: Block5Finances,
-     mandatoryFields: [
-        // TODO: Populate Block 5 mandatory fields
-        'block5_financialYearEnd',
-        'block5_fundManagement',
-        'block5_paymentAuthorisation',
-        'block5_auditRequirement',
-        'block5_windingUpDistribution',
-        'block5_confirmNoFinancialGain',
-    ],
-  },
-  {
-    number: 6,
-    title: 'Amendments & Bylaws',
-    screenTitle: 'Changing the Rules',
+    title: 'Block 5: Amendments',
+    screenTitle: 'Amendments & Bylaws',
     component: Block6Amendments,
      mandatoryFields: [
-        // TODO: Populate Block 6 mandatory fields
+        // TODO: Populate Block 5 mandatory fields
         'block6_amendmentProcedure',
     ],
   },
   {
-    number: 7,
-    title: 'Dispute Resolution & Notices',
-    screenTitle: 'Handling Disagreements',
+    number: 6,
+    title: 'Block 6: Disputes',
+    screenTitle: 'Dispute Resolution & Notices',
     component: Block7Disputes,
      mandatoryFields: [
-        // TODO: Populate Block 7 mandatory fields
+        // TODO: Populate Block 6 mandatory fields
         'block7_disputeProcedure',
     ],
   },
    {
-    number: 8,
-    title: 'Winding Up',
-    screenTitle: 'Closing the Society',
-    component: Block8WindingUp,
+    number: 7,
+    title: 'Block 7: Finances',
+    screenTitle: 'Financial Management',
+    component: Block8Finances,
      mandatoryFields: [
-        // TODO: Populate Block 8 mandatory fields - none strictly required by UI yet?
+        // TODO: Populate Block 7 mandatory fields
+        'block8_financialYearEnd',
+        'block8_bankAccountRequired',
+        'block8_borrowingPowers',
+        'block8_propertyAndFundsUsage',
+     ],
+  },
+  {
+    number: 8,
+    title: 'Block 8: Dissolution',
+    screenTitle: 'Dissolution (Winding Up)',
+    component: Block9Dissolution,
+     mandatoryFields: [
+         // TODO: Populate Block 8 mandatory fields
+        'block9_dissolutionTrigger',
+        'block9_dissolutionMeetingType',
+        'block9_dissolutionVoteThreshold',
+        'block5_windingUpDistribution',
      ],
   },
   {
     number: 9,
-    title: 'Transitional Provisions',
-    screenTitle: 'Adopting the New Constitution',
-    component: Block9Transitional,
+    title: 'Block 9: Transitional',
+    screenTitle: 'Transitional Provisions',
+    component: Block10Transitional,
      mandatoryFields: [
          // TODO: Populate Block 9 mandatory fields
-        'block9_isReplacingConstitution',
+        'block10_isReplacingConstitution',
+        // Conditional: 'block10_includeTransitionalProvisions'
+        // Conditional: 'block10_transitionalProvisionsText'
      ],
   },
   {
     number: 10,
-    title: 'Review & Generate',
-    screenTitle: 'Review Constitution',
-    component: Block8Review,
-    // No mandatory fields for review block
+    title: 'Block 10: Review',
+    screenTitle: 'Review & Generate',
+    component: Block11Review,
   },
 ];
 
@@ -432,18 +496,20 @@ const ConstitutionWizard: React.FC = () => {
 
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-      <h1 className="text-2xl font-semibold mb-6">Constitution Builder</h1>
+    <div className="">
+      <h2 className="text-lg font-semibold text-gray-900 mb-6">Constitution Builder</h2>
       <div className="space-y-4">
         {blocks.map((block) => {
+          // Keep the component type general here
           const BlockComponent = block.component as React.FC<any>;
           const isCurrentBlockOpen = openBlockId === block.number;
           const status = blockStatus[block.number] || 'incomplete';
 
-          const mandatoryFields = getMandatoryFieldsForBlock(block.number, formData);
+          // Calculate progress only for blocks 1-10
+          const mandatoryFields = block.number < 11 ? getMandatoryFieldsForBlock(block.number, formData) : [];
           const completedCount = mandatoryFields.filter(key => isFieldFilled(key, formData)).length;
           const totalMandatory = mandatoryFields.length;
-          const progressText = totalMandatory > 0 ? `(${completedCount}/${totalMandatory} Mandatory)` : '';
+          const progressText = block.number < 11 && totalMandatory > 0 ? `(${completedCount}/${totalMandatory} Mandatory)` : '';
 
           return (
             <div key={block.number} className="border border-gray-200 rounded-md overflow-hidden">
@@ -467,8 +533,13 @@ const ConstitutionWizard: React.FC = () => {
 
               {isCurrentBlockOpen && (
                 <div className="p-6 border-t border-gray-200">
-                  <h2 className="text-xl font-medium mb-4">{block.screenTitle}</h2>
-                  {block.number < 10 ? (
+                  {/* Removed H2 heading that displayed screenTitle */}
+                  {/* <h2 className="text-xl font-medium mb-4">{block.screenTitle}</h2> */}
+                  {/* Check specifically for block 10 (new review block number) */}
+                  {block.number === 10 ? (
+                     <BlockComponent formData={formData} />
+                  ) : (
+                    // Render blocks 1-9 with standard StepProps
                     <BlockComponent
                       blockNumber={block.number}
                       formData={formData}
@@ -476,8 +547,6 @@ const ConstitutionWizard: React.FC = () => {
                       onComplete={handleCompleteBlock}
                       onSaveProgress={handleSaveProgress}
                     />
-                  ) : (
-                    <BlockComponent formData={formData} />
                   )}
                 </div>
               )}

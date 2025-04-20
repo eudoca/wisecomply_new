@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button } from '../../ui/Button'; 
-import { Input } from '../../ui/Input';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { RadioGroup } from '../../wizard/RadioGroup'; // Assuming path
 import { Alert } from '../../wizard/Alert'; // Assuming path
 import { PlusIcon, Trash2Icon } from 'lucide-react';
@@ -131,7 +131,7 @@ const Step3ContactPerson: React.FC<Step3ContactPersonProps> = ({ onComplete }) =
                      id={`cp-name-${person.id}`}
                      name="name"
                      value={person.name || ''}
-                     onChange={(e) => handleContactChange(person.id, 'name', e.target.value)}
+                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleContactChange(person.id, 'name', e.target.value)}
                      placeholder="Enter full name"
                    />
                    {errors[`person_${person.id}_name`] && <p className="mt-1 text-xs text-red-600">{errors[`person_${person.id}_name`]}</p>}
@@ -143,7 +143,7 @@ const Step3ContactPerson: React.FC<Step3ContactPersonProps> = ({ onComplete }) =
                      id={`cp-address-${person.id}`}
                      name="postalAddress"
                      value={person.postalAddress || ''}
-                     onChange={(e) => handleContactChange(person.id, 'postalAddress', e.target.value)}
+                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleContactChange(person.id, 'postalAddress', e.target.value)}
                      placeholder="Enter postal address"
                    />
                     {errors[`person_${person.id}_address`] && <p className="mt-1 text-xs text-red-600">{errors[`person_${person.id}_address`]}</p>}
@@ -156,7 +156,7 @@ const Step3ContactPerson: React.FC<Step3ContactPersonProps> = ({ onComplete }) =
                      name="email"
                      type="email"
                      value={person.email || ''}
-                     onChange={(e) => handleContactChange(person.id, 'email', e.target.value)}
+                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleContactChange(person.id, 'email', e.target.value)}
                      placeholder="Enter email address"
                    />
                     {errors[`person_${person.id}_email`] && <p className="mt-1 text-xs text-red-600">{errors[`person_${person.id}_email`]}</p>}
@@ -169,7 +169,7 @@ const Step3ContactPerson: React.FC<Step3ContactPersonProps> = ({ onComplete }) =
                      name="phone"
                      type="tel"
                      value={person.phone || ''}
-                     onChange={(e) => handleContactChange(person.id, 'phone', e.target.value)}
+                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleContactChange(person.id, 'phone', e.target.value)}
                      placeholder="Enter phone number"
                    />
                  </div>

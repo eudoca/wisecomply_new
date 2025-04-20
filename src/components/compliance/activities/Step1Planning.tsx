@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { RadioGroup } from '../../wizard/RadioGroup'; // Assuming this path is correct
-import { Button } from '../../ui/Button'; // Assuming this path is correct
+import { Button } from '@/components/ui/button'; // Standardized path
 import { Alert } from '../../wizard/Alert'; // Assuming this path is correct
-import { Input } from '../../ui/Input'; // Assuming this path is correct & component exists
+import { Input } from '@/components/ui/input'; // Standardized path
 
 interface Step1PlanningProps {
   onComplete: () => void; // Function to call when the step is marked complete or saved
@@ -81,7 +81,7 @@ const Step1Planning: React.FC<Step1PlanningProps> = ({ onComplete }) => {
               id="ownerName"
               name="ownerName"
               value={formData.ownerName || ''} 
-              onChange={(e) => handleChange('ownerName', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('ownerName', e.target.value)}
               placeholder="Enter full name"
             />
           </div>
@@ -92,7 +92,7 @@ const Step1Planning: React.FC<Step1PlanningProps> = ({ onComplete }) => {
               name="ownerEmail"
               type="email" 
               value={formData.ownerEmail || ''} 
-              onChange={(e) => handleChange('ownerEmail', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('ownerEmail', e.target.value)}
               placeholder="Enter email address"
             />
             {emailError && <p className="mt-1 text-xs text-red-600">{emailError}</p>}
@@ -104,7 +104,7 @@ const Step1Planning: React.FC<Step1PlanningProps> = ({ onComplete }) => {
               name="ownerPhone"
               type="tel"
               value={formData.ownerPhone || ''} 
-              onChange={(e) => handleChange('ownerPhone', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('ownerPhone', e.target.value)}
               placeholder="Enter phone number"
             />
           </div>

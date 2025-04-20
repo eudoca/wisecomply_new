@@ -1,6 +1,6 @@
 import React from 'react';
-import { AlertCircleIcon, CheckCircleIcon, ClockIcon } from 'lucide-react';
-import { Button } from '../ui/Button'; // Import shared button
+import { AlertCircleIcon, CheckCircleIcon, ClockIcon, UsersIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button'; // Standardized path
 import { cn } from '../../utils/cn'; // Corrected path
 
 interface ComplianceActivity {
@@ -8,6 +8,11 @@ interface ComplianceActivity {
   title: string;
   dueDate: string;
   status: 'completed' | 'pending' | 'overdue';
+}
+
+// Add props interface to accept officerCount
+interface ComplianceActivitiesProps {
+  officerCount: number;
 }
 
 // Sample data - replace with actual data fetching later
@@ -32,7 +37,7 @@ const activities: ComplianceActivity[] = [
   },
 ];
 
-const ComplianceActivities: React.FC = () => {
+const ComplianceActivities: React.FC<ComplianceActivitiesProps> = ({ officerCount }) => {
   const getStatusIcon = (status: ComplianceActivity['status']) => {
     switch (status) {
       case 'completed':
@@ -70,12 +75,26 @@ const ComplianceActivities: React.FC = () => {
         <h2 className="text-lg font-semibold text-gray-900">
           Upcoming Compliance Activities
         </h2>
-         <Button variant="ghost" size="sm" onClick={handleViewAll}>
-           View All
-         </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {activities.map((activity) => (
+        {/* New Card: Number of Officers */}
+        <div className="border border-gray-100 rounded-lg p-4 flex items-start space-x-3 bg-blue-50">
+          <div className="flex-shrink-0 mt-1">
+            <UsersIcon className="w-5 h-5 text-blue-500" aria-hidden="true" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              Registered Officers
+            </p>
+            <div className="mt-1 flex items-center flex-wrap gap-x-2">
+              <span className="text-2xl font-semibold text-blue-800">
+                {officerCount}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {activities.filter(activity => activity.id !== '2').map((activity) => (
           <div key={activity.id} className="border border-gray-100 rounded-lg p-4 flex items-start space-x-3 hover:shadow-md transition-shadow duration-150">
             <div className="flex-shrink-0 mt-1">
               {getStatusIcon(activity.status)}

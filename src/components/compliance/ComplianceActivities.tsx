@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import StatusIndicator from './StatusIndicator';
+// import StatusIndicator from './StatusIndicator'; // Removed unused import
 import { CalendarIcon, ArrowRightIcon, FileTextIcon, CheckCircleIcon, InfoIcon } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Button } from '@/components/ui/button';
+// import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Removed unused import
 import { Card, CardContent } from '../ui/Card';
-import { Badge } from '../ui/Badge';
-import { Tooltip } from '../ui/Tooltip';
+import { Badge } from '../ui/Badge'; // Keep used Badge
+import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from '../../utils/cn';
 import Step1Planning from './activities/Step1Planning';
 import Step2Committee from './activities/Step2Committee';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ClipboardListIcon, BookOpenIcon, WandIcon } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Button } from '@/components/ui/button';
 import { cn } from '../../utils/cn';
 
 interface TabNavigationProps {

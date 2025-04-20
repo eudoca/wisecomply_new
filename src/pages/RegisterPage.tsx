@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon, CheckCircleIcon } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Button } from '@/components/ui/button';
+import { useForm } from 'react-hook-form';
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { CalendarIcon, ClipboardIcon, CheckCircleIcon, ClockIcon, UserCheckIcon, EditIcon } from 'lucide-react'; // Added icons
-import { Button } from '../components/ui/Button'; // Import shared Button
+import { Button } from '@/components/ui/button'; // Standardized path
 import { cn } from '../utils/cn'; // Import cn utility
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { PlusIcon, ListFilterIcon, CheckSquareIcon } from 'lucide-react';
 
 // Renamed component
 export const MeetingsPage: React.FC = () => {

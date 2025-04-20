@@ -10,18 +10,22 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   fullWidth?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({
-  children,
-  variant = 'primary',
-  size = 'md',
-  isLoading = false,
-  leftIcon,
-  rightIcon,
-  className = '',
-  disabled,
-  fullWidth = false,
-  ...props
-}) => {
+// Wrap with React.forwardRef
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>((
+  { 
+    children,
+    variant = 'primary',
+    size = 'md',
+    isLoading = false,
+    leftIcon,
+    rightIcon,
+    className = '',
+    disabled,
+    fullWidth = false,
+    ...props 
+  }, 
+  ref // Accept the ref
+) => {
   const baseStyles = "rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 inline-flex items-center justify-center";
   
   const sizeStyles = {
@@ -48,6 +52,7 @@ export const Button: React.FC<ButtonProps> = ({
   
   return (
     <button
+      ref={ref} // Pass the ref to the button element
       className={cn(
         baseStyles,
         sizeStyles[size],
@@ -74,4 +79,10 @@ export const Button: React.FC<ButtonProps> = ({
       )}
     </button>
   );
-};
+});
+
+// Add display name for better debugging
+Button.displayName = 'Button';
+
+// Export the wrapped component
+export { Button };

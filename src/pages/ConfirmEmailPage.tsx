@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Button } from '../components/ui/Button'; // Corrected path
+import { Button } from '@/components/ui/button'; // Standardized path
 import { ArrowLeftIcon, CheckCircleIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 

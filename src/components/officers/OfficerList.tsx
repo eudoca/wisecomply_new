@@ -1,59 +1,70 @@
 import React from 'react';
+import { Button } from '@/components/ui/button'; // Standardized path
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../ui/Card'; // Assuming these components exist
+import { UserIcon, MailIcon, PhoneIcon, Trash2Icon, EditIcon, MoreVerticalIcon } from 'lucide-react';
 import QualificationStatus from './QualificationStatus'; // Import from same directory
-import { Button } from '../ui/Button'; // Use shared Button
+import { Officer } from '../../types/officer'; // Import the correct Officer type
 
+// Interface for qualifications (keep separate for now)
 interface OfficerQualification {
   status: 'verified' | 'warning';
   text: string;
   warning?: string;
 }
 
-interface Officer {
-  id: string;
-  name: string;
-  role: string;
-  term: string;
-  qualifications: OfficerQualification[];
-}
+// Remove the old local Officer interface
+// interface Officer {
+//   id: string;
+//   name: string;
+//   role: string;
+//   term: string;
+//   qualifications: OfficerQualification[];
+// }
 
-// Sample data - replace with actual data fetching later
+// Sample data - updated to match the Officer type from ../../types/officer
 const officers: Officer[] = [
   {
     id: '1',
-    name: 'Sarah Johnson',
-    role: 'Chairperson',
-    term: '15/09/2023 - 15/09/2025',
-    qualifications: [
-      { status: 'verified', text: 'Not disqualified under section 53' },
-      { status: 'verified', text: '18 years or older' },
-      { status: 'verified', text: 'Not bankrupt' },
-      { status: 'verified', text: 'No conflict of interest declared' },
-    ],
+    fullName: 'Sarah Johnson', // Renamed from name
+    position: 'Chairperson', // Renamed from role
+    dateElectedAppointed: '2023-09-15', // Added
+    termEndDate: '2025-09-14', // Added
+    email: 'sarah.j@example.com', // Added
+    phone: '555-1234', // Added (Optional)
+    address: '123 Main St, Anytown', // Added (Optional)
+    isEligible: true, // Added
+    hasConsented: true, // Added
+    consentDate: '2023-09-10', // Added (Optional)
+    // qualifications array removed for now
   },
   {
     id: '2',
-    name: 'David Wong',
-    role: 'Treasurer',
-    term: '15/09/2023 - 15/09/2025',
-    qualifications: [
-      { status: 'verified', text: 'Not disqualified under section 53' },
-      { status: 'verified', text: '18 years or older' },
-      { status: 'verified', text: 'Not bankrupt' },
-      { status: 'warning', text: 'Annual declaration due in 15 days', warning: 'No conflict of interest' },
-    ],
+    fullName: 'David Wong', // Renamed from name
+    position: 'Treasurer', // Renamed from role
+    dateElectedAppointed: '2023-09-15', // Added
+    termEndDate: '2025-09-14', // Added
+    email: 'david.wong@example.com', // Added
+    phone: '555-5678', // Added (Optional)
+    address: null, // Added (Optional - example null)
+    isEligible: true, // Added
+    hasConsented: false, // Added - Example: Consent pending
+    consentDate: null, // Added (Optional - example null)
+     // qualifications array removed for now
   },
 ];
 
-const OfficerList: React.FC = () => {
-  const handleViewDetails = (officerId: string) => {
-     console.log('View details for officer:', officerId);
-     alert(`Viewing details for officer ${officerId}`);
-  };
-  
-  const handleEdit = (officerId: string) => {
-     console.log('Edit officer:', officerId);
-     alert(`Editing officer ${officerId}`);
-  };
+// Define props for OfficerList (to receive officers from parent later if needed)
+interface OfficerListProps {
+   officers: Officer[]; // Expect officers array from parent
+   onViewDetailsClick: (id: string) => void; // Handler for View Details button
+   onEditClick: (id: string) => void; // Handler for Edit button
+}
+
+// Update component signature if props are added
+const OfficerList: React.FC<OfficerListProps> = ({ officers, onViewDetailsClick, onEditClick }) => {
+  // Remove local handleViewDetails and handleEdit, use props instead
+  // const handleViewDetails = (officerId: string) => { ... };
+  // const handleEdit = (officerId: string) => { ... };
   
   return (
     <div className="space-y-6">
@@ -64,32 +75,40 @@ const OfficerList: React.FC = () => {
       </div> */} 
       
       <div className="space-y-6">
+        {/* Use officers from props */} 
         {officers.map((officer) => (
           <div key={officer.id} className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
             <div className="flex justify-between items-start mb-4 flex-wrap gap-4">
               <div>
                 <h3 className="text-lg font-medium text-gray-900">
-                  {officer.name}
+                  {officer.fullName}
                 </h3>
-                <p className="text-sm text-gray-500">{officer.role}</p>
+                <p className="text-sm text-gray-500">{officer.position}</p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Term: {officer.term}
+                  Elected/Appointed: {officer.dateElectedAppointed}
                 </p>
+                {officer.termEndDate && (
+                   <p className="text-sm text-gray-500 mt-1">
+                      Term End: {officer.termEndDate}
+                   </p>
+                )}
               </div>
               <div className="flex gap-2 flex-shrink-0">
-                 <Button variant="outline" size="sm" onClick={() => handleViewDetails(officer.id)}>
+                 {/* Call prop handlers */}
+                 <Button variant="outline" size="sm" onClick={() => onViewDetailsClick(officer.id)}>
                   View Details
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleEdit(officer.id)}>
+                <Button variant="ghost" size="sm" onClick={() => onEditClick(officer.id)}>
                   Edit
                 </Button>
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-gray-100">
               <h4 className="text-sm font-medium text-gray-700 mb-2">
-                Qualification Status
+                Details
               </h4>
-              <QualificationStatus items={officer.qualifications} />
+              <p className="text-sm text-gray-600">Eligibility Confirmed: {officer.isEligible ? 'Yes' : 'No'}</p>
+              <p className="text-sm text-gray-600">Written Consent Held: {officer.hasConsented ? 'Yes' : 'No'}</p>
             </div>
           </div>
         ))}

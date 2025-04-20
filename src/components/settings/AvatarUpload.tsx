@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { CameraIcon } from 'lucide-react';
-import { Button } from '../ui/Button'; // Import shared button
+import { Button } from '@/components/ui/button'; // Standardized path
+import { UploadCloudIcon, Trash2Icon } from 'lucide-react';
 
 interface AvatarUploadProps {
   initials: string;

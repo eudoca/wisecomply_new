@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import StatusBadge from './StatusBadge'; // Import from same directory
 import { ChevronRightIcon } from 'lucide-react';
-import { Button } from '../ui/Button'; // Import the main Button component
+import { Button } from '@/components/ui/button'; // Standardized path
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../ui/Card'; // Adjust path as needed
+import { CheckCircleIcon, XCircleIcon, AlertCircleIcon } from 'lucide-react';
 
 interface ComplianceCheck {
   requirement: string;

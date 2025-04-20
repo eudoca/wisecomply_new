@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../ui/Button'; 
-import { Input } from '../../ui/Input';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { RadioGroup } from '../../wizard/RadioGroup'; 
 import { Alert } from '../../wizard/Alert'; 
 
@@ -171,7 +171,7 @@ const Step5Registers: React.FC<Step5RegistersProps> = ({ onComplete }) => {
                id="registerResponsiblePerson"
                name="registerResponsiblePerson"
                value={formData.registerResponsiblePerson || ''} 
-               onChange={(e) => handleChange('registerResponsiblePerson', e.target.value)}
+               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('registerResponsiblePerson', e.target.value)}
                placeholder="Enter name or role"
                className="max-w-md"
              />

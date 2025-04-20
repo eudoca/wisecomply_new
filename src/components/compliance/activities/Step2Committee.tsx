@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../ui/Button'; 
-import { Input } from '../../ui/Input';
-import { Alert } from '../../wizard/Alert'; 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+// import { Alert } from '../../wizard/Alert'; // Removed unused import
 
 interface Step2CommitteeProps {
   onComplete: () => void; // Function to call when the step is marked complete or saved
@@ -61,7 +61,7 @@ const Step2Committee: React.FC<Step2CommitteeProps> = ({ onComplete }) => {
           type="number"
           min="3"
           value={formData.committeeSize || ''} 
-          onChange={(e) => handleChange('committeeSize', e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('committeeSize', e.target.value)}
           placeholder="Enter number (min 3)"
           className="max-w-xs"
         />
