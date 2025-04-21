@@ -1,96 +1,255 @@
-# WiseComply - Incorporated Society Compliance Management
+# WiseComply Dashboard
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) <!-- [Placeholder: Update license if different] -->
 
 ## Overview
 
-WiseComply is a web application designed to assist incorporated societies in New Zealand with managing their compliance obligations and generating/updating their constitutions in line with the Incorporated Societies Act 2022. It provides guided workflows and tools to streamline administrative tasks.
+WiseComply is a web application designed to help New Zealand Non-Profits and Incorporated Societies manage their compliance requirements. It provides features like intelligent document generation (Constitution Wizard), role management (Officers), dispute/complaint tracking, and compliance activity monitoring.
+
+This README provides instructions for setting up the development environment, understanding the project structure, and contributing to the codebase, with a focus on helping new developers get started quickly.
+
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+  - [Cloning the Repository](#cloning-the-repository)
+  - [Environment Variables](#environment-variables)
+  - [Installing Dependencies](#installing-dependencies)
+- [Running the Application](#running-the-application)
+- [Available Scripts](#available-scripts)
+- [Project Structure](#project-structure)
+- [Architecture Overview](#architecture-overview)
+  - [Frontend](#frontend)
+  - [Backend](#backend)
+  - [API Communication](#api-communication)
+- [API Documentation](#api-documentation)
+- [Database](#database)
+- [UI Components](#ui-components)
+- [Environment Variables Details](#environment-variables-details)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+  - [Branching Strategy](#branching-strategy)
+  - [Pull Requests](#pull-requests)
+  - [Coding Standards](#coding-standards)
+- [License](#license)
+
+## Features
+
+*   User Authentication (Login/Registration - Implied)
+*   Compliance Dashboard Overview
+*   Constitution Wizard (Multi-step form for document generation)
+*   Officer Management (Add, View, Edit Officers)
+*   Dispute & Complaint Management (Add, View, Track Cases)
+*   Compliance Activity Tracking (Multi-step workflows)
+*   Membership Management (Implied)
+*   Settings Management (Implied)
 
 ## Tech Stack
 
-*   **Framework:** React
-*   **Build Tool:** Vite
-*   **Language:** TypeScript
-*   **Styling:** Tailwind CSS
-*   **UI Components:** shadcn/ui
-*   **Routing:** React Router DOM
-*   **State Management:** React Context API (likely, based on usage in Constitution Wizard) / Local Component State (`useState`)
+*   **Frontend:**
+    *   Framework: React (`v18.x`)
+    *   Language: TypeScript (`v5.x`)
+    *   Build Tool: Vite (`v5.x`)
+    *   Routing: React Router DOM (`v6.x`)
+    *   Styling: Tailwind CSS (`v3.x`)
+    *   UI Components: shadcn/ui (using Radix UI primitives)
+    *   State Management: React Context API / Local Component State (or specify global state manager if added)
+    *   Form Handling: React Hook Form (`v7.x`) with Zod (`v3.x`) for validation
+    *   Icons: Lucide React
+*   **Backend:**
+    *   Language: `[TODO: Backend Team - Specify Language (e.g., Node.js, Python, Go)]`
+    *   Framework: `[TODO: Backend Team - Specify Framework (e.g., Express, NestJS, Flask, Gin)]`
+    *   Authentication: `[TODO: Backend Team - Specify Auth strategy (e.g., JWT, OAuth, Session)]`
+*   **Database:**
+    *   Type: `[TODO: Backend Team - Specify Database (e.g., PostgreSQL, MongoDB, MySQL)]`
+    *   ORM/Driver: `[TODO: Backend Team - Specify ORM/Driver (e.g., Prisma, TypeORM, Mongoose, node-postgres)]`
+*   **Development Tools:**
+    *   Linting: ESLint
+    *   Formatting: Prettier
 
-## Project Structure
+## Prerequisites
 
-```
-wisecomply_new/
-├── public/             # Static assets
-├── src/
-│   ├── assets/         # Images, fonts, etc.
-│   ├── components/     # Reusable UI components & feature components
-│   │   ├── compliance/   # Components for compliance activities feature
-│   │   │   └── activities/ # Components for individual compliance steps
-│   │   ├── constitution/ # Components for constitution wizard feature
-│   │   │   └── blocks/     # Components for individual constitution blocks
-│   │   ├── disputes/     # Components for disputes management feature
-│   │   ├── officers/     # Components for officer management feature
-│   │   ├── ui/           # Core UI components (likely shadcn/ui based)
-│   │   └── wizard/       # Shared components for wizard interfaces
-│   ├── hooks/          # Custom React hooks (if any)
-│   ├── layouts/        # Layout components (e.g., MainAppLayout)
-│   ├── lib/            # Utility functions or libraries
-│   ├── pages/          # Top-level page components mapped to routes
-│   ├── types/          # TypeScript type definitions (e.g., dispute types)
-│   ├── utils/          # Utility functions (e.g., cn for classnames)
-│   ├── App.tsx         # Main application component (routing setup)
-│   ├── index.css       # Global CSS and Tailwind directives
-│   └── main.tsx        # Application entry point
-├── .eslintrc.cjs       # ESLint configuration
-├── index.html          # HTML entry point for Vite
-├── package.json        # Project dependencies and scripts
-├── postcss.config.js   # PostCSS configuration (for Tailwind)
-├── tailwind.config.js  # Tailwind CSS configuration
-├── tsconfig.json       # TypeScript configuration
-└── vite.config.ts      # Vite configuration
-```
+Before you begin, ensure you have the following installed on your system:
 
-## Core Features / Pages
-
-The application is structured around several key features accessible via routing:
-
-1.  **Dashboard:** (Assumed home page) Provides an overview or entry point to other features.
-2.  **Compliance Activities:** A guided, multi-step process (likely using `src/components/compliance/activities/`) to walk users through various compliance tasks.
-3.  **Constitution Wizard:** A multi-block wizard (`src/components/constitution/blocks/`) allowing users to generate or update their society's constitution based on guided inputs.
-4.  **Disputes Management:** Functionality for logging, tracking, and managing disputes within the society (`src/components/disputes/`).
-5.  **Officer Management:** Tools for managing committee members/officers, potentially including eligibility checks and contact details (`src/components/officers/`).
-6.  **Settings:** (Assumed) Configuration options for the society or application.
-
-## Key Component Areas
-
-*   **`components/ui`:** Contains foundational UI elements like `Button`, `Input`, `Select`, `RadioGroup`, `Checkbox`, `Tooltip`, `Badge`, `Calendar`, `Popover`, `Textarea`, `Label` used throughout the application. Built using `shadcn/ui`.
-*   **`components/wizard`:** Provides reusable components tailored for multi-step wizard interfaces, such as `RadioGroup`, `Alert`, `InfoBox`.
-*   **`components/compliance/activities`:** Houses individual components for each step of the compliance workflow (e.g., `Step1Planning`, `Step2Committee`, `Step3ContactPerson`).
-*   **`components/constitution/blocks`:** Contains components for each section/block of the constitution wizard (e.g., `Block1Foundation`, `Block3Committee`, `Block8Finances`). These components manage local state and validation for their respective sections.
-*   **`components/disputes`:** Includes components for displaying dispute lists (`DisputesList`), viewing case details (`CaseDetails`), and adding new cases (`AddDisputeForm`).
-*   **`components/officers`:** (Assumed based on navigation links) Components for listing, adding, or editing officer details.
-*   **`layouts`:** Defines the overall page structure, potentially including sidebars, headers, and content areas.
-*   **`pages`:** Top-level components rendered by the router for each main section of the application.
+*   **Node.js:** >= v18.x (LTS recommended). Check with `node -v`.
+*   **npm:** (Usually comes with Node.js). Check with `npm -v`. (or Yarn/pnpm if used)
+*   **Git:** For version control.
+*   `[TODO: Backend Team - Add any backend-specific prerequisites (e.g., Docker, specific database client)]`
 
 ## Getting Started
 
-1.  **Clone the repository:**
+Follow these steps to set up the project locally for development.
+
+### Cloning the Repository
+
+```bash
+git clone https://github.com/eudoca/wisecomply_new.git # [Placeholder: Verify repo URL]
+cd wisecomply_new
+```
+
+### Environment Variables
+
+This project uses environment variables for configuration, especially for connecting to backend services and managing secrets.
+
+1.  **Create an environment file:** Copy the example environment file (if one exists) or create a new one.
     ```bash
-    git clone https://github.com/eudoca/wisecomply_new.git
-    cd wisecomply_new
+    # If .env.example exists:
+    cp .env.example .env
+    # Otherwise, create an empty file:
+    touch .env
     ```
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-3.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-    This will start the Vite development server, typically available at `http://localhost:5173` (or the next available port).
+    *Note: The `.env` file is listed in `.gitignore` and should **never** be committed to the repository.*
+
+2.  **Populate `.env`:** Fill in the necessary environment variables in the `.env` file. See the [Environment Variables Details](#environment-variables-details) section below for required variables. You will need values for backend API endpoints, potential database connections (if running backend locally), and any other required secrets. Consult with the backend team for the correct values for your local setup.
+
+### Installing Dependencies
+
+Install the project dependencies using npm:
+
+```bash
+npm install
+```
+*(If the project uses Yarn or pnpm, use `yarn install` or `pnpm install` instead)*
+
+`[TODO: Backend Team - Add steps for setting up the backend service locally, if applicable (e.g., `cd backend && npm install`, database migrations)]`
+
+## Running the Application
+
+To run the frontend development server:
+
+```bash
+npm run dev
+```
+
+This will start the Vite development server, typically available at `http://localhost:4001` (check the terminal output for the exact URL). The server supports Hot Module Replacement (HMR) for faster development.
+
+`[TODO: Backend Team - Add command(s) to run the backend development server]`
+
+## Available Scripts
+
+The following scripts are available in `package.json`:
+
+*   `npm run dev`: Starts the Vite development server for the frontend.
+*   `npm run build`: Builds the production-ready frontend application (outputs to `dist/`).
+*   `npm run lint`: Runs ESLint to check for code quality and style issues.
+*   `npm run format`: Runs Prettier to automatically format the codebase.
+*   `npm run preview`: Serves the production build locally for previewing.
+
+`[TODO: Backend Team - Add relevant backend scripts (e.g., `npm run dev:server`, `npm run db:migrate`)]`
+
+## Project Structure
+
+The frontend codebase is organized within the `src/` directory:
+
+```
+src/
+├── assets/         # Static assets like images, fonts
+├── components/     # Reusable UI and feature-specific components
+│   ├── ui/         # Core shared UI components (Button, Card, etc. - shadcn/ui based)
+│   ├── constitution/ # Components specific to the Constitution Wizard
+│   ├── compliance/   # Components specific to Compliance Activities
+│   ├── disputes/     # Components specific to Dispute Management
+│   ├── officers/     # Components specific to Officer Management
+│   └── ...           # Other feature-specific component directories
+├── hooks/          # Custom React hooks
+├── layouts/        # Layout components (e.g., MainLayout, AuthLayout)
+├── pages/          # Page components corresponding to routes
+├── services/       # API service functions for backend communication [Placeholder: Confirm location]
+├── types/          # TypeScript type definitions (e.g., officer.d.ts, dispute.d.ts)
+├── utils/          # Utility functions (e.g., cn for classnames)
+├── App.tsx         # Main application component, sets up routing
+└── main.tsx        # Entry point of the application
+```
+
+`[TODO: Backend Team - Add description of the backend project structure]`
+
+## Architecture Overview
+
+### Frontend
+
+*   Built with **React** and **TypeScript**, bundled using **Vite**.
+*   Uses **Tailwind CSS** for styling, often applied via **shadcn/ui** components.
+*   **React Router DOM** handles client-side routing.
+*   State is managed primarily through local component state (`useState`, `useReducer`) and potentially React Context for shared state. [Placeholder: Update if a global state manager like Redux/Zustand is used].
+*   Forms are managed using **React Hook Form** with **Zod** for robust validation.
+
+### Backend
+
+`[TODO: Backend Team - Describe backend architecture: Framework patterns (MVC, etc.), key modules, how requests are processed, authentication flow, background jobs, etc.]`
+
+### API Communication
+
+*   The frontend interacts with the backend via API calls.
+*   `[TODO: Backend Team - Specify API type (e.g., REST, GraphQL)]`
+*   `[Placeholder: Describe where API client/service functions are located (e.g., `src/services/`)]`
+*   `[Placeholder: Mention base API URL configuration (likely via environment variables)]`
+
+## API Documentation
+
+`[TODO: Backend Team - Provide a link to API documentation (e.g., Swagger/OpenAPI spec, Postman collection) or describe how to access/generate it.]`
+
+## Database
+
+`[TODO: Backend Team - Describe the database schema, key tables/collections, relationships, and how migrations (if any) are handled.]`
+
+## UI Components
+
+This project uses **shadcn/ui** for its core component library. These are unstyled components built using Radix UI primitives and styled with Tailwind CSS.
+
+*   Find the core components in `src/components/ui/`.
+*   Refer to the [shadcn/ui documentation](https://ui.shadcn.com/) for component APIs and usage.
+*   To add new shadcn/ui components, use their CLI: `npx shadcn-ui@latest add [component-name]`
+
+## Environment Variables Details
+
+The following environment variables are needed in your `.env` file for local development:
+
+| Variable                    | Description                                                                      | Example Value                      | Required |
+| :-------------------------- | :------------------------------------------------------------------------------- | :--------------------------------- | :------- |
+| `VITE_API_BASE_URL`         | The base URL for the backend API endpoint.                                         | `http://localhost:8000/api`        | Yes      |
+| `[TODO: Add Backend Vars]`  | `[E.g., Database connection string, JWT secret, external service API keys, etc.]` | `[Provide realistic examples]`       | `[...]`    |
+| `[TODO: Add DB Vars]`       | `[E.g., DATABASE_URL for Prisma/ORM]`                                             | `postgresql://user:pass@host:port/db` | `[...]`    |
+
+*Consult with the team for the appropriate values for your local setup.*
+
+## Testing
+
+`[TODO: Describe the testing strategy: Unit tests, integration tests, end-to-end tests. Specify frameworks (e.g., Jest, Vitest, React Testing Library, Cypress) and how to run tests (e.g., `npm test`).]`
+
+## Deployment
+
+*   The application is automatically deployed from the `master` branch via **Vercel**.
+*   Production URL: `[Placeholder: Add production URL]`
+*   Staging/Preview URLs are generated by Vercel for pull requests and specific branches.
+*   `[TODO: Add any backend deployment details/links if separate]`
 
 ## Contributing
 
-(Add contribution guidelines if applicable)
+Contributions are welcome! Please follow these guidelines:
+
+### Branching Strategy
+
+*   Create feature branches from the `master` branch (or `develop` if used).
+*   Use a descriptive naming convention, e.g., `feat/add-dispute-filtering`, `fix/login-button-casing`.
+
+### Pull Requests
+
+*   Ensure your code lints (`npm run lint`) and formats (`npm run format`) correctly before pushing.
+*   Create a Pull Request (PR) targeting the `master` branch (or `develop`).
+*   Provide a clear description of the changes in the PR.
+*   Link any relevant issues.
+*   Request review from team members.
+*   `[TODO: Add backend-specific contribution points if necessary (e.g., database migrations)]`
+
+### Coding Standards
+
+*   Follow existing code style and patterns.
+*   Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for commit messages (e.g., `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`).
+*   Write clear, understandable code with comments where necessary.
 
 ## License
 
-(Add license information if applicable) 
+`[Placeholder: Specify the project license, e.g., This project is licensed under the MIT License - see the LICENSE file for details.]` 
