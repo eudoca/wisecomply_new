@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SearchIcon, FilterIcon, PlusIcon } from 'lucide-react';
 import CaseList from '../components/disputes/CaseList';
 import CaseDetails from '../components/disputes/CaseDetails';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button.tsx';
 import { cn } from '../utils/cn';
 import { DisputeCase } from '../types/dispute';
 import AddDisputeForm from '../components/disputes/AddDisputeForm';
