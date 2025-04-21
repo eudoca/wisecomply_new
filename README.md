@@ -39,11 +39,11 @@ This README provides instructions for setting up the development environment, un
 ## Features
 
 *   User Authentication (Login/Registration - Implied)
-*   Compliance Dashboard Overview
+*   User Setup Wizard
+*   Compliance Activity Tracking (Multi-step workflows)
 *   Constitution Wizard (Multi-step form for document generation)
 *   Officer Management (Add, View, Edit Officers)
 *   Dispute & Complaint Management (Add, View, Track Cases)
-*   Compliance Activity Tracking (Multi-step workflows)
 *   Membership Management (Implied)
 *   Settings Management (Implied)
 
