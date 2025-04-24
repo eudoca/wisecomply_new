@@ -12,6 +12,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ConfirmEmailPage } from './pages/ConfirmEmailPage';
 import { WizardPage } from './pages/WizardPage';
+import OfficerConsentPage from './pages/OfficerConsentPage';
 
 // Dashboard Pages
 // import { DashboardPage } from './pages/DashboardPage'; // Removed
@@ -25,6 +26,9 @@ import { DisputesPage } from './pages/DisputesPage';
 import { MeetingsPage } from './pages/MeetingsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdviceSupportPage } from './pages/AdviceSupportPage';
+import { SocietyInfoPage } from './pages/SocietyInfoPage';
+import { CommitteePage } from './pages/CommitteePage';
+import { FinancesPage } from './pages/FinancesPage';
 
 const App: React.FC = () => {
   // For demo purposes only - in a real app, this would be determined from auth state
@@ -45,6 +49,9 @@ const App: React.FC = () => {
       {/* Wizard Route - outside standard layouts */}
       <Route path="/wizard" element={<WizardPage />} />
 
+      {/* Officer Consent Form - accessible via unique link */}
+      <Route path="/officer-consent/:token" element={<OfficerConsentPage />} />
+
       {/* Protected Routes */}
       <Route
         element={
@@ -54,15 +61,18 @@ const App: React.FC = () => {
         {/* <Route path="/dashboard" element={<DashboardPage />} /> */}
         <Route path="/dashboard" element={<Navigate to="/compliance" replace />} />
         <Route path="/compliance" element={<ComplianceActivitiesPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/documents" element={<DocumentsPage />} />
+        <Route path="/society-info" element={<SocietyInfoPage />} />
         <Route path="/officers" element={<OfficersPage />} />
-        <Route path="/constitution" element={<ConstitutionPage />} />
+        <Route path="/committee" element={<CommitteePage />} />
+        <Route path="/meetings" element={<MeetingsPage />} />
         <Route path="/membership" element={<MembershipPage />} />
         <Route path="/disputes" element={<DisputesPage />} />
-        <Route path="/meetings" element={<MeetingsPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/finances" element={<FinancesPage />} />
+        <Route path="/constitution" element={<ConstitutionPage />} />
+        <Route path="/documents" element={<DocumentsPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/advice" element={<AdviceSupportPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Route>
 
       {/* Catch-all redirect */}

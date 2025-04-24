@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button'; // Standardized path
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../ui/Card'; // Assuming these components exist
-import { UserIcon, MailIcon, PhoneIcon, Trash2Icon, EditIcon, MoreVerticalIcon } from 'lucide-react';
+import { UserIcon, MailIcon, PhoneIcon, Trash2Icon, EditIcon, MoreVerticalIcon, ClipboardIcon, CheckCircle, XCircle } from 'lucide-react';
 import QualificationStatus from './QualificationStatus'; // Import from same directory
 import { Officer } from '../../types/officer'; // Import the correct Officer type
 
@@ -58,10 +58,16 @@ interface OfficerListProps {
    officers: Officer[]; // Expect officers array from parent
    onViewDetailsClick: (id: string) => void; // Handler for View Details button
    onEditClick: (id: string) => void; // Handler for Edit button
+   onViewConsentFormClick: (id: string) => void; // Handler for View Consent Form button
 }
 
 // Update component signature if props are added
-const OfficerList: React.FC<OfficerListProps> = ({ officers, onViewDetailsClick, onEditClick }) => {
+const OfficerList: React.FC<OfficerListProps> = ({ 
+  officers, 
+  onViewDetailsClick, 
+  onEditClick,
+  onViewConsentFormClick 
+}) => {
   // Remove local handleViewDetails and handleEdit, use props instead
   // const handleViewDetails = (officerId: string) => { ... };
   // const handleEdit = (officerId: string) => { ... };
@@ -83,19 +89,27 @@ const OfficerList: React.FC<OfficerListProps> = ({ officers, onViewDetailsClick,
                 <h3 className="text-lg font-medium text-gray-900">
                   {officer.fullName}
                 </h3>
-                <p className="text-sm text-gray-500">{officer.position}</p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm font-medium text-gray-700">{officer.position}</p>
+                <p className="text-sm text-gray-600 mt-1">
                   Elected/Appointed: {officer.dateElectedAppointed}
                 </p>
                 {officer.termEndDate && (
-                   <p className="text-sm text-gray-500 mt-1">
-                      Term End: {officer.termEndDate}
-                   </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Term End: {officer.termEndDate}
+                  </p>
                 )}
               </div>
               <div className="flex gap-2 flex-shrink-0">
-                 {/* Call prop handlers */}
-                 <Button variant="outline" size="sm" onClick={() => onViewDetailsClick(officer.id)}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => onViewConsentFormClick(officer.id)}
+                  className="flex items-center gap-1"
+                >
+                  <ClipboardIcon className="h-4 w-4" />
+                  <span>View Consent Form</span>
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => onViewDetailsClick(officer.id)}>
                   View Details
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => onEditClick(officer.id)}>
@@ -104,11 +118,40 @@ const OfficerList: React.FC<OfficerListProps> = ({ officers, onViewDetailsClick,
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                Details
-              </h4>
-              <p className="text-sm text-gray-600">Eligibility Confirmed: {officer.isEligible ? 'Yes' : 'No'}</p>
-              <p className="text-sm text-gray-600">Written Consent Held: {officer.hasConsented ? 'Yes' : 'No'}</p>
+              <div className="bg-gray-200 p-3 rounded-md space-y-2">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Consent Form Requested:
+                    {officer.hasConsented !== null ? (
+                      <span className="ml-2 flex items-center inline-flex">
+                        <CheckCircle size={16} className="text-green-500 mr-1" />
+                        <span className="font-medium text-green-600">Yes</span>
+                      </span>
+                    ) : (
+                      <span className="ml-2 flex items-center inline-flex">
+                        <XCircle size={16} className="text-red-500 mr-1" />
+                        <span className="font-medium text-red-600">No</span>
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Written Consent Held:
+                    {officer.hasConsented ? (
+                      <span className="ml-2 flex items-center inline-flex">
+                        <CheckCircle size={16} className="text-green-500 mr-1" />
+                        <span className="font-medium text-green-600">Yes</span>
+                      </span>
+                    ) : (
+                      <span className="ml-2 flex items-center inline-flex">
+                        <XCircle size={16} className="text-red-500 mr-1" />
+                        <span className="font-medium text-red-600">No</span>
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         ))}

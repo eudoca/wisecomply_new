@@ -3,35 +3,56 @@ import { Officer } from '../../types/officer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn } from '../../utils/cn';
-import { Alert } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangleIcon } from 'lucide-react';
+import { cn } from '../../utils/cn';
 
 interface AddOfficerFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (officer: Officer) => void;
+  onSendInvite: (request: OfficerInviteRequest) => void;
   initialData?: Officer | null;
 }
+
+interface OfficerInviteRequest {
+  fullName: string;
+  email: string;
+  message: string;
+}
+
+type CompletionMode = 'self' | 'officer';
 
 const commonOfficerRoles = [
   'President',
   'Secretary',
   'Treasurer',
+  'Chairperson',
   'Committee Member',
+  'Board Member',
   'Other'
 ];
 
 const labelClass = "block text-sm font-medium text-gray-700 mb-1";
 const inputClass = "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md";
-const checkboxClass = "h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500";
 const errorClass = "mt-1 text-xs text-red-600";
 
-const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave, initialData }) => {
+const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave, onSendInvite, initialData }) => {
+  const [completionMode, setCompletionMode] = useState<CompletionMode>('self');
+
+  // Form for admin completing the officer details
   const [formData, setFormData] = useState<Partial<Officer>>({});
-  const [errors, setErrors] = useState<Partial<Record<keyof Officer, string>>>({});
+  
+  // Form for sending a request to the officer
+  const [inviteData, setInviteData] = useState<OfficerInviteRequest>({
+    fullName: '',
+    email: '',
+    message: ''
+  });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [showOtherPosition, setShowOtherPosition] = useState(false);
+  const [hasSignedForm, setHasSignedForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -40,106 +61,152 @@ const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave
           ...initialData,
           dateElectedAppointed: initialData.dateElectedAppointed ? initialData.dateElectedAppointed.split('T')[0] : '',
           termEndDate: initialData.termEndDate ? initialData.termEndDate.split('T')[0] : '',
-          consentDate: initialData.consentDate ? initialData.consentDate.split('T')[0] : ''
         });
         setShowOtherPosition(!commonOfficerRoles.includes(initialData.position) || initialData.position === 'Other');
       } else {
         setFormData({
           fullName: '',
           position: commonOfficerRoles[0],
+          email: '',
           dateElectedAppointed: '',
           termEndDate: '',
-          email: '',
-          phone: '',
-          address: '',
-          isEligible: false,
-          hasConsented: false,
-          consentDate: ''
         });
+        setInviteData({
+          fullName: '',
+          email: '',
+          message: ''
+        });
+        setCompletionMode('self');
         setShowOtherPosition(false);
+        setHasSignedForm(false);
       }
       setErrors({});
     }
   }, [isOpen, initialData]);
 
+  const handleCompletionModeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCompletionMode(e.target.value as CompletionMode);
+    setErrors({});
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
+    const isCheckbox = type === 'checkbox';
+    const val = isCheckbox ? (e.target as HTMLInputElement).checked : value;
 
-    if (name === 'position') {
+    if (name === 'position' && !isCheckbox) {
       setShowOtherPosition(value === 'Other');
-      if (value !== 'Other' && formData.position === 'Other') {
-        
-      }
     }
 
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    if (errors[name as keyof Officer]) {
-      setErrors(prev => { const next = {...prev}; delete next[name as keyof Officer]; return next; });
+    if (name === 'hasSignedForm' && isCheckbox) {
+      setHasSignedForm(val as boolean);
+    } else if (completionMode === 'self') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: val
+      }));
+    } else {
+      setInviteData(prev => ({
+        ...prev,
+        [name]: val
+      }));
+    }
+
+    if (errors[name]) {
+      setErrors(prev => { 
+        const next = {...prev}; 
+        delete next[name]; 
+        return next; 
+      });
     }
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: checked
-    }));
-    if (errors[name as keyof Officer]) {
-      setErrors(prev => { const next = {...prev}; delete next[name as keyof Officer]; return next; });
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof Officer, string>> = {};
-    let isValid = true;
-
+  const validateSelfForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
     if (!formData.fullName?.trim()) {
       newErrors.fullName = 'Full Legal Name is required.';
-      isValid = false;
     }
+    
     if (!formData.position || (formData.position === 'Other' && !formData.position?.trim())) {
-        newErrors.position = 'Position is required.';
-        isValid = false;
+      newErrors.position = 'Position is required.';
     }
+    
+    if (!formData.email?.trim()) {
+      newErrors.email = 'Email Address is required.';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address.';
+    }
+    
     if (!formData.dateElectedAppointed) {
       newErrors.dateElectedAppointed = 'Date Elected/Appointed is required.';
-      isValid = false;
     }
-    if (!formData.email?.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'A valid Email Address is required.';
-      isValid = false;
-    }
-    if (!formData.isEligible) {
-      newErrors.isEligible = 'Confirmation of eligibility is required.';
-      isValid = false;
-    }
-    if (!formData.hasConsented) {
-      newErrors.hasConsented = 'Confirmation of written consent is required.';
-      isValid = false;
+    
+    if (!hasSignedForm) {
+      newErrors.hasSignedForm = 'You must confirm that you have sighted the signed form.';
     }
 
     setErrors(newErrors);
-    return isValid;
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateInviteForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!inviteData.fullName.trim()) {
+      newErrors.fullName = 'Full Name is required.';
+    }
+    
+    if (!inviteData.email.trim()) {
+      newErrors.email = 'Email Address is required.';
+    } else if (!/\S+@\S+\.\S+/.test(inviteData.email)) {
+      newErrors.email = 'Please enter a valid email address.';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = () => {
-    if (validateForm()) {
-      const officerId = initialData?.id || Date.now().toString();
-      const officerToSave: Officer = {
-        ...formData,
-        id: officerId,
-        isEligible: formData.isEligible || false,
-        hasConsented: formData.hasConsented || false,
-        fullName: formData.fullName || '',
-        position: formData.position || '',
-        dateElectedAppointed: formData.dateElectedAppointed || '',
-        email: formData.email || ''
-      } as Officer;
+    if (completionMode === 'self') {
+      if (validateSelfForm()) {
+        setIsSubmitting(true);
+        
+        try {
+          const officerId = initialData?.id || Date.now().toString();
+          const officerToSave: Officer = {
+            ...formData,
+            id: officerId,
+            fullName: formData.fullName || '',
+            position: formData.position || '',
+            dateElectedAppointed: formData.dateElectedAppointed || '',
+            // Set default values for required fields in the Officer type
+            email: formData.email || '',
+            isEligible: true,
+            hasConsented: true,
+          } as Officer;
 
-      onSave(officerToSave);
+          onSave(officerToSave);
+          onClose();
+        } catch (err) {
+          console.error('Error saving officer:', err);
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
+    } else {
+      if (validateInviteForm()) {
+        setIsSubmitting(true);
+        
+        try {
+          onSendInvite(inviteData);
+          onClose();
+        } catch (err) {
+          console.error('Error sending officer invite:', err);
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
     }
   };
 
@@ -149,7 +216,7 @@ const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center px-4">
-      <div className="relative mx-auto p-6 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+      <div className="relative mx-auto p-6 border w-full max-w-2xl shadow-lg rounded-md bg-white">
         <div className="flex justify-between items-start pb-4 border-b rounded-t">
           <h3 className="text-xl font-semibold text-gray-900">
             {initialData ? 'Edit Officer' : 'Add New Officer'}
@@ -159,168 +226,204 @@ const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave
           </button>
         </div>
 
-        <div className="mt-4 space-y-4 max-h-[70vh] overflow-y-auto p-4 pr-2">
+        {!initialData && (
+          <div className="mb-6 mt-4">
+            <p className="text-sm font-medium text-gray-700 mb-2">How would you like to add this officer?</p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex items-center">
+                <input
+                  id="completion-self"
+                  name="completionMode"
+                  type="radio"
+                  value="self"
+                  checked={completionMode === 'self'}
+                  onChange={handleCompletionModeChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <label htmlFor="completion-self" className="ml-2 block text-sm font-medium text-gray-700">
+                  I am completing this on behalf of an officer
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="completion-officer"
+                  name="completionMode"
+                  type="radio"
+                  value="officer"
+                  checked={completionMode === 'officer'}
+                  onChange={handleCompletionModeChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <label htmlFor="completion-officer" className="ml-2 block text-sm font-medium text-gray-700">
+                  The officer will complete the form digitally
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4 p-4 pr-2 max-h-[70vh] overflow-y-auto">
+          {/* Common fields for both modes */}
           <div>
-            <label htmlFor="fullName" className={labelClass}>Full Legal Name <span className="text-red-500">*</span></label>
+            <label htmlFor="fullName" className={labelClass}>
+              Full {completionMode === 'self' ? 'Legal ' : ''}Name <span className="text-red-500">*</span>
+            </label>
             <Input 
               id="fullName" 
               name="fullName" 
               type="text" 
-              value={formData.fullName || ''} 
+              value={completionMode === 'self' ? formData.fullName || '' : inviteData.fullName} 
               onChange={handleChange} 
               className={cn(inputClass, errors.fullName ? 'border-red-500' : '')} 
             />
             {errors.fullName && <p className={errorClass}>{errors.fullName}</p>}
           </div>
 
+          {/* Email field for both modes */}
           <div>
-            <label htmlFor="position" className={labelClass}>Position / Title <span className="text-red-500">*</span></label>
-            <select 
-              id="position" 
-              name="position" 
-              value={showOtherPosition ? 'Other' : formData.position || ''} 
+            <label htmlFor="email" className={labelClass}>Email Address <span className="text-red-500">*</span></label>
+            <Input 
+              id="email" 
+              name="email" 
+              type="email" 
+              value={completionMode === 'self' ? formData.email || '' : inviteData.email} 
               onChange={handleChange} 
-              className={cn(inputClass, errors.position ? 'border-red-500' : '')} 
-            >
-              {commonOfficerRoles.map(role => (
-                <option key={role} value={role}>{role}</option>
-              ))}
-            </select>
-            {showOtherPosition && (
-              <div className="mt-2">
-                 <label htmlFor="positionOther" className="sr-only">Specify Other Position</label>
-                 <Input 
-                   id="positionOther" 
-                   name="position"
-                   type="text" 
-                   placeholder="Specify other position..."
-                   value={showOtherPosition ? formData.position : ''}
-                   onChange={handleChange} 
-                   className={cn(inputClass, errors.position ? 'border-red-500' : '')}
-                 />
-              </div>
-            )}
-            {errors.position && <p className={errorClass}>{errors.position}</p>}
+              className={cn(inputClass, errors.email ? 'border-red-500' : '')}
+              placeholder="email@example.com"
+            />
+            {errors.email && <p className={errorClass}>{errors.email}</p>}
           </div>
+
+          {/* Fields for officer completion mode */}
+          {completionMode === 'officer' && (
+            <>
+              <div>
+                <Label htmlFor="message" className={labelClass}>
+                  Message to Officer (Optional)
+                </Label>
+                <Textarea
+                  id="message"
+                  name="message"
+                  value={inviteData.message}
+                  onChange={handleChange}
+                  rows={4}
+                  placeholder="Include any additional instructions or context for the officer..."
+                  className={inputClass}
+                />
+              </div>
+              
+              <div className="bg-blue-50 p-4 rounded border border-blue-100 mt-4">
+                <h4 className="text-sm font-medium text-blue-800 mb-2">What happens next?</h4>
+                <p className="text-sm text-blue-700">
+                  The officer will receive an email with a link to complete their details. 
+                  They'll be asked to provide their position, appointment date, and other required information.
+                  You'll be notified when they complete their submission.
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Fields for self completion mode */}
+          {completionMode === 'self' && (
+            <>
+              <div>
+                <label htmlFor="position" className={labelClass}>Position / Title <span className="text-red-500">*</span></label>
+                <select 
+                  id="position" 
+                  name="position" 
+                  value={showOtherPosition ? 'Other' : formData.position || ''} 
+                  onChange={handleChange} 
+                  className={cn(inputClass, errors.position ? 'border-red-500' : '')} 
+                >
+                  {commonOfficerRoles.map(role => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+                {showOtherPosition && (
+                  <div className="mt-2">
+                     <label htmlFor="positionOther" className="sr-only">Specify Other Position</label>
+                     <Input 
+                       id="positionOther" 
+                       name="position"
+                       type="text" 
+                       placeholder="Specify other position..."
+                       value={showOtherPosition ? formData.position : ''}
+                       onChange={handleChange} 
+                       className={cn(inputClass, errors.position ? 'border-red-500' : '')}
+                     />
+                  </div>
+                )}
+                {errors.position && <p className={errorClass}>{errors.position}</p>}
+              </div>
           
-          <div>
-            <label htmlFor="dateElectedAppointed" className={labelClass}>Date Elected / Appointed <span className="text-red-500">*</span></label>
-            <Input 
-              id="dateElectedAppointed" 
-              name="dateElectedAppointed" 
-              type="date" 
-              value={formData.dateElectedAppointed || ''} 
-              onChange={handleChange} 
-              className={cn(inputClass, errors.dateElectedAppointed ? 'border-red-500' : '')} 
-            />
-            {errors.dateElectedAppointed && <p className={errorClass}>{errors.dateElectedAppointed}</p>}
-          </div>
+              <div>
+                <label htmlFor="dateElectedAppointed" className={labelClass}>Date Elected / Appointed <span className="text-red-500">*</span></label>
+                <Input 
+                  id="dateElectedAppointed" 
+                  name="dateElectedAppointed" 
+                  type="date" 
+                  value={formData.dateElectedAppointed || ''} 
+                  onChange={handleChange} 
+                  className={cn(inputClass, errors.dateElectedAppointed ? 'border-red-500' : '')} 
+                />
+                {errors.dateElectedAppointed && <p className={errorClass}>{errors.dateElectedAppointed}</p>}
+              </div>
 
-          <div>
-            <label htmlFor="termEndDate" className={labelClass}>Term End Date (Optional)</label>
-            <Input 
-              id="termEndDate" 
-              name="termEndDate" 
-              type="date" 
-              value={formData.termEndDate || ''} 
-              onChange={handleChange} 
-              className={inputClass}
-            />
-          </div>
-
-          <fieldset className="border-t border-gray-200 pt-4">
-            <legend className="text-base font-medium text-gray-900 mb-2">Contact Details</legend>
-            <div>
-              <label htmlFor="email" className={labelClass}>Email Address <span className="text-red-500">*</span></label>
-              <Input 
-                id="email" 
-                name="email" 
-                type="email" 
-                value={formData.email || ''} 
-                onChange={handleChange} 
-                className={cn(inputClass, errors.email ? 'border-red-500' : '')} 
-              />
-              {errors.email && <p className={errorClass}>{errors.email}</p>}
-            </div>
-            <div className="mt-4">
-              <label htmlFor="phone" className={labelClass}>Phone Number (Recommended)</label>
-              <Input 
-                id="phone" 
-                name="phone" 
-                type="tel" 
-                value={formData.phone || ''} 
-                onChange={handleChange} 
-                className={inputClass}
-              />
-            </div>
-            <div className="mt-4">
-              <label htmlFor="address" className={labelClass}>Physical/Postal Address (Optional)</label>
-              <Textarea 
-                id="address" 
-                name="address" 
-                rows={3} 
-                value={formData.address || ''} 
-                onChange={handleChange} 
-                className={inputClass}
-              />
-            </div>
-          </fieldset>
-
-          <fieldset className="border-t border-gray-200 pt-4 space-y-4">
-            <legend className="text-base font-medium text-gray-900 mb-2">Confirmations</legend>
-            <div className="relative flex items-start">
-              <div className="flex items-center h-5">
-                <input
-                  id="isEligible"
-                  name="isEligible"
-                  type="checkbox"
-                  checked={formData.isEligible || false}
-                  onChange={handleCheckboxChange}
-                  className={cn(checkboxClass, errors.isEligible ? 'border-red-500' : '')} 
+              <div>
+                <label htmlFor="termEndDate" className={labelClass}>Term End Date (Optional)</label>
+                <Input 
+                  id="termEndDate" 
+                  name="termEndDate" 
+                  type="date" 
+                  value={formData.termEndDate || ''} 
+                  onChange={handleChange} 
+                  className={inputClass}
                 />
               </div>
-              <div className="ml-3 text-sm">
-                <label htmlFor="isEligible" className={labelClass}>Confirm Eligibility <span className="text-red-500">*</span></label>
-                <p className="text-xs text-gray-500">I confirm this person meets the eligibility criteria under the Incorporated Societies Act 2022 and is not disqualified.</p>
-                {errors.isEligible && <p className={errorClass}>{errors.isEligible}</p>}
+
+              <div className="mt-4">
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="hasSignedForm"
+                      name="hasSignedForm"
+                      type="checkbox"
+                      checked={hasSignedForm}
+                      onChange={handleChange}
+                      className={`h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded ${
+                        errors.hasSignedForm ? "border-red-500" : ""
+                      }`}
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <Label htmlFor="hasSignedForm" className="font-medium text-gray-700">
+                      Signed Form Confirmation <span className="text-red-500">*</span>
+                    </Label>
+                    <p className="text-gray-500">
+                      I confirm that I have sighted the signed officer form and am authorized to enter this information.
+                    </p>
+                    {errors.hasSignedForm && (
+                      <p className="mt-1 text-xs text-red-600">{errors.hasSignedForm}</p>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div className="relative flex items-start">
-              <div className="flex items-center h-5">
-                <input
-                  id="hasConsented"
-                  name="hasConsented"
-                  type="checkbox"
-                  checked={formData.hasConsented || false}
-                  onChange={handleCheckboxChange}
-                  className={cn(checkboxClass, errors.hasConsented ? 'border-red-500' : '')} 
-                />
-              </div>
-              <div className="ml-3 text-sm">
-                <label htmlFor="hasConsented" className={labelClass}>Confirm Written Consent <span className="text-red-500">*</span></label>
-                <p className="text-xs text-gray-500">Written consent form from this officer has been received and is held on record.</p>
-                {errors.hasConsented && <p className={errorClass}>{errors.hasConsented}</p>}
-              </div>
-            </div>
-            
-            <div className="mt-4">
-              <label htmlFor="consentDate" className={labelClass}>Date Consent Signed (Optional)</label>
-              <Input 
-                id="consentDate" 
-                name="consentDate" 
-                type="date" 
-                value={formData.consentDate || ''} 
-                onChange={handleChange} 
-                className={inputClass}
-              />
-            </div>
-          </fieldset>
+            </>
+          )}
         </div>
 
         <div className="flex items-center justify-end pt-4 border-t border-gray-200 rounded-b space-x-2">
-          <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button> 
-          <Button type="button" onClick={handleSave}>Save Officer</Button>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+            Cancel
+          </Button> 
+          <Button type="button" onClick={handleSave} disabled={isSubmitting}>
+            {isSubmitting 
+              ? "Submitting..." 
+              : completionMode === 'officer' 
+                ? "Send Invitation" 
+                : "Save Officer"
+            }
+          </Button>
         </div>
       </div>
     </div>

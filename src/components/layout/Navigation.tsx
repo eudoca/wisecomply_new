@@ -1,6 +1,18 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookIcon, FileTextIcon, UsersIcon, UserCogIcon, MessageSquareIcon, CalendarIcon, SettingsIcon, ClipboardListIcon, LayoutDashboardIcon, VoteIcon } from 'lucide-react';
+import { 
+  BookIcon, 
+  FileTextIcon, 
+  UsersIcon, 
+  UserCogIcon, 
+  MessageSquareIcon, 
+  CalendarIcon, 
+  ClipboardListIcon, 
+  BuildingIcon,
+  Users2Icon,
+  BarChart4Icon,
+  ArchiveIcon
+} from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 interface NavItem {
@@ -11,12 +23,6 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  // {
-  //   id: 'dashboard',
-  //   title: 'Dashboard',
-  //   path: '/dashboard',
-  //   icon: <LayoutDashboardIcon className="w-5 h-5" />
-  // }, // Removed Dashboard Link
   {
     id: 'compliance',
     title: 'Compliance Activities',
@@ -24,44 +30,62 @@ const navItems: NavItem[] = [
     icon: <ClipboardListIcon className="w-5 h-5" />
   },
   {
-    id: 'constitution',
-    title: 'Constitution Management',
-    path: '/constitution',
-    icon: <BookIcon className="w-5 h-5" />
-  },
-  {
-    id: 'documents',
-    title: 'Document Management',
-    path: '/documents',
-    icon: <FileTextIcon className="w-5 h-5" />
+    id: 'society-info',
+    title: 'Society Information',
+    path: '/society-info',
+    icon: <BuildingIcon className="w-5 h-5" />
   },
   {
     id: 'officers',
-    title: 'Officer Management',
+    title: 'Officers & Interests',
     path: '/officers',
     icon: <UserCogIcon className="w-5 h-5" />
   },
   {
+    id: 'committee',
+    title: 'Committee',
+    path: '/committee',
+    icon: <Users2Icon className="w-5 h-5" />
+  },
+  {
+    id: 'meetings',
+    title: 'Meetings',
+    path: '/meetings',
+    icon: <MessageSquareIcon className="w-5 h-5" />
+  },
+  {
     id: 'membership',
-    title: 'Membership Management',
+    title: 'Members',
     path: '/membership',
     icon: <UsersIcon className="w-5 h-5" />
   },
   {
     id: 'disputes',
-    title: 'Dispute Management',
+    title: 'Disputes',
     path: '/disputes',
     icon: <MessageSquareIcon className="w-5 h-5" />
   },
   {
-    id: 'meetings',
-    title: 'Meetings Management',
-    path: '/meetings',
-    icon: <VoteIcon className="w-5 h-5" />
+    id: 'finances',
+    title: 'Finances',
+    path: '/finances',
+    icon: <BarChart4Icon className="w-5 h-5" />
+  },
+  {
+    id: 'constitution',
+    title: 'Constitution',
+    path: '/constitution',
+    icon: <BookIcon className="w-5 h-5" />
+  },
+  {
+    id: 'documents',
+    title: 'Records',
+    path: '/documents',
+    icon: <ArchiveIcon className="w-5 h-5" />
   },
   {
     id: 'calendar',
-    title: 'Calendar Management',
+    title: 'Society Calendar',
     path: '/calendar',
     icon: <CalendarIcon className="w-5 h-5" />
   },

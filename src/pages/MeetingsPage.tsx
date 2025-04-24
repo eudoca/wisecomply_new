@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button'; // Standardized path
 import { cn } from '../utils/cn'; // Import cn utility
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { PlusIcon, ListFilterIcon, CheckSquareIcon } from 'lucide-react';
+import { Tabs, Tab } from '../components/ui/Tabs';
 
 // Renamed component
 export const MeetingsPage: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState('upcoming');
 
-  const tabs = [
+  const tabs: Tab[] = [
     { id: 'upcoming', label: 'Upcoming Meetings' },
     { id: 'past', label: 'Past Meetings' },
     { id: 'decisions', label: 'Decisions' },
@@ -98,88 +99,39 @@ export const MeetingsPage: React.FC = () => {
           <h1 className="text-2xl font-semibold text-gray-900">
             Meetings & Decisions Management
           </h1>
-          <p className="mt-1 text-gray-600">
-            Schedule, organize, and track meetings and the decisions made in them
-          </p>
         </div>
         <Button size="sm" onClick={handleScheduleMeeting} leftIcon={<CalendarIcon className="h-4 w-4" />}>
           Schedule Meeting
         </Button>
       </div>
-
-      {/* Stats Cards */}
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-           <div className="flex justify-between items-start">
-             <div>
-               <h2 className="text-sm font-medium text-gray-500">
-                 Upcoming Meetings
-               </h2>
-               <p className="mt-2 text-3xl font-semibold text-gray-900">{upcomingCount}</p>
-             </div>
-             <div className="bg-blue-100 rounded-md p-2">
-                 <CalendarIcon className="w-5 h-5 text-blue-600" />
-             </div>
-           </div>
-           {/* Optional: Add next meeting details */} 
-         </div>
-         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex justify-between items-start">
-                 <div>
-                   <h2 className="text-sm font-medium text-gray-500">
-                     AGM Status
-                   </h2>
-                   <p className="mt-2 text-3xl font-semibold text-gray-900">Planning</p> 
-                   {/* Replace with dynamic date */} 
-                   <p className="text-sm text-gray-500 mt-2">Target: May 15, 2025</p>
-                 </div>
-                 <div className="bg-purple-100 rounded-md p-2">
-                     <UserCheckIcon className="w-5 h-5 text-purple-600" />
-                 </div>
-            </div>
-         </div>
-         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-           <div className="flex justify-between items-start">
-             <div>
-               <h2 className="text-sm font-medium text-gray-500">
-                 Recent Decisions
-               </h2>
-               <p className="mt-2 text-3xl font-semibold text-gray-900">{recentDecisionsCount}</p>
-               <div className="text-sm text-gray-500 mt-2">
-                 <span>{implementedDecisions} Implemented</span>
-                 <span className="mx-1">•</span>
-                 <span>{inProgressDecisions} In Progress</span>
-               </div>
-             </div>
-              <div className="bg-green-100 rounded-md p-2">
-                 <ClipboardIcon className="w-5 h-5 text-green-600" />
-             </div>
-           </div>
-         </div>
-       </div>
+      
+      {/* Blue information box */}
+      <div className="mt-6 mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100 flex">
+        <div className="flex-shrink-0 mr-3">
+          <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+        </div>
+        <div className="text-sm text-blue-700">
+          <p>
+            This page helps you manage all aspects of your society's meetings:
+          </p>
+          <ul className="mt-2 list-disc pl-5 space-y-1">
+            <li>Schedule and plan committee, general, and special meetings</li>
+            <li>Keep track of meeting attendance, minutes, and decisions</li>
+            <li>Plan and prepare for your Annual General Meeting (AGM)</li>
+            <li>Monitor implementation of decisions made in meetings</li>
+          </ul>
+        </div>
+      </div>
 
       {/* Tabs and Content Area */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        {/* Updated Tab Navigation */}
-         <div className="px-4 py-3 border-b border-gray-200">
-           <nav className="flex space-x-2 overflow-x-auto" aria-label="Tabs">
-             {tabs.map((tab) => (
-               <button
-                 key={tab.id}
-                 onClick={() => setSelectedTab(tab.id)}
-                 className={cn(
-                   'px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-purple-500',
-                   selectedTab === tab.id
-                     ? 'bg-brand-light text-brand-primary'
-                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                 )}
-                 aria-current={selectedTab === tab.id ? 'page' : undefined}
-               >
-                 {tab.label}
-               </button>
-             ))}
-           </nav>
-         </div>
+        <Tabs
+          activeTab={selectedTab}
+          onTabChange={setSelectedTab}
+          tabs={tabs}
+        />
         <div className="p-6">
           {/* Conditional rendering based on tab */}
            {selectedTab === 'upcoming' && (

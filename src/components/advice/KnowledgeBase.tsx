@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SearchIcon, MicIcon, ThumbsUpIcon, ThumbsDownIcon, BookOpenIcon, UserIcon, LandmarkIcon, CalendarIcon, FileTextIcon, ClipboardListIcon } from 'lucide-react';
+import { SearchIcon, ThumbsUpIcon, ThumbsDownIcon, BookOpenIcon, UserIcon, LandmarkIcon, CalendarIcon, FileTextIcon, ClipboardListIcon } from 'lucide-react';
 
 // Note: Renamed from default export to named export
 export const KnowledgeBase = () => { 
@@ -60,9 +60,6 @@ export const KnowledgeBase = () => {
         <div className="flex items-center bg-white rounded-lg border border-gray-200 p-4">
           <SearchIcon className="w-5 h-5 text-gray-400 mr-3" />
           <input type="text" placeholder="Ask anything about incorporated societies, governance, or compliance..." className="flex-1 border-none focus:ring-0 text-gray-900 placeholder-gray-400" />
-          <button className="p-2 hover:bg-gray-50 rounded-full">
-            <MicIcon className="w-5 h-5 text-gray-400" />
-          </button>
         </div>
       </div>
       <div className="mb-8">
