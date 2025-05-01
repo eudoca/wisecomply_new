@@ -7,7 +7,7 @@ import { Card, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge'; // Keep used Badge
 import { Tooltip } from '../wizard/Tooltip';
 import { cn } from '../../utils/cn';
-import Step1Planning from './activities/Step1Planning';
+import Step1SocietyInfo from './activities/Step1SocietyInfo';
 import Step2Committee from './activities/Step2Committee';
 import Step3ContactPerson from './activities/Step3ContactPerson';
 import Step4Membership from './activities/Step4Membership';
@@ -37,7 +37,7 @@ interface ComplianceActivityItem {
 const complianceActivities: ComplianceActivityItem[] = [
   {
     id: 1,
-    title: 'Pre-requisites & Planning',
+    title: '1. Society Information',
     description: 'Confirm your organisation\'s intent to register and assign responsibilities with a target completion date.',
     status: 'upcoming',
     dueDate: 'TBC',
@@ -193,21 +193,33 @@ const ComplianceActivities: React.FC = () => {
                    <div className="absolute left-6 top-12 -bottom-4 w-0.5 bg-gray-200"></div> // Adjusted length
                  )}
                  <div className="flex flex-col items-center mr-6 z-10">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
-                      activity.status === 'completed' ? 'bg-purple-600 text-white' : 
-                      activity.status === 'in-progress' ? 'border-2 border-purple-600 text-purple-600' : 
-                      'bg-gray-200 text-gray-600'
-                    }`}>
+                   {/* Conditional styling for the number circle */}
+                  <div 
+                     className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${ 
+                       // Use conditional class application + style for ID 1
+                       activity.id !== 1 ? (
+                         activity.status === 'completed' ? 'bg-purple-600 text-white' : 
+                         activity.status === 'in-progress' ? 'border-2 border-purple-600 text-purple-600' : 
+                         'bg-gray-200 text-gray-600'
+                       ) : 'text-white' // For ID 1, ensure text is white
+                     }`}
+                     // Apply specific background color for ID 1 using inline style
+                     style={activity.id === 1 ? { backgroundColor: '#8065F2' } : {}}
+                   >
                     {activity.id}
                   </div>
                 </div>
                </div>
               
-               {/* Content part of the header */}
-               <div className="flex-1">
+               {/* Content part of the header - Apply conditional background and padding */}
+               <div className={cn(
+                   "flex-1", 
+                   activity.id === 1 ? "p-4 rounded-md" : "" // Removed bg-purple-50, already handled by parent
+                  )}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
-                      <h3 className="text-sm font-medium">{activity.title}</h3>
+                       {/* Update title size and color - Apply inline style */}
+                      <h3 className="text-lg font-semibold" style={{ color: '#8065F2' }}>{activity.title}</h3>
                        <Tooltip text={activity.info || 'No additional info available.'}>
                          <InfoIcon className="w-4 h-4 ml-1.5 text-gray-400 cursor-help" />
                       </Tooltip>
@@ -216,7 +228,8 @@ const ComplianceActivities: React.FC = () => {
                       {getStatusBadge(activity.status)}
                     </div>
                   </div>
-                  <p className="text-xs text-gray-600">{activity.description}</p>
+                   {/* Update description size and weight */}
+                  <p className="text-sm font-medium text-gray-600">{activity.description}</p>
                   <div className="flex justify-between items-center mt-4">
                     <div className="flex items-center text-gray-500">
                       <CalendarIcon className="w-4 h-4 mr-1" />
@@ -237,10 +250,10 @@ const ComplianceActivities: React.FC = () => {
                </div>
              </div>
             
-            {/* Accordion Content - Render Step1Planning if activity.id is 1 and isOpen */}
+            {/* Accordion Content - Render Step1SocietyInfo if activity.id is 1 and isOpen */}
             {isOpen && activity.id === 1 && (
               <div className="p-6 border-t border-gray-200">
-                <Step1Planning onComplete={() => handleCompleteStep(1)} />
+                <Step1SocietyInfo onComplete={() => handleCompleteStep(1)} />
               </div>
             )}
             {isOpen && activity.id === 2 && (
