@@ -225,12 +225,19 @@ const Step1SocietyInfo: React.FC<Step1SocietyInfoProps> = ({ onComplete }) => {
               </div>
             </div>
           </div>
-          {/* Right Column (1/3) - Empty for now */}
+          {/* Right Column (1/3) - Add info boxes */}
           <div 
             className="w-full md:w-1/3 flex flex-col space-y-4 p-4 rounded-r-md"
             style={{ backgroundColor: '#8065F2' }}
           >
-            {/* Placeholder for potential future info boxes */}
+            {/* Added helpText */}
+            {helpText(
+              "For full naming requirements, refer to Section 11 of the Incorporated Societies Act 2022."
+            )}
+             {/* Added alertBox */}
+            {alertBox(
+              "The Incorporated Societies Act 2022 requires every society to have a legal name that clearly identifies it. This name must appear in the constitution and be used consistently in all official matters."
+            )}
           </div>
         </div>
       </div>
@@ -625,12 +632,12 @@ const Step1SocietyInfo: React.FC<Step1SocietyInfoProps> = ({ onComplete }) => {
                     style={{ backgroundColor: '#8065F2' }}
                   >1.06a</span>
                 </div>
-                <div className="pl-8">
-                   {/* Add acknowledgeField for button */}
-                  {uneditableBox(
-                    <p>The registered office of the Society shall be at such place in New Zealand as the Committee from time to time determines.</p>,
-                    'registerOfficeLocationAcknowledged'
-                  )}
+                <div>
+                     {/* Add acknowledgeField for button */}
+                    {uneditableBox(
+                      <p>The registered office of the Society shall be at such place in New Zealand as the Committee from time to time determines.</p>,
+                      'registerOfficeLocationAcknowledged'
+                    )}
                 </div>
             </div>
              {/* 1.06b */}
@@ -641,19 +648,19 @@ const Step1SocietyInfo: React.FC<Step1SocietyInfoProps> = ({ onComplete }) => {
                     style={{ backgroundColor: '#8065F2' }}
                   >1.06b</span>
                 </div>
-                <div className="pl-8">
-                   {/* Alert box moved to right column */} 
-                  {/* Wrap notification text in uneditableBox */}
-                  {uneditableBox(
-                    <div>
-                      <p>Any change to the registered office shall be notified to the Registrar of Incorporated Societies:</p>
-                      <ul className="list-disc pl-5 space-y-1">
-                        <li>at least 5 Working Days before the change is to take effect; and</li>
-                        <li>in the form and manner required by the Incorporated Societies Act 2022.</li>
-                      </ul>
-                    </div>,
-                    'registerOfficeChangeAcknowledged'
-                  )}
+                <div>
+                     {/* Alert box moved to right column */} 
+                    {/* Wrap notification text in uneditableBox */}
+                    {uneditableBox(
+                      <div>
+                        <p>Any change to the registered office shall be notified to the Registrar of Incorporated Societies:</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>at least 5 Working Days before the change is to take effect; and</li>
+                          <li>in the form and manner required by the Incorporated Societies Act 2022.</li>
+                        </ul>
+                      </div>,
+                      'registerOfficeChangeAcknowledged'
+                    )}
                 </div>
             </div>
           </div>
