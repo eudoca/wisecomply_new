@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StepProps } from '../ConstitutionWizard';
-import { ExternalLinkIcon, HelpCircle, PlusCircleIcon, Trash2Icon } from 'lucide-react';
+import { ExternalLinkIcon, HelpCircle, PlusCircleIcon, Trash2Icon, CheckCircleIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,7 @@ const subSectionsForBlock1: SubSectionData[] = [
   { id: '1.06', number: '1.06', title: 'Registered office', isS26Compulsory: false, actReferenceLabel: 'S110-111', actReferenceLink: 'https://www.legislation.govt.nz/act/public/2022/0012/latest/LMS101003.html?search=sw_096be8ed81dce6e4_%22registered+office%22_25_se&p=1' },
   { id: '1.07', number: '1.07', title: 'Restrictions on powers', isS26Compulsory: true, actReferenceLabel: 'S46', actReferenceLink: 'https://www.legislation.govt.nz/act/public/2022/0012/latest/LMS100914.html?search=sw_096be8ed81dce6e4_46_25_se&p=1&sr=2' },
   { id: '1.08', number: '1.08', title: 'Balance date', isS26Compulsory: false, actReferenceLabel: 'S99-100', actReferenceLink: 'https://www.legislation.govt.nz/act/public/2022/0012/latest/LMS100985.html?search=sw_096be8ed81dce6e4_%22Balance+Date%22_25_se&p=1&sr=0' },
-  { id: '1.09', number: '1.09', title: 'Tikanga, kawa, culture or practice', isS26Compulsory: false, actReferenceLabel: 'S28', actReferenceLink: 'https://www.legislation.govt.nz/act/public/2022/0012/latest/LMS100893.html?search=sw_096be8ed81dce6e4_Tikanga%2c+kawa%2c+culture+or+practice+and+other+matters_25_se&p=1&sr=16' },
+  { id: '1.09', number: '1.09', title: 'Tikanga, kawa, culture and practice', isS26Compulsory: false, actReferenceLabel: 'S28', actReferenceLink: 'https://www.legislation.govt.nz/act/public/2022/0012/latest/LMS100893.html?search=sw_096be8ed81dce6e4_Tikanga%2c+kawa%2c+culture+or+practice+and+other+matters_25_se&p=1&sr=16' },
 ];
 
 const helpText101a = `Every society must have a legal name that clearly identifies it and appears in its constitution and official records. Your chosen name will affect how your society is officially recognised and needs to be unique.
@@ -97,7 +97,18 @@ const months = [
   { value: "9", label: "October" }, { value: "10", label: "November" }, { value: "11", label: "December" }
 ];
 
+// Interface for validation errors
+interface ValidationError {
+  message: string;
+  fields: string[]; // Names of the invalid fields
+}
+
 const Block1SocietyInformation: React.FC<StepProps> = ({ blockNumber, formData, updateFormData, onComplete, onSaveProgress }) => {
+
+  // State for validation errors, keyed by subsection ID
+  const [validationErrors, setValidationErrors] = useState<Record<string, ValidationError | null>>({});
+  // State to track the ID of the subsection that was just successfully updated
+  const [successSubsectionId, setSuccessSubsectionId] = useState<string | null>(null);
 
   const handleCheckboxChange = (
     field: keyof Pick<typeof formData, 'block1_03a_isRelievingPoverty' | 'block1_03a_isAdvancingEducation' | 'block1_03a_isAdvancingReligion' | 'block1_03a_isBenefittingCommunity'>,
@@ -108,6 +119,8 @@ const Block1SocietyInformation: React.FC<StepProps> = ({ blockNumber, formData, 
     if (checked !== true) {
       updateFormData(textInputKey, '');
     }
+    // Clear validation errors for 1.03 when a checkbox changes
+    setValidationErrors(prev => ({ ...prev, '1.03': null }));
   };
 
   const renderCharitablePurposeOption = (
@@ -120,15 +133,24 @@ const Block1SocietyInformation: React.FC<StepProps> = ({ blockNumber, formData, 
         id={mainField}
         checked={!!formData[mainField]}
         onCheckedChange={(checked: boolean | 'indeterminate') => handleCheckboxChange(mainField, textField, checked)}
+        // Add error highlighting for the checkbox itself if the group is invalid and this specific checkbox is part of the error
+        className={cn(isFieldInvalid('1.03', mainField) ? 'ring-2 ring-red-500 ring-offset-1' : '')}
       />
       <Label htmlFor={mainField} className="text-sm font-normal text-gray-700 flex-grow">
         {label}
         {formData[mainField] && (
           <Textarea
             value={formData[textField] || ''}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFormData(textField, e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                updateFormData(textField, e.target.value);
+                 // Clear validation errors for 1.03 when the textarea changes
+                setValidationErrors(prev => ({ ...prev, '1.03': null }));
+            }}
             placeholder="Describe how..."
-            className="mt-1 w-full text-sm p-2 border-gray-300 rounded-md"
+            className={cn(
+                "mt-1 w-full text-sm p-2 border rounded-md",
+                isFieldInvalid('1.03', textField) ? 'border-red-500' : 'border-gray-300' // Add highlighting
+            )}
             rows={2}
           />
         )}
@@ -163,10 +185,13 @@ const Block1SocietyInformation: React.FC<StepProps> = ({ blockNumber, formData, 
   };
 
   const handleRestrictionsOptionChange = (value: string) => {
-    updateFormData('block1_07_restrictionsOption', value as 'noAdditionalRestrictions' | 'hasSpecificRestrictions');
+    const fieldName = 'block1_07_restrictionsOption';
+    updateFormData(fieldName, value as 'noAdditionalRestrictions' | 'hasSpecificRestrictions');
     if (value === 'noAdditionalRestrictions') {
-      updateFormData('block1_07_specificRestrictions', []); // Clear specific restrictions if none are chosen
+      updateFormData('block1_07_specificRestrictions', []); // Clear specific restrictions
     }
+    // Clear validation error for this field when changed
+    setValidationErrors(prev => ({ ...prev, '1.07': null }));
   };
 
   const handleSpecificRestrictionChange = (index: number, value: string) => {
@@ -215,604 +240,910 @@ const Block1SocietyInformation: React.FC<StepProps> = ({ blockNumber, formData, 
     return `${startDay} ${startMonthName}`;
   };
 
+  // Validation function
+  const validateSubsection = (subsectionId: string): ValidationError | null => {
+    // console.log(`[validateSubsection] Validating subsection: ${subsectionId}`); 
+    const errors: string[] = [];
+    switch (subsectionId) {
+      case '1.01':
+        if (!formData.block1_01_societyName?.trim()) {
+          errors.push('block1_01_societyName');
+        }
+        break;
+      case '1.02':
+        if (!formData.block1_02_charitableStatusIntent) {
+          errors.push('block1_02_charitableStatusIntent');
+        }
+        break;
+      case '1.03':
+        if (formData.block1_02_charitableStatusIntent === 'intendsToRegister') {
+          const purposesChecked = [
+            formData.block1_03a_isRelievingPoverty,
+            formData.block1_03a_isAdvancingEducation,
+            formData.block1_03a_isAdvancingReligion,
+            formData.block1_03a_isBenefittingCommunity
+          ].some(Boolean);
+          if (!purposesChecked) {
+            // Highlight all checkboxes if none are selected
+            errors.push('block1_03a_isRelievingPoverty', 'block1_03a_isAdvancingEducation', 'block1_03a_isAdvancingReligion', 'block1_03a_isBenefittingCommunity');
+          } else {
+            if (formData.block1_03a_isRelievingPoverty && !formData.block1_03a_relievingPovertyBy?.trim()) errors.push('block1_03a_relievingPovertyBy');
+            if (formData.block1_03a_isAdvancingEducation && !formData.block1_03a_advancingEducationBy?.trim()) errors.push('block1_03a_advancingEducationBy');
+            if (formData.block1_03a_isAdvancingReligion && !formData.block1_03a_advancingReligionBy?.trim()) errors.push('block1_03a_advancingReligionBy');
+            if (formData.block1_03a_isBenefittingCommunity && !formData.block1_03a_benefittingCommunityBy?.trim()) errors.push('block1_03a_benefittingCommunityBy');
+          }
+        } else if (formData.block1_02_charitableStatusIntent === 'doesNotIntendToRegister') {
+          if (!formData.block1_03b_primaryPurposesDescription?.trim()) {
+            errors.push('block1_03b_primaryPurposesDescription');
+          }
+        } else {
+           // If 1.02 is not answered, we can\'t validate 1.03 effectively, but can add a general error
+           errors.push('block1_03_dependency'); // Special key indicating dependency issue
+        }
+        break;
+      case '1.04':
+        // NEW: Only validate if the include clause checkbox is checked
+        if (formData.block1_04_includeDefinitionsClause) {
+          if (!formData.block1_04_additionalTerms || formData.block1_04_additionalTerms.length === 0) {
+            // If you want to enforce at least one term if clause is included
+            // errors.push(\'block1_04_addTermButton\'); // Or a general error for the section
+          } else {
+            (formData.block1_04_additionalTerms || []).forEach((term, index) => {
+              if (!term.term?.trim()) errors.push(`block1_04_additionalTerms[${index}].term`);
+              if (!term.definition?.trim()) errors.push(`block1_04_additionalTerms[${index}].definition`);
+            });
+          }
+        }
+        break;
+      // 1.05 & 1.06 only have checkboxes for inclusion, no specific input fields *within* the subsection to mandate currently.
+      // Add validation if specific fields become required later.
+      case '1.07':
+        if (!formData.block1_07_restrictionsOption) {
+          errors.push('block1_07_restrictionsOption');
+        } else if (formData.block1_07_restrictionsOption === 'hasSpecificRestrictions') {
+          if (!formData.block1_07_specificRestrictions || formData.block1_07_specificRestrictions.length === 0) {
+             errors.push('block1_07_addRestrictionButton'); // Indicate need to add at least one
+          } else {
+            formData.block1_07_specificRestrictions.forEach((restriction, index) => {
+              if (!restriction.description?.trim()) {
+                errors.push(`block1_07_specificRestrictions[${index}].description`);
+              }
+            });
+          }
+        }
+        break;
+      case '1.08':
+        if (!formData.block1_08_balanceDateDay) errors.push('block1_08_balanceDateDay');
+        if (!formData.block1_08_balanceDateMonth) errors.push('block1_08_balanceDateMonth');
+        break;
+      case '1.09':
+        // NEW: Only validate if the include clause checkbox is checked
+        if (formData.block1_09_includeTikangaClause) {
+          if (!formData.block1_09_tikangaDescription?.trim()) {
+            errors.push('block1_09_tikangaDescription');
+          }
+        }
+        break;
+      default:
+        break;
+    }
+    
+    // console.log(`[validateSubsection] Errors found for ${subsectionId}:`, errors); 
+
+    if (errors.length > 0) {
+      const result = { message: "Please complete all required fields.", fields: errors };
+      // console.log(`[validateSubsection] Returning error object for ${subsectionId}:`, result); 
+      return result;
+    }
+    // console.log(`[validateSubsection] No errors found for ${subsectionId}. Returning null.`); 
+    return null;
+  };
+
+  // Update handler for the button
+  const handleUpdateClick = (subsectionId: string) => {
+    // console.log(`[handleUpdateClick] Clicked for subsection: ${subsectionId}`); 
+    setSuccessSubsectionId(null); // Clear previous success messages
+    const validationResult = validateSubsection(subsectionId);
+    // console.log(`[handleUpdateClick] Validation result for ${subsectionId}:`, validationResult); 
+    setValidationErrors(prev => {
+      const newState = { ...prev, [subsectionId]: validationResult };
+      // console.log(`[handleUpdateClick] Updating validationErrors state to:`, newState); 
+      return newState;
+    });
+
+    if (!validationResult) {
+      // console.log(`[handleUpdateClick] Validation passed for ${subsectionId}. Proceeding with update.`);
+      // Proceed with actual update logic here in the future
+      console.log('Constitution update logic would run here for', subsectionId);
+
+      // Set success state
+      setSuccessSubsectionId(subsectionId);
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessSubsectionId(null);
+      }, 3000);
+    } else {
+       // Clear success message immediately if validation fails
+       setSuccessSubsectionId(null);
+    }
+  };
+
+  // Helper to check if a field is invalid for highlighting
+  const isFieldInvalid = (subsectionId: string, fieldName: string): boolean => {
+    return !!validationErrors[subsectionId]?.fields.includes(fieldName);
+  };
+  
+  // Helper to get error state for a RadioGroup
+  const getRadioGroupErrorState = (subsectionId: string, fieldName: string): boolean => {
+    return isFieldInvalid(subsectionId, fieldName);
+  };
+  
+  // Helper to get error state for a Checkbox group (like 1.03a)
+  const getCheckboxGroupErrorState = (subsectionId: string, fieldNames: string[]): boolean => {
+      const errors = validationErrors[subsectionId]?.fields || [];
+      return fieldNames.some(fieldName => errors.includes(fieldName));
+  };
+
   return (
     <div className="space-y-6">
-      {subSectionsForBlock1.map((subSection) => (
-        <div key={subSection.id} className="p-4 rounded-lg bg-gray-50 shadow-sm space-y-4">
-          {/* Sub-section Header */}
-          <div className="flex justify-between items-center">
-            <h3 className="text-md font-semibold text-gray-800">
-              {subSection.number} {subSection.title}
-            </h3>
-            <div className="flex items-center space-x-2">
-              <span 
-                className={cn(
-                  "flex items-center justify-center h-6 w-6 rounded-full text-xs font-medium border",
-                  subSection.isS26Compulsory 
-                    ? "bg-[#8065F2] text-white border-[#8065F2]" 
-                    : "bg-gray-200 text-gray-500 border-gray-300"
+      {subSectionsForBlock1.map((subSection) => {
+        const currentError = validationErrors[subSection.id];
+        const isSuccess = successSubsectionId === subSection.id;
+        
+        return (
+          <div key={subSection.id} className="p-4 rounded-lg bg-gray-50 shadow-sm space-y-4">
+            {/* Sub-section Header */}
+            <div className="flex justify-between items-center">
+              <h3 className="text-md font-semibold text-gray-800">
+                {subSection.number} {subSection.title}
+              </h3>
+              <div className="flex items-center space-x-2">
+                <span 
+                  className={cn(
+                    "flex items-center justify-center h-6 w-6 rounded-full text-xs font-medium border",
+                    subSection.isS26Compulsory 
+                      ? "bg-[#8065F2] text-white border-[#8065F2]" 
+                      : "bg-gray-200 text-gray-500 border-gray-300"
+                  )}
+                  title={subSection.isS26Compulsory ? "Compulsory under Section 26 ISA 2022" : "Not compulsory under Section 26 ISA 2022"}
+                >
+                  S26
+                </span>
+                {subSection.actReferenceLabel && subSection.actReferenceLink && (
+                  <a href={subSection.actReferenceLink} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                    title={`View ${subSection.actReferenceLabel} in the Act`}>
+                    {subSection.actReferenceLabel}
+                    <ExternalLinkIcon className="w-3 h-3 ml-1 flex-shrink-0" />
+                  </a>
                 )}
-                title={subSection.isS26Compulsory ? "Compulsory under Section 26 ISA 2022" : "Not compulsory under Section 26 ISA 2022"}
-              >
-                S26
-              </span>
-              {subSection.actReferenceLabel && subSection.actReferenceLink && (
-                <a href={subSection.actReferenceLink} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 hover:text-gray-800 transition-colors"
-                  title={`View ${subSection.actReferenceLabel} in the Act`}>
-                  {subSection.actReferenceLabel}
-                  <ExternalLinkIcon className="w-3 h-3 ml-1 flex-shrink-0" />
-                </a>
+              </div>
+            </div>
+
+            {/* Content for the specific sub-section */}
+            <div className="pl-1 space-y-3">
+              {subSection.id === '1.01' && (
+                <>
+                  <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+                    <AccordionItem value="help-1.01a" className="border-b-0">
+                      <AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md">
+                        <div className="flex items-center">
+                          <HelpCircle className="w-4 h-4 mr-2 text-purple-600" />
+                          Helpful information for this question
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">
+                        {/* Split help text into paragraphs for better spacing */}
+                        {helpText101a.split(/\n+/).map((paragraph, index) => (
+                          <p key={index} className={index > 0 ? "mt-2" : ""}> {/* Add margin-top to subsequent paragraphs */}
+                            {paragraph.trim()}
+                          </p>
+                        ))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                  
+                  <div className="p-3 bg-slate-100 border border-slate-200 rounded-md text-sm text-gray-700 my-3">
+                    <span className="mr-1">The name of the society is</span>
+                    <Input 
+                      type="text" 
+                      placeholder="Start typing to search, or enter a new society name here..." 
+                      value={formData.block1_01_societyName || ''}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        updateFormData('block1_01_societyName', e.target.value);
+                        setValidationErrors(prev => ({ ...prev, '1.01': null }));
+                      }}
+                      className={cn(
+                        "block w-full max-w-lg p-2 mt-1 mb-1 border rounded-md placeholder-gray-400 placeholder:italic focus:border-purple-500 focus:ring-purple-500 text-sm",
+                        isFieldInvalid('1.01', 'block1_01_societyName') ? 'border-red-500' : 'border-gray-300'
+                      )}
+                    />
+                    <span>(in this CONSTITUTION referred to as the "Society")</span>
+                  </div>
+
+                  <div className="flex justify-end items-center mt-4 space-x-2">
+                    {currentError && !isSuccess && <span className="text-red-600 text-xs italic">{currentError.message}</span>}
+                    {isSuccess && (
+                        <span className="text-green-600 text-xs italic flex items-center">
+                            <CheckCircleIcon className="w-4 h-4 mr-1" />
+                            Constitution updated
+                        </span>
+                    )}
+                    <button 
+                      onClick={() => { 
+                         console.log('!!! Button 1.01 Clicked Directly !!!'); // Keep direct log for this specific button 
+                         // handleUpdateClick('1.01'); // Re-enable this once direct click confirmed
+                       }}
+                      className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]"
+                    >
+                      Update Constitution
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {subSection.id === '1.02' && (
+                <>
+                  <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+                    <AccordionItem value="help-1.02a" className="border-b-0">
+                      <AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md">
+                        <div className="flex items-center">
+                          <HelpCircle className="w-4 h-4 mr-2 text-purple-600" />
+                          Helpful information for this question
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">
+                        {helpText102a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+
+                  <p className="text-sm text-gray-700 mb-2">Select the appropriate statement</p>
+
+                  <RadioGroup 
+                    value={formData.block1_02_charitableStatusIntent}
+                    onValueChange={(value) => {
+                      updateFormData('block1_02_charitableStatusIntent', value as 'intendsToRegister' | 'doesNotIntendToRegister');
+                      setValidationErrors(prev => ({ ...prev, '1.02': null, '1.03': null })); // Also clear 1.03 as it depends on this
+                    }}
+                    className={cn(
+                        "space-y-2 pt-1 rounded-md", 
+                        getRadioGroupErrorState('1.02', 'block1_02_charitableStatusIntent') ? 'ring-2 ring-red-500 ring-offset-1' : ''
+                     )}
+                  >
+                    <div className="flex items-start space-x-3 p-3 rounded-md border bg-slate-100 border-slate-200 hover:border-purple-300 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
+                      <RadioGroupItem value="intendsToRegister" id={`${subSection.id}-intendsToRegister`} className="mt-1" />
+                      <Label htmlFor={`${subSection.id}-intendsToRegister`} className="flex-1 text-sm font-normal text-gray-700">
+                        The Society intends to become or remain registered as a charitable society after incorporation under the 2022 ACT.
+                      </Label>
+                    </div>
+                    <div className="flex items-start space-x-3 p-3 rounded-md border bg-slate-100 border-slate-200 hover:border-purple-300 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
+                      <RadioGroupItem value="doesNotIntendToRegister" id={`${subSection.id}-doesNotIntendToRegister`} className="mt-1" />
+                      <Label htmlFor={`${subSection.id}-doesNotIntendToRegister`} className="flex-1 text-sm font-normal text-gray-700">
+                        The Society does not intend to be registered as a charitable entity under the Charities Act 2005.
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                  
+                  <div className="flex justify-end items-center mt-4 space-x-2">
+                    {currentError && !isSuccess && <span className="text-red-600 text-xs italic">{currentError.message}</span>}
+                    {isSuccess && (
+                        <span className="text-green-600 text-xs italic flex items-center">
+                          <CheckCircleIcon className="w-4 h-4 mr-1" />
+                          Constitution updated
+                        </span>
+                    )}
+                    <button 
+                      onClick={() => handleUpdateClick('1.02')} // Use the handler here
+                      className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]"
+                    >
+                      Update Constitution
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {subSection.id === '1.03' && (
+                <>
+                  {formData.block1_02_charitableStatusIntent === 'intendsToRegister' && (
+                    <>
+                      <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+                        <AccordionItem value="help-1.03a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText103a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
+                      </Accordion>
+                      <p className="text-sm text-gray-700">Select and update the charitable purpose/s that apply to your society</p>
+                      <div className={cn(
+                        "p-3 bg-slate-100 border rounded-md text-sm text-gray-700 space-y-2",
+                        getCheckboxGroupErrorState('1.03', ['block1_03a_isRelievingPoverty', 'block1_03a_isAdvancingEducation', 'block1_03a_isAdvancingReligion', 'block1_03a_isBenefittingCommunity']) ? 'border-red-500 ring-1 ring-red-500' : 'border-slate-200'
+                        )}>
+                        <p>The Society is established and maintained exclusively for charitable purposes (including any purposes ancillary to those charitable purposes), namely:</p>
+                        {renderCharitablePurposeOption('block1_03a_isRelievingPoverty', 'block1_03a_relievingPovertyBy', 'Relieving poverty by ')}
+                        {renderCharitablePurposeOption('block1_03a_isAdvancingEducation', 'block1_03a_advancingEducationBy', 'Advancing education by ')}
+                        {renderCharitablePurposeOption('block1_03a_isAdvancingReligion', 'block1_03a_advancingReligionBy', 'Advancing religion by ')}
+                        {renderCharitablePurposeOption('block1_03a_isBenefittingCommunity', 'block1_03a_benefittingCommunityBy', 'Benefitting the community by ')}
+                        <p className="pt-2">Any income, benefit, or advantage must be used exclusively to advance the charitable purposes of the Society.</p>
+                      </div>
+                    </>
+                  )}
+                  {formData.block1_02_charitableStatusIntent === 'doesNotIntendToRegister' && (
+                    <>
+                     <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+                       <AccordionItem value="help-1.03b" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText103b.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
+                     </Accordion>
+                      <p className="text-sm text-gray-700">Modify and select to include the clause in your constitution</p>
+                      <div className="p-3 bg-slate-100 border border-slate-200 rounded-md text-sm text-gray-700">
+                        <Textarea 
+                          placeholder="Describe your society's purpose here …"
+                          value={formData.block1_03b_primaryPurposesDescription || ''}
+                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                              updateFormData('block1_03b_primaryPurposesDescription', e.target.value);
+                              setValidationErrors(prev => ({ ...prev, '1.03': null }));
+                          }}
+                          className={cn(
+                            "block w-full p-2 my-1 border rounded-md placeholder-gray-400 placeholder:italic focus:border-purple-500 focus:ring-purple-500 text-sm",
+                            isFieldInvalid('1.03', 'block1_03b_primaryPurposesDescription') ? 'border-red-500' : 'border-gray-300'
+                           )}
+                          rows={3}
+                        />
+                        <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-3">Financial Gain Restrictions</h4>
+                        <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-700 mb-1">
+                          <div className="break-inside-avoid border-l-4 border-violet-300 px-3 py-2">
+                            {uneditableClause103bPart2.split(/\n+/).map((line, idx) => {
+                              const trimmedLine = line.trim();
+                              if (trimmedLine === "") return null;
+                              
+                              if (trimmedLine.startsWith('•')) { 
+                                return (
+                                  <div 
+                                    key={idx} 
+                                    className="block text-xs text-gray-700 font-normal leading-snug pl-4 mt-1"
+                                  >
+                                    <span className="mr-1 text-violet-400">&bull;</span>
+                                    <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
+                                  </div>
+                                ); 
+                              } else if (trimmedLine.startsWith('o')) { 
+                                return (
+                                  <div 
+                                    key={idx} 
+                                    className="block text-xs text-gray-700 font-normal leading-snug pl-8 mt-1"
+                                  >
+                                    <span className="mr-1 text-violet-400">○</span>
+                                    <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
+                                  </div>
+                                ); 
+                              }
+                              
+                              return (
+                                <div 
+                                  key={idx} 
+                                  className={`block text-xs text-gray-700 font-normal leading-snug ${idx > 0 ? "mt-2" : ""}`}
+                                  dangerouslySetInnerHTML={{ __html: trimmedLine }} 
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {/* Render if no selection made in 1.02 yet */}
+                  {!formData.block1_02_charitableStatusIntent && (
+                      <p className="text-sm text-orange-600 italic">Please complete section 1.02 Charitable status first to see relevant purpose questions.</p>
+                  )}
+                    <div className="flex justify-end items-center mt-4 space-x-2">
+                       {currentError && !isSuccess && <span className="text-red-600 text-xs italic">{currentError.message}</span>}
+                       {isSuccess && (
+                        <span className="text-green-600 text-xs italic flex items-center">
+                          <CheckCircleIcon className="w-4 h-4 mr-1" />
+                          Constitution updated
+                        </span>
+                       )}
+                      {/* Corrected button definition */}
+                      <button 
+                          onClick={() => handleUpdateClick('1.03')} 
+                          className={cn(
+                            "px-4 py-2 text-white text-sm font-medium rounded-md", 
+                            !formData.block1_02_charitableStatusIntent 
+                              ? 'bg-gray-400 cursor-not-allowed' 
+                              : 'bg-[#8065F2] hover:bg-[#6d54d1]'
+                          )}
+                          disabled={!formData.block1_02_charitableStatusIntent}
+                       >
+                           Update Constitution
+                       </button>
+                     </div>
+                </>
+              )}
+
+              {subSection.id === '1.04' && (
+                <>
+                  <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+                    <AccordionItem value="help-1.04a" className="border-b-0">
+                      <AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md">
+                        <div className="flex items-center">
+                          <HelpCircle className="w-4 h-4 mr-2 text-purple-600" />
+                          Helpful information for this question
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">
+                        <div className="bg-white border border-slate-200 rounded-md p-4 mb-3">
+                          <div className="md:grid md:grid-cols-2 md:gap-x-8">
+                            <div>
+                              <h5 className="font-semibold text-violet-700 mb-2 flex items-center">
+                                <span className="inline-block w-4 h-4 mr-1"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4"><circle cx="12" cy="12" r="10" strokeWidth="2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 16v-4m0-4h.01" /></svg></span>
+                                Why are definitions important?
+                              </h5>
+                              <ul className="list-disc list-inside text-xs text-gray-700 space-y-1">
+                                <li>Definitions ensure everyone interprets key terms the same way.</li>
+                                <li>They help avoid confusion and disputes about society rules.</li>
+                                <li>Standard terms are drawn from the Incorporated Societies Act 2022.</li>
+                                <li>Clear definitions support compliance and good governance.</li>
+                              </ul>
+                            </div>
+                            <div className="mt-4 md:mt-0">
+                              <h5 className="font-semibold text-violet-700 mb-2 flex items-center">
+                                <span className="inline-block w-4 h-4 mr-1"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 20h9" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16.5 3.5l4 4m-4-4L21 7.5M4 20h16M4 4h16" /></svg></span>
+                                How should I use or edit these?
+                              </h5>
+                              <ul className="list-disc list-inside text-xs text-gray-700 space-y-1">
+                                <li>You may add new terms or clarify descriptions for your society.</li>
+                                <li>Do not change the legal meaning of standard terms unless you're sure it won't conflict with the Act.</li>
+                                <li>Show defined terms in bold throughout your constitution for clarity.</li>
+                                <li>Adding society-specific terms can help avoid ambiguity.</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                  
+                  <div className="flex items-center space-x-2 py-2 mb-2">
+                    <Checkbox 
+                      id="includeDefinitionsClause-1.04"
+                      checked={!!formData.block1_04_includeDefinitionsClause}
+                      onCheckedChange={(checked: boolean | 'indeterminate') => handleGenericCheckboxChange('block1_04_includeDefinitionsClause', checked)}
+                    />
+                    <Label htmlFor="includeDefinitionsClause-1.04" className="text-sm font-medium leading-none">
+                      Select this clause to include in your constitution
+                    </Label>
+                  </div>
+                  
+                  <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-2">Standard Definitions</h4>
+                  <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-800 mb-3 columns-1 md:columns-2 gap-x-4">
+                    {(() => {
+                      const definitions = [];
+                      let currentDefinition = { term: '', meaningLines: [] as string[] };
+                      const lines = standardDefinitionsText.split(/\n+/);
+
+                      for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        if (trimmedLine.startsWith('<strong>')) {
+                          if (currentDefinition.term || currentDefinition.meaningLines.length > 0) {
+                            definitions.push(currentDefinition);
+                          }
+                          currentDefinition = { term: trimmedLine, meaningLines: [] };
+                        } else if (currentDefinition.term) {
+                          currentDefinition.meaningLines.push(trimmedLine);
+                        }
+                      }
+                      if (currentDefinition.term || currentDefinition.meaningLines.length > 0) {
+                        definitions.push(currentDefinition);
+                      }
+
+                      return definitions.map((def, index) => {
+                        // Extract the term from the <strong> tag
+                        const termMatch = def.term.match(/<strong>(.*?)<\/strong>/);
+                        const termText = termMatch ? termMatch[1] : def.term;
+                        // The rest of the line after the term
+                        const afterTerm = def.term.replace(/<strong>.*?<\/strong>/, '').replace(/^\s*[:-]?\s*/, '');
+                        return (
+                          <div
+                            key={index}
+                            className={cn(
+                              "break-inside-avoid border-l-4 border-violet-300 px-3 py-2 mb-3",
+                              index > 0 ? "mt-0" : ""
+                            )}
+                          >
+                            <div className="block font-semibold text-[13px] text-violet-900 mb-0.5">{termText}</div>
+                            {afterTerm && <div className="block text-xs font-normal text-gray-700 mb-0.5">{afterTerm}</div>}
+                            {def.meaningLines.map((meaningLine, lineIdx) => {
+                              const isBullet = meaningLine.startsWith('•') || meaningLine.match(/^\d+\.\s+/);
+                              return (
+                                <div
+                                  key={lineIdx}
+                                  className={cn(
+                                    "block text-xs text-gray-700 font-normal leading-snug",
+                                    isBullet ? "pl-4" : "pl-0 mt-1"
+                                  )}
+                                >
+                                  {isBullet ? <span className="mr-1 text-violet-400">&bull;</span> : null}
+                                  <span dangerouslySetInnerHTML={{ __html: meaningLine.replace(/^•/, '').trim() }} />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+
+                  <p className="text-sm text-gray-700 mt-4">Add any additional terms here</p>
+                  <div className="space-y-3">
+                    {(formData.block1_04_additionalTerms || []).map((item, index) => (
+                      <div key={item.id} className="p-3 border border-dashed border-gray-300 rounded-md bg-white space-y-2">
+                        <Label htmlFor={`term-${item.id}`} className="text-sm font-medium text-gray-700">Additional term {index + 1}</Label>
+                        <Input 
+                          id={`term-${item.id}`}
+                          type="text" 
+                          placeholder="Enter term..."
+                          value={item.term}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              handleAdditionalTermChange(index, 'term', e.target.value);
+                              setValidationErrors(prev => ({ ...prev, '1.04': null }));
+                          }}
+                          className={cn("w-full p-2 border rounded-md placeholder-gray-400 placeholder:italic text-sm bg-white", 
+                               isFieldInvalid('1.04', `block1_04_additionalTerms[${index}].term`) ? 'border-red-500' : 'border-gray-300')} 
+                         />
+                        <Label htmlFor={`definition-${item.id}`} className="text-sm font-medium text-gray-700 mt-1 block">Definition</Label>
+                        <Textarea 
+                          id={`definition-${item.id}`}
+                          placeholder="Enter its definition…"
+                          value={item.definition}
+                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                              handleAdditionalTermChange(index, 'definition', e.target.value);
+                              setValidationErrors(prev => ({ ...prev, '1.04': null }));
+                          }}
+                          className={cn("w-full p-2 border rounded-md placeholder-gray-400 placeholder:italic text-sm bg-white", 
+                               isFieldInvalid('1.04', `block1_04_additionalTerms[${index}].definition`) ? 'border-red-500' : 'border-gray-300')}
+                          rows={3}
+                        />
+                        <div className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => removeAdditionalTerm(item.id)} className="text-red-600 hover:text-red-700">
+                            <Trash2Icon className="w-4 h-4 mr-1" /> Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {(formData.block1_04_additionalTerms || []).length < 50 && (
+                      <Button type="button" variant="outline" size="sm" onClick={addAdditionalTerm} className="mt-2">
+                        <PlusCircleIcon className="w-4 h-4 mr-2" /> Add Term
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end items-center mt-6 space-x-2">
+                    {currentError && !isSuccess && <span className="text-red-600 text-xs italic">{currentError.message}</span>}
+                    {isSuccess && (
+                        <span className="text-green-600 text-xs italic flex items-center">
+                          <CheckCircleIcon className="w-4 h-4 mr-1" />
+                          Constitution updated
+                        </span>
+                    )}
+                    <button onClick={() => handleUpdateClick('1.04')} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
+                  </div>
+                </>
+              )}
+
+              {subSection.id === '1.05' && (
+                <>
+                  <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+                    <AccordionItem value="help-1.05a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText105a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
+                  </Accordion>
+
+                  {/* <p className="text-sm text-gray-700">Select to include the clause in your constitution</p> REMOVE THIS LINE */}
+                  
+                  <div className="flex items-center space-x-2 py-2">
+                    <Checkbox 
+                      id="includeContactPersonClause-1.05"
+                      checked={!!formData.block1_05_includeContactPersonClause}
+                      onCheckedChange={(checked: boolean | 'indeterminate') => handleGenericCheckboxChange('block1_05_includeContactPersonClause', checked)}
+                    />
+                    <Label htmlFor="includeContactPersonClause-1.05" className="text-sm font-medium leading-none">
+                      Include standard clause for Contact Person requirements
+                    </Label>
+                  </div>
+
+                  <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-2">Contact Person Requirements</h4>
+                  <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-700 mb-3">
+                    <div className="break-inside-avoid border-l-4 border-violet-300 px-3 py-2">
+                      {uneditableClause105.split(/\n+/).map((line, idx) => {
+                        const trimmedLine = line.trim();
+                        if (trimmedLine === "") return null;
+                        
+                        if (trimmedLine.startsWith('•')) { 
+                          return (
+                            <div 
+                              key={idx} 
+                              className="block text-xs text-gray-700 font-normal leading-snug pl-4 mt-1"
+                            >
+                              <span className="mr-1 text-violet-400">&bull;</span>
+                              <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
+                            </div>
+                          ); 
+                        }
+                        
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`block text-xs text-gray-700 font-normal leading-snug ${idx > 0 ? "mt-2" : ""}`}
+                            dangerouslySetInnerHTML={{ __html: trimmedLine }} 
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end items-center mt-4 space-x-2">
+                    {currentError && !isSuccess && <span className="text-red-600 text-xs italic">{currentError.message}</span>}
+                    {isSuccess && (
+                        <span className="text-green-600 text-xs italic flex items-center">
+                          <CheckCircleIcon className="w-4 h-4 mr-1" />
+                          Constitution updated
+                        </span>
+                    )}
+                    <button onClick={() => handleUpdateClick('1.05')} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
+                  </div>
+                </>
+              )}
+
+              {subSection.id === '1.06' && (
+                <>
+                  <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+                    <AccordionItem value="help-1.06a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText106a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
+                  </Accordion>
+
+                  <div className="flex items-center space-x-2 py-2">
+                    <Checkbox 
+                      id="includeRegisteredOfficeClause-1.06"
+                      checked={!!formData.block1_06_includeRegisteredOfficeClause}
+                      onCheckedChange={(checked: boolean | 'indeterminate') => handleGenericCheckboxChange('block1_06_includeRegisteredOfficeClause', checked)}
+                    />
+                    <Label htmlFor="includeRegisteredOfficeClause-1.06" className="text-sm font-medium leading-none">
+                      Include standard clause for Registered Office requirements
+                    </Label>
+                  </div>
+
+                  <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-2">Registered Office Requirements</h4>
+                  <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-700 mb-3">
+                    <div className="break-inside-avoid border-l-4 border-violet-300 px-3 py-2">
+                      {uneditableClause106.split(/\n+/).map((line, idx) => {
+                        const trimmedLine = line.trim();
+                        if (trimmedLine === "") return null;
+                        
+                        if (trimmedLine.startsWith('•')) { 
+                          return (
+                            <div 
+                              key={idx} 
+                              className="block text-xs text-gray-700 font-normal leading-snug pl-4 mt-1"
+                            >
+                              <span className="mr-1 text-violet-400">&bull;</span>
+                              <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
+                            </div>
+                          ); 
+                        }
+                        
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`block text-xs text-gray-700 font-normal leading-snug ${idx > 0 ? "mt-2" : ""}`}
+                            dangerouslySetInnerHTML={{ __html: trimmedLine }} 
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end items-center mt-4 space-x-2">
+                    {currentError && !isSuccess && <span className="text-red-600 text-xs italic">{currentError.message}</span>}
+                    {isSuccess && (
+                        <span className="text-green-600 text-xs italic flex items-center">
+                          <CheckCircleIcon className="w-4 h-4 mr-1" />
+                          Constitution updated
+                        </span>
+                    )}
+                    <button onClick={() => handleUpdateClick('1.06')} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
+                  </div>
+                </>
+              )}
+
+              {subSection.id === '1.07' && (
+                <>
+                  <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+                    <AccordionItem value="help-1.07a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText107a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
+                  </Accordion>
+
+                  <p className="text-sm text-gray-700">Select the appropriate statement</p>
+
+                  <RadioGroup 
+                    value={formData.block1_07_restrictionsOption}
+                    onValueChange={handleRestrictionsOptionChange}
+                    className={cn(
+                        "space-y-2 pt-1 rounded-md", 
+                        getRadioGroupErrorState('1.07', 'block1_07_restrictionsOption') ? 'ring-2 ring-red-500 ring-offset-1' : ''
+                     )}
+                  >
+                    <div className="flex items-start space-x-3 p-3 rounded-md border bg-slate-100 border-slate-200 hover:border-purple-300 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
+                      <RadioGroupItem value="noAdditionalRestrictions" id={`${subSection.id}-noRestrictions`} className="mt-1" />
+                      <Label htmlFor={`${subSection.id}-noRestrictions`} className="flex-1 text-sm font-normal text-gray-700">
+                        The Society\'s capacity, rights, powers, and privileges are subject to no additional restrictions.
+                      </Label>
+                    </div>
+                    <div className="flex items-start space-x-3 p-3 rounded-md border bg-slate-100 border-slate-200 hover:border-purple-300 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
+                      <RadioGroupItem value="hasSpecificRestrictions" id={`${subSection.id}-hasRestrictions`} className="mt-1" />
+                      <Label htmlFor={`${subSection.id}-hasRestrictions`} className="flex-1 text-sm font-normal text-gray-700">
+                        The Society\'s capacity, rights, powers, and privileges are subject to the following restrictions:
+                        {formData.block1_07_restrictionsOption === 'hasSpecificRestrictions' && (
+                          <div className="mt-3 space-y-3">
+                            {(formData.block1_07_specificRestrictions || []).map((restriction, index) => (
+                              <div key={restriction.id} className="p-3 border border-dashed border-gray-300 rounded-md bg-white space-y-2">
+                                <Label htmlFor={`restriction-${restriction.id}`} className="text-sm font-medium text-gray-700">Restriction {index + 1}</Label>
+                                <Textarea 
+                                  id={`restriction-${restriction.id}`}
+                                  placeholder="e.g. The Society does not have the power to borrow money"
+                                  value={restriction.description}
+                                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                                      handleSpecificRestrictionChange(index, e.target.value);
+                                      setValidationErrors(prev => ({ ...prev, '1.07': null }));
+                                  }}
+                                  className={cn("w-full p-2 border rounded-md placeholder-gray-400 placeholder:italic text-sm bg-white my-1",
+                                       isFieldInvalid('1.07', `block1_07_specificRestrictions[${index}].description`) ? 'border-red-500' : 'border-gray-300')}
+                                  rows={2}
+                                />
+                                <div className="text-right">
+                                  <Button variant="ghost" size="sm" onClick={() => removeSpecificRestriction(restriction.id)} className="text-red-600 hover:text-red-700">
+                                    <Trash2Icon className="w-4 h-4 mr-1" /> Remove
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                            {(formData.block1_07_specificRestrictions || []).length < 20 && (
+                              <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={addSpecificRestriction} 
+                                  className={cn("mt-2", isFieldInvalid('1.07', 'block1_07_addRestrictionButton') ? 'ring-2 ring-red-500' : '')}
+                               >
+                                <PlusCircleIcon className="w-4 h-4 mr-2" /> Add Restriction
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </Label>
+                    </div>
+                  </RadioGroup>
+
+                  <div className="flex justify-end items-center mt-4 space-x-2">
+                    {currentError && !isSuccess && <span className="text-red-600 text-xs italic">{currentError.message}</span>}
+                    {isSuccess && (
+                        <span className="text-green-600 text-xs italic flex items-center">
+                          <CheckCircleIcon className="w-4 h-4 mr-1" />
+                          Constitution updated
+                        </span>
+                    )}
+                    <button onClick={() => handleUpdateClick('1.07')} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
+                  </div>
+                </>
+              )}
+
+              {subSection.id === '1.08' && (
+                <>
+                  <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+                    <AccordionItem value="help-1.08a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText108a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
+                  </Accordion>
+
+                  <p className="text-sm text-gray-700 mb-2">Enter your Society balance date and select to include the clause in your constitution</p>
+                  
+                  <div className="p-3 bg-slate-100 border border-slate-200 rounded-md text-sm text-gray-700">
+                    The Society\'s financial year shall commence on <span className="font-semibold">{getCalculatedStartDate(formData.block1_08_balanceDateDay, formData.block1_08_balanceDateMonth)}</span> of each year and end on 
+                    <div className="inline-flex space-x-2 mx-1 my-1 align-baseline">
+                      <Select 
+                          value={formData.block1_08_balanceDateDay || undefined}
+                          onValueChange={(value: string) => {
+                              updateFormData('block1_08_balanceDateDay', value);
+                              setValidationErrors(prev => ({ ...prev, '1.08': null }));
+                          }}
+                      >
+                          <SelectTrigger className={cn("w-[100px] h-8 text-sm p-1 bg-white placeholder-gray-400 border rounded-md", 
+                              isFieldInvalid('1.08', 'block1_08_balanceDateDay') ? 'border-red-500' : 'border-gray-300')}>
+                              <SelectValue placeholder="Day..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                          </SelectContent>
+                      </Select>
+                      <Select
+                          value={formData.block1_08_balanceDateMonth || undefined}
+                          onValueChange={(value: string) => {
+                              updateFormData('block1_08_balanceDateMonth', value);
+                              setValidationErrors(prev => ({ ...prev, '1.08': null }));
+                           }}
+                      >
+                          <SelectTrigger className={cn("w-[130px] h-8 text-sm p-1 bg-white placeholder-gray-400 border rounded-md",
+                              isFieldInvalid('1.08', 'block1_08_balanceDateMonth') ? 'border-red-500' : 'border-gray-300')}>
+                              <SelectValue placeholder="Month..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                          </SelectContent>
+                      </Select>
+                    </div>
+                    (the latter date being the Society\'s balance date).
+                  </div>
+
+                  <div className="flex justify-end items-center mt-4 space-x-2">
+                    {currentError && !isSuccess && <span className="text-red-600 text-xs italic">{currentError.message}</span>}
+                    {isSuccess && (
+                        <span className="text-green-600 text-xs italic flex items-center">
+                          <CheckCircleIcon className="w-4 h-4 mr-1" />
+                          Constitution updated
+                        </span>
+                    )}
+                    <button onClick={() => handleUpdateClick('1.08')} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
+                  </div>
+                </>
+              )}
+
+              {subSection.id === '1.09' && (
+                <>
+                  <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+                    <AccordionItem value="help-1.09a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText109a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
+                  </Accordion>
+
+                  <div className="flex items-center space-x-2 py-2 mb-2">
+                    <Checkbox 
+                      id="includeTikangaClause-1.09"
+                      checked={!!formData.block1_09_includeTikangaClause}
+                      onCheckedChange={(checked: boolean | 'indeterminate') => handleGenericCheckboxChange('block1_09_includeTikangaClause', checked)}
+                    />
+                    <Label htmlFor="includeTikangaClause-1.09" className="text-sm font-medium leading-none">
+                      Select this clause to include in your constitution
+                    </Label>
+                  </div>
+                  
+                  <div className="p-3 bg-slate-100 border border-slate-200 rounded-md text-sm text-gray-700">
+                    The tikanga or culture of the Society is as follows:
+                    <Textarea 
+                      placeholder="Describe your tikanga, kawa, culture or practice here…" 
+                      value={formData.block1_09_tikangaDescription || ''}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                          updateFormData('block1_09_tikangaDescription', e.target.value);
+                          setValidationErrors(prev => ({ ...prev, '1.09': null }));
+                      }}
+                      className={cn("block w-full p-2 my-1 border rounded-md placeholder-gray-400 placeholder:italic focus:border-purple-500 focus:ring-purple-500 text-sm bg-white", 
+                          isFieldInvalid('1.09', 'block1_09_tikangaDescription') ? 'border-red-500' : 'border-gray-300')}
+                      rows={4}
+                    />
+                    and this CONSTITUTION shall be interpreted having regard to that tikanga, kawa, culture or practice.
+                  </div>
+
+                  <div className="flex justify-end items-center mt-4 space-x-2">
+                    {currentError && !isSuccess && <span className="text-red-600 text-xs italic">{currentError.message}</span>}
+                    {isSuccess && (
+                        <span className="text-green-600 text-xs italic flex items-center">
+                          <CheckCircleIcon className="w-4 h-4 mr-1" />
+                          Constitution updated
+                        </span>
+                    )}
+                    <button onClick={() => handleUpdateClick('1.09')} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
+                  </div>
+                </>
+              )}
+
+              {subSection.id !== '1.01' && subSection.id !== '1.02' && subSection.id !== '1.03' && subSection.id !== '1.04' && subSection.id !== '1.05' && subSection.id !== '1.06' && subSection.id !== '1.07' && subSection.id !== '1.08' && subSection.id !== '1.09' && (
+                <>
+                  <p>Questions for {subSection.title} will be built here.</p>
+                   <div className="flex justify-end items-center mt-4 space-x-2">
+                    {/* Generic button for subsections without specific logic yet */}
+                    <button onClick={() => console.log(`Update constitution for ${subSection.id}. No validation yet.`)} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
+                  </div>
+                </>
               )}
             </div>
           </div>
-
-          {/* Content for the specific sub-section */}
-          <div className="pl-1 space-y-3">
-            {subSection.id === '1.01' && (
-              <>
-                <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
-                  <AccordionItem value="help-1.01a" className="border-b-0">
-                    <AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md">
-                      <div className="flex items-center">
-                        <HelpCircle className="w-4 h-4 mr-2 text-purple-600" />
-                        Helpful information for this question
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">
-                      {/* Split help text into paragraphs for better spacing */}
-                      {helpText101a.split(/\n+/).map((paragraph, index) => (
-                        <p key={index} className={index > 0 ? "mt-2" : ""}> {/* Add margin-top to subsequent paragraphs */}
-                          {paragraph.trim()}
-                        </p>
-                      ))}
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-                
-                <div className="p-3 bg-slate-100 border border-slate-200 rounded-md text-sm text-gray-700 my-3">
-                  <span className="mr-1">The name of the society is</span>
-                  <Input 
-                    type="text" 
-                    placeholder="Start typing to search, or enter a new society name here..." 
-                    value={formData.block1_01_societyName || ''}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block1_01_societyName', e.target.value)}
-                    className="block w-full max-w-lg p-2 mt-1 mb-1 border-gray-300 rounded-md placeholder-gray-400 placeholder:italic focus:border-purple-500 focus:ring-purple-500 text-sm"
-                  />
-                  <span>(in this CONSTITUTION referred to as the "Society")</span>
-                </div>
-
-                <div className="flex justify-end mt-4">
-                  <button 
-                    onClick={() => console.log(`Update constitution for 1.01. Name:`, formData.block1_01_societyName)}
-                    className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]"
-                  >
-                    Update Constitution
-                  </button>
-                </div>
-              </>
-            )}
-
-            {subSection.id === '1.02' && (
-              <>
-                <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
-                  <AccordionItem value="help-1.02a" className="border-b-0">
-                    <AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md">
-                      <div className="flex items-center">
-                        <HelpCircle className="w-4 h-4 mr-2 text-purple-600" />
-                        Helpful information for this question
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">
-                      {helpText102a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-
-                <RadioGroup 
-                  value={formData.block1_02_charitableStatusIntent}
-                  onValueChange={(value) => updateFormData('block1_02_charitableStatusIntent', value as 'intendsToRegister' | 'doesNotIntendToRegister')}
-                  className="space-y-2 pt-1"
-                >
-                  <div className="flex items-start space-x-3 p-3 rounded-md border bg-slate-100 border-slate-200 hover:border-purple-300 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
-                    <RadioGroupItem value="intendsToRegister" id={`${subSection.id}-intendsToRegister`} className="mt-1" />
-                    <Label htmlFor={`${subSection.id}-intendsToRegister`} className="flex-1 text-sm font-normal text-gray-700">
-                      The Society intends to become or remain registered as a charitable society after incorporation under the 2022 ACT.
-                    </Label>
-                  </div>
-                  <div className="flex items-start space-x-3 p-3 rounded-md border bg-slate-100 border-slate-200 hover:border-purple-300 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
-                    <RadioGroupItem value="doesNotIntendToRegister" id={`${subSection.id}-doesNotIntendToRegister`} className="mt-1" />
-                    <Label htmlFor={`${subSection.id}-doesNotIntendToRegister`} className="flex-1 text-sm font-normal text-gray-700">
-                      The Society does not intend to be registered as a charitable entity under the Charities Act 2005.
-                    </Label>
-                  </div>
-                </RadioGroup>
-                
-                <div className="flex justify-end mt-4">
-                  <button 
-                    onClick={() => console.log(`Update constitution for 1.02. Intent:`, formData.block1_02_charitableStatusIntent)}
-                    className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]"
-                  >
-                    Update Constitution
-                  </button>
-                </div>
-              </>
-            )}
-
-            {subSection.id === '1.03' && (
-              <>
-                {formData.block1_02_charitableStatusIntent === 'intendsToRegister' && (
-                  <>
-                    <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
-                      <AccordionItem value="help-1.03a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText103a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
-                    </Accordion>
-                    <p className="text-sm text-gray-700">Select and update the charitable purpose/s that apply to your society</p>
-                    <div className="p-3 bg-slate-100 border border-slate-200 rounded-md text-sm text-gray-700 space-y-2">
-                      <p>The Society is established and maintained exclusively for charitable purposes (including any purposes ancillary to those charitable purposes), namely:</p>
-                      {renderCharitablePurposeOption('block1_03a_isRelievingPoverty', 'block1_03a_relievingPovertyBy', 'Relieving poverty by ')}
-                      {renderCharitablePurposeOption('block1_03a_isAdvancingEducation', 'block1_03a_advancingEducationBy', 'Advancing education by ')}
-                      {renderCharitablePurposeOption('block1_03a_isAdvancingReligion', 'block1_03a_advancingReligionBy', 'Advancing religion by ')}
-                      {renderCharitablePurposeOption('block1_03a_isBenefittingCommunity', 'block1_03a_benefittingCommunityBy', 'Benefitting the community by ')}
-                      <p className="pt-2">Any income, benefit, or advantage must be used exclusively to advance the charitable purposes of the Society.</p>
-                    </div>
-                  </>
-                )}
-                {formData.block1_02_charitableStatusIntent === 'doesNotIntendToRegister' && (
-                  <>
-                    <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
-                      <AccordionItem value="help-1.03b" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText103b.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
-                    </Accordion>
-                    <p className="text-sm text-gray-700">Modify and select to include the clause in your constitution</p>
-                    <div className="p-3 bg-slate-100 border border-slate-200 rounded-md text-sm text-gray-700">
-                      <Textarea 
-                        placeholder="Describe your society's purpose here …"
-                        value={formData.block1_03b_primaryPurposesDescription || ''}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFormData('block1_03b_primaryPurposesDescription', e.target.value)}
-                        className="block w-full p-2 my-1 border-gray-300 rounded-md placeholder-gray-400 placeholder:italic focus:border-purple-500 focus:ring-purple-500 text-sm"
-                        rows={3}
-                      />
-                      <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-3">Financial Gain Restrictions</h4>
-                      <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-700 mb-1">
-                        <div className="break-inside-avoid border-l-4 border-violet-300 px-3 py-2">
-                          {uneditableClause103bPart2.split(/\n+/).map((line, idx) => {
-                            const trimmedLine = line.trim();
-                            if (trimmedLine === "") return null;
-                            
-                            if (trimmedLine.startsWith('•')) { 
-                              return (
-                                <div 
-                                  key={idx} 
-                                  className="block text-xs text-gray-700 font-normal leading-snug pl-4 mt-1"
-                                >
-                                  <span className="mr-1 text-violet-400">&bull;</span>
-                                  <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
-                                </div>
-                              ); 
-                            } else if (trimmedLine.startsWith('o')) { 
-                              return (
-                                <div 
-                                  key={idx} 
-                                  className="block text-xs text-gray-700 font-normal leading-snug pl-8 mt-1"
-                                >
-                                  <span className="mr-1 text-violet-400">○</span>
-                                  <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
-                                </div>
-                              ); 
-                            }
-                            
-                            return (
-                              <div 
-                                key={idx} 
-                                className={`block text-xs text-gray-700 font-normal leading-snug ${idx > 0 ? "mt-2" : ""}`}
-                                dangerouslySetInnerHTML={{ __html: trimmedLine }} 
-                              />
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-                {/* Render if no selection made in 1.02 yet */}
-                {!formData.block1_02_charitableStatusIntent && (
-                    <p className="text-sm text-orange-600 italic">Please complete section 1.02 Charitable status first to see relevant purpose questions.</p>
-                )}
-                <div className="flex justify-end mt-4">
-                  <button onClick={() => console.log('Update constitution for 1.03. Data:', formData)} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
-                </div>
-              </>
-            )}
-
-            {subSection.id === '1.04' && (
-              <>
-                <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
-                  <AccordionItem value="help-1.04a" className="border-b-0">
-                    <AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md">
-                      <div className="flex items-center">
-                        <HelpCircle className="w-4 h-4 mr-2 text-purple-600" />
-                        Helpful information for this question
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">
-                      <div className="bg-white border border-slate-200 rounded-md p-4 mb-3">
-                        <div className="md:grid md:grid-cols-2 md:gap-x-8">
-                          <div>
-                            <h5 className="font-semibold text-violet-700 mb-2 flex items-center">
-                              <span className="inline-block w-4 h-4 mr-1"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4"><circle cx="12" cy="12" r="10" strokeWidth="2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 16v-4m0-4h.01" /></svg></span>
-                              Why are definitions important?
-                            </h5>
-                            <ul className="list-disc list-inside text-xs text-gray-700 space-y-1">
-                              <li>Definitions ensure everyone interprets key terms the same way.</li>
-                              <li>They help avoid confusion and disputes about society rules.</li>
-                              <li>Standard terms are drawn from the Incorporated Societies Act 2022.</li>
-                              <li>Clear definitions support compliance and good governance.</li>
-                            </ul>
-                          </div>
-                          <div className="mt-4 md:mt-0">
-                            <h5 className="font-semibold text-violet-700 mb-2 flex items-center">
-                              <span className="inline-block w-4 h-4 mr-1"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 20h9" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16.5 3.5l4 4m-4-4L21 7.5M4 20h16M4 4h16" /></svg></span>
-                              How should I use or edit these?
-                            </h5>
-                            <ul className="list-disc list-inside text-xs text-gray-700 space-y-1">
-                              <li>You may add new terms or clarify descriptions for your society.</li>
-                              <li>Do not change the legal meaning of standard terms unless you're sure it won't conflict with the Act.</li>
-                              <li>Show defined terms in bold throughout your constitution for clarity.</li>
-                              <li>Adding society-specific terms can help avoid ambiguity.</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-                
-                <p className="text-sm text-gray-700">Select and modify to include these definitions in your constitution</p>
-                {/* Enhanced Standard Definitions Box */}
-                <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-2">Standard Definitions</h4>
-                <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-800 mb-3 columns-1 md:columns-2 gap-x-4">
-                  {(() => {
-                    const definitions = [];
-                    let currentDefinition = { term: '', meaningLines: [] as string[] };
-                    const lines = standardDefinitionsText.split(/\n+/);
-
-                    for (const line of lines) {
-                      const trimmedLine = line.trim();
-                      if (trimmedLine.startsWith('<strong>')) {
-                        if (currentDefinition.term || currentDefinition.meaningLines.length > 0) {
-                          definitions.push(currentDefinition);
-                        }
-                        currentDefinition = { term: trimmedLine, meaningLines: [] };
-                      } else if (currentDefinition.term) {
-                        currentDefinition.meaningLines.push(trimmedLine);
-                      }
-                    }
-                    if (currentDefinition.term || currentDefinition.meaningLines.length > 0) {
-                      definitions.push(currentDefinition);
-                    }
-
-                    return definitions.map((def, index) => {
-                      // Extract the term from the <strong> tag
-                      const termMatch = def.term.match(/<strong>(.*?)<\/strong>/);
-                      const termText = termMatch ? termMatch[1] : def.term;
-                      // The rest of the line after the term
-                      const afterTerm = def.term.replace(/<strong>.*?<\/strong>/, '').replace(/^\s*[:-]?\s*/, '');
-                      return (
-                        <div
-                          key={index}
-                          className={cn(
-                            "break-inside-avoid border-l-4 border-violet-300 px-3 py-2 mb-3",
-                            index > 0 ? "mt-0" : ""
-                          )}
-                        >
-                          <div className="block font-semibold text-[13px] text-violet-900 mb-0.5">{termText}</div>
-                          {afterTerm && <div className="block text-xs font-normal text-gray-700 mb-0.5">{afterTerm}</div>}
-                          {def.meaningLines.map((meaningLine, lineIdx) => {
-                            const isBullet = meaningLine.startsWith('•') || meaningLine.match(/^\d+\.\s+/);
-                            return (
-                              <div
-                                key={lineIdx}
-                                className={cn(
-                                  "block text-xs text-gray-700 font-normal leading-snug",
-                                  isBullet ? "pl-4" : "pl-0 mt-1"
-                                )}
-                              >
-                                {isBullet ? <span className="mr-1 text-violet-400">&bull;</span> : null}
-                                <span dangerouslySetInnerHTML={{ __html: meaningLine.replace(/^•/, '').trim() }} />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-
-                <p className="text-sm text-gray-700 mt-4">Add any additional terms here</p>
-                <div className="space-y-3">
-                  {(formData.block1_04_additionalTerms || []).map((item, index) => (
-                    <div key={item.id} className="p-3 border border-dashed border-gray-300 rounded-md bg-white space-y-2">
-                      <Label htmlFor={`term-${item.id}`} className="text-sm font-medium text-gray-700">Additional term {index + 1}</Label>
-                      <Input 
-                        id={`term-${item.id}`}
-                        type="text" 
-                        placeholder="Enter term..."
-                        value={item.term}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleAdditionalTermChange(index, 'term', e.target.value)}
-                        className="w-full p-2 border-gray-300 rounded-md placeholder-gray-400 placeholder:italic text-sm bg-white" />
-                      <Label htmlFor={`definition-${item.id}`} className="text-sm font-medium text-gray-700 mt-1 block">Definition</Label>
-                      <Textarea 
-                        id={`definition-${item.id}`}
-                        placeholder="Enter its definition…"
-                        value={item.definition}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleAdditionalTermChange(index, 'definition', e.target.value)}
-                        className="w-full p-2 border-gray-300 rounded-md placeholder-gray-400 placeholder:italic text-sm bg-white"
-                        rows={3}
-                      />
-                      <div className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => removeAdditionalTerm(item.id)} className="text-red-600 hover:text-red-700">
-                          <Trash2Icon className="w-4 h-4 mr-1" /> Remove
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {(formData.block1_04_additionalTerms || []).length < 50 && (
-                    <Button type="button" variant="outline" size="sm" onClick={addAdditionalTerm} className="mt-2">
-                      <PlusCircleIcon className="w-4 h-4 mr-2" /> Add Term
-                    </Button>
-                  )}
-                </div>
-
-                <div className="flex justify-end mt-6">
-                  <button onClick={() => console.log('Update constitution for 1.04. Data:', formData.block1_04_additionalTerms)} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
-                </div>
-              </>
-            )}
-
-            {subSection.id === '1.05' && (
-              <>
-                <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
-                  <AccordionItem value="help-1.05a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText105a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
-                </Accordion>
-
-                <p className="text-sm text-gray-700">Select to include the clause in your constitution</p>
-                
-                <div className="flex items-center space-x-2 py-2">
-                  <Checkbox 
-                    id="includeContactPersonClause-1.05"
-                    checked={!!formData.block1_05_includeContactPersonClause}
-                    onCheckedChange={(checked: boolean | 'indeterminate') => handleGenericCheckboxChange('block1_05_includeContactPersonClause', checked)}
-                  />
-                  <Label htmlFor="includeContactPersonClause-1.05" className="text-sm font-medium leading-none">
-                    Include standard clause for Contact Person requirements
-                  </Label>
-                </div>
-
-                <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-2">Contact Person Requirements</h4>
-                <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-700 mb-3">
-                  <div className="break-inside-avoid border-l-4 border-violet-300 px-3 py-2">
-                    {uneditableClause105.split(/\n+/).map((line, idx) => {
-                      const trimmedLine = line.trim(); 
-                      if (trimmedLine === "") return null;
-                      
-                      if (trimmedLine.startsWith('•')) { 
-                        return (
-                          <div 
-                            key={idx} 
-                            className="block text-xs text-gray-700 font-normal leading-snug pl-4 mt-1"
-                          >
-                            <span className="mr-1 text-violet-400">&bull;</span>
-                            <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
-                          </div>
-                        ); 
-                      }
-                      
-                      return (
-                        <div 
-                          key={idx} 
-                          className={`block text-xs text-gray-700 font-normal leading-snug ${idx > 0 ? "mt-2" : ""}`}
-                          dangerouslySetInnerHTML={{ __html: trimmedLine }} 
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="flex justify-end mt-4">
-                  <button onClick={() => console.log('Update constitution for 1.05. Clause included:', formData.block1_05_includeContactPersonClause)} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
-                </div>
-              </>
-            )}
-
-            {subSection.id === '1.06' && (
-              <>
-                <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
-                  <AccordionItem value="help-1.06a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText106a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
-                </Accordion>
-
-                <p className="text-sm text-gray-700">Select to include the clause in your constitution</p>
-                
-                <div className="flex items-center space-x-2 py-2">
-                  <Checkbox 
-                    id="includeRegisteredOfficeClause-1.06"
-                    checked={!!formData.block1_06_includeRegisteredOfficeClause}
-                    onCheckedChange={(checked: boolean | 'indeterminate') => handleGenericCheckboxChange('block1_06_includeRegisteredOfficeClause', checked)}
-                  />
-                  <Label htmlFor="includeRegisteredOfficeClause-1.06" className="text-sm font-medium leading-none">
-                    Include standard clause for Registered Office requirements
-                  </Label>
-                </div>
-
-                <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-2">Registered Office Requirements</h4>
-                <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-700 mb-3">
-                  <div className="break-inside-avoid border-l-4 border-violet-300 px-3 py-2">
-                    {uneditableClause106.split(/\n+/).map((line, idx) => {
-                      const trimmedLine = line.trim(); 
-                      if (trimmedLine === "") return null;
-                      
-                      if (trimmedLine.startsWith('•')) { 
-                        return (
-                          <div 
-                            key={idx} 
-                            className="block text-xs text-gray-700 font-normal leading-snug pl-4 mt-1"
-                          >
-                            <span className="mr-1 text-violet-400">&bull;</span>
-                            <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
-                          </div>
-                        ); 
-                      }
-                      
-                      return (
-                        <div 
-                          key={idx} 
-                          className={`block text-xs text-gray-700 font-normal leading-snug ${idx > 0 ? "mt-2" : ""}`}
-                          dangerouslySetInnerHTML={{ __html: trimmedLine }} 
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="flex justify-end mt-4">
-                  <button onClick={() => console.log('Update constitution for 1.06. Clause included:', formData.block1_06_includeRegisteredOfficeClause)} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
-                </div>
-              </>
-            )}
-
-            {subSection.id === '1.07' && (
-              <>
-                <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
-                  <AccordionItem value="help-1.07a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText107a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
-                </Accordion>
-
-                <p className="text-sm text-gray-700">Select the appropriate statement</p>
-
-                <RadioGroup 
-                  value={formData.block1_07_restrictionsOption}
-                  onValueChange={handleRestrictionsOptionChange}
-                  className="space-y-2 pt-1"
-                >
-                  <div className="flex items-start space-x-3 p-3 rounded-md border bg-slate-100 border-slate-200 hover:border-purple-300 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
-                    <RadioGroupItem value="noAdditionalRestrictions" id={`${subSection.id}-noRestrictions`} className="mt-1" />
-                    <Label htmlFor={`${subSection.id}-noRestrictions`} className="flex-1 text-sm font-normal text-gray-700">
-                      The Society's capacity, rights, powers, and privileges are subject to no additional restrictions.
-                    </Label>
-                  </div>
-                  <div className="flex items-start space-x-3 p-3 rounded-md border bg-slate-100 border-slate-200 hover:border-purple-300 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
-                    <RadioGroupItem value="hasSpecificRestrictions" id={`${subSection.id}-hasRestrictions`} className="mt-1" />
-                    <Label htmlFor={`${subSection.id}-hasRestrictions`} className="flex-1 text-sm font-normal text-gray-700">
-                      The Society's capacity, rights, powers, and privileges are subject to the following restrictions:
-                      {formData.block1_07_restrictionsOption === 'hasSpecificRestrictions' && (
-                        <div className="mt-3 space-y-3">
-                          {(formData.block1_07_specificRestrictions || []).map((restriction, index) => (
-                            <div key={restriction.id} className="p-3 border border-dashed border-gray-300 rounded-md bg-white space-y-2">
-                              <Label htmlFor={`restriction-${restriction.id}`} className="text-sm font-medium text-gray-700">Restriction {index + 1}</Label>
-                              <Textarea 
-                                id={`restriction-${restriction.id}`}
-                                placeholder="e.g. The Society does not have the power to borrow money"
-                                value={restriction.description}
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleSpecificRestrictionChange(index, e.target.value)}
-                                className="w-full p-2 border-gray-300 rounded-md placeholder-gray-400 placeholder:italic text-sm bg-white my-1"
-                                rows={2}
-                              />
-                              <div className="text-right">
-                                <Button variant="ghost" size="sm" onClick={() => removeSpecificRestriction(restriction.id)} className="text-red-600 hover:text-red-700">
-                                  <Trash2Icon className="w-4 h-4 mr-1" /> Remove
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                          {(formData.block1_07_specificRestrictions || []).length < 20 && (
-                            <Button type="button" variant="outline" size="sm" onClick={addSpecificRestriction} className="mt-2">
-                              <PlusCircleIcon className="w-4 h-4 mr-2" /> Add Restriction
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </Label>
-                  </div>
-                </RadioGroup>
-
-                <div className="flex justify-end mt-4">
-                  <button onClick={() => console.log('Update constitution for 1.07. Data:', formData)} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
-                </div>
-              </>
-            )}
-
-            {subSection.id === '1.08' && (
-              <>
-                <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
-                  <AccordionItem value="help-1.08a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText108a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
-                </Accordion>
-
-                <p className="text-sm text-gray-700 mb-2">Enter your Society balance date and select to include the clause in your constitution</p>
-                
-                <div className="p-3 bg-slate-100 border border-slate-200 rounded-md text-sm text-gray-700">
-                  The Society's financial year shall commence on <span className="font-semibold">{getCalculatedStartDate(formData.block1_08_balanceDateDay, formData.block1_08_balanceDateMonth)}</span> of each year and end on 
-                  <div className="inline-flex space-x-2 mx-1 my-1 align-baseline">
-                    <Select 
-                        value={formData.block1_08_balanceDateDay || undefined}
-                        onValueChange={(value: string) => updateFormData('block1_08_balanceDateDay', value)}
-                    >
-                        <SelectTrigger className="w-[100px] h-8 text-sm p-1 bg-white placeholder-gray-400">
-                            <SelectValue placeholder="Day..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    <Select
-                        value={formData.block1_08_balanceDateMonth || undefined}
-                        onValueChange={(value: string) => updateFormData('block1_08_balanceDateMonth', value)}
-                    >
-                        <SelectTrigger className="w-[130px] h-8 text-sm p-1 bg-white placeholder-gray-400">
-                            <SelectValue placeholder="Month..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                  </div>
-                  (the latter date being the Society's balance date).
-                </div>
-
-                <div className="flex justify-end mt-4">
-                  <button onClick={() => console.log('Update constitution for 1.08. Data:', formData)} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
-                </div>
-              </>
-            )}
-
-            {subSection.id === '1.09' && (
-              <>
-                <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
-                  <AccordionItem value="help-1.09a" className="border-b-0"><AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger><AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">{helpText109a.split(/\n+/).map((p, i) => (<p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>))}</AccordionContent></AccordionItem>
-                </Accordion>
-
-                <p className="text-sm text-gray-700 mb-2">Modify and select to include the clause in your constitution</p>
-                
-                <div className="p-3 bg-slate-100 border border-slate-200 rounded-md text-sm text-gray-700">
-                  The tikanga or culture of the Society is as follows:
-                  <Textarea 
-                    placeholder="Describe your tikanga, kawa, culture or practice here…" 
-                    value={formData.block1_09_tikangaDescription || ''}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFormData('block1_09_tikangaDescription', e.target.value)}
-                    className="block w-full p-2 my-1 border-gray-300 rounded-md placeholder-gray-400 placeholder:italic focus:border-purple-500 focus:ring-purple-500 text-sm bg-white"
-                    rows={4}
-                  />
-                  and this CONSTITUTION shall be interpreted having regard to that tikanga, kawa, culture or practice.
-                </div>
-
-                <div className="flex justify-end mt-4">
-                  <button onClick={() => console.log('Update constitution for 1.09. Data:', formData.block1_09_tikangaDescription)} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button>
-                </div>
-              </>
-            )}
-
-            {subSection.id !== '1.01' && subSection.id !== '1.02' && subSection.id !== '1.03' && subSection.id !== '1.04' && subSection.id !== '1.05' && subSection.id !== '1.06' && subSection.id !== '1.07' && subSection.id !== '1.08' && subSection.id !== '1.09' && (
-              <p>Questions for {subSection.title} will be built here.</p>
-            )}
-          </div>
-        </div>
-      ))}
+        ) 
+      })}
 
       {/* Main Block Save/Complete buttons */}
       <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end">
