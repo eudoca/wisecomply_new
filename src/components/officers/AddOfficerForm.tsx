@@ -101,15 +101,15 @@ const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave
     if (name === 'hasSignedForm' && isCheckbox) {
       setHasSignedForm(val as boolean);
     } else if (completionMode === 'self') {
-      setFormData(prev => ({
-        ...prev,
+    setFormData(prev => ({
+      ...prev,
         [name]: val
       }));
     } else {
       setInviteData(prev => ({
-        ...prev,
+      ...prev,
         [name]: val
-      }));
+    }));
     }
 
     if (errors[name]) {
@@ -123,13 +123,13 @@ const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave
 
   const validateSelfForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.fullName?.trim()) {
       newErrors.fullName = 'Full Legal Name is required.';
     }
     
     if (!formData.position || (formData.position === 'Other' && !formData.position?.trim())) {
-      newErrors.position = 'Position is required.';
+        newErrors.position = 'Position is required.';
     }
     
     if (!formData.email?.trim()) {
@@ -162,7 +162,7 @@ const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave
     } else if (!/\S+@\S+\.\S+/.test(inviteData.email)) {
       newErrors.email = 'Please enter a valid email address.';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -173,20 +173,20 @@ const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave
         setIsSubmitting(true);
         
         try {
-          const officerId = initialData?.id || Date.now().toString();
-          const officerToSave: Officer = {
-            ...formData,
-            id: officerId,
-            fullName: formData.fullName || '',
-            position: formData.position || '',
-            dateElectedAppointed: formData.dateElectedAppointed || '',
+      const officerId = initialData?.id || Date.now().toString();
+      const officerToSave: Officer = {
+        ...formData,
+        id: officerId,
+        fullName: formData.fullName || '',
+        position: formData.position || '',
+        dateElectedAppointed: formData.dateElectedAppointed || '',
             // Set default values for required fields in the Officer type
             email: formData.email || '',
             isEligible: true,
             hasConsented: true,
-          } as Officer;
+      } as Officer;
 
-          onSave(officerToSave);
+      onSave(officerToSave);
           onClose();
         } catch (err) {
           console.error('Error saving officer:', err);
@@ -326,76 +326,76 @@ const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave
           {/* Fields for self completion mode */}
           {completionMode === 'self' && (
             <>
-              <div>
-                <label htmlFor="position" className={labelClass}>Position / Title <span className="text-red-500">*</span></label>
-                <select 
-                  id="position" 
-                  name="position" 
-                  value={showOtherPosition ? 'Other' : formData.position || ''} 
-                  onChange={handleChange} 
-                  className={cn(inputClass, errors.position ? 'border-red-500' : '')} 
-                >
-                  {commonOfficerRoles.map(role => (
-                    <option key={role} value={role}>{role}</option>
-                  ))}
-                </select>
-                {showOtherPosition && (
-                  <div className="mt-2">
-                     <label htmlFor="positionOther" className="sr-only">Specify Other Position</label>
-                     <Input 
-                       id="positionOther" 
-                       name="position"
-                       type="text" 
-                       placeholder="Specify other position..."
-                       value={showOtherPosition ? formData.position : ''}
-                       onChange={handleChange} 
-                       className={cn(inputClass, errors.position ? 'border-red-500' : '')}
-                     />
-                  </div>
-                )}
-                {errors.position && <p className={errorClass}>{errors.position}</p>}
+          <div>
+            <label htmlFor="position" className={labelClass}>Position / Title <span className="text-red-500">*</span></label>
+            <select 
+              id="position" 
+              name="position" 
+              value={showOtherPosition ? 'Other' : formData.position || ''} 
+              onChange={handleChange} 
+              className={cn(inputClass, errors.position ? 'border-red-500' : '')} 
+            >
+              {commonOfficerRoles.map(role => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
+            {showOtherPosition && (
+              <div className="mt-2">
+                 <label htmlFor="positionOther" className="sr-only">Specify Other Position</label>
+                 <Input 
+                   id="positionOther" 
+                   name="position"
+                   type="text" 
+                   placeholder="Specify other position..."
+                   value={showOtherPosition ? formData.position : ''}
+                   onChange={handleChange} 
+                   className={cn(inputClass, errors.position ? 'border-red-500' : '')}
+                 />
               </div>
+            )}
+            {errors.position && <p className={errorClass}>{errors.position}</p>}
+          </div>
           
-              <div>
-                <label htmlFor="dateElectedAppointed" className={labelClass}>Date Elected / Appointed <span className="text-red-500">*</span></label>
-                <Input 
-                  id="dateElectedAppointed" 
-                  name="dateElectedAppointed" 
-                  type="date" 
-                  value={formData.dateElectedAppointed || ''} 
-                  onChange={handleChange} 
-                  className={cn(inputClass, errors.dateElectedAppointed ? 'border-red-500' : '')} 
-                />
-                {errors.dateElectedAppointed && <p className={errorClass}>{errors.dateElectedAppointed}</p>}
-              </div>
+          <div>
+            <label htmlFor="dateElectedAppointed" className={labelClass}>Date Elected / Appointed <span className="text-red-500">*</span></label>
+            <Input 
+              id="dateElectedAppointed" 
+              name="dateElectedAppointed" 
+              type="date" 
+              value={formData.dateElectedAppointed || ''} 
+              onChange={handleChange} 
+              className={cn(inputClass, errors.dateElectedAppointed ? 'border-red-500' : '')} 
+            />
+            {errors.dateElectedAppointed && <p className={errorClass}>{errors.dateElectedAppointed}</p>}
+          </div>
 
-              <div>
-                <label htmlFor="termEndDate" className={labelClass}>Term End Date (Optional)</label>
-                <Input 
-                  id="termEndDate" 
-                  name="termEndDate" 
-                  type="date" 
-                  value={formData.termEndDate || ''} 
-                  onChange={handleChange} 
-                  className={inputClass}
-                />
-              </div>
+          <div>
+            <label htmlFor="termEndDate" className={labelClass}>Term End Date (Optional)</label>
+            <Input 
+              id="termEndDate" 
+              name="termEndDate" 
+              type="date" 
+              value={formData.termEndDate || ''} 
+              onChange={handleChange} 
+              className={inputClass}
+            />
+          </div>
 
-              <div className="mt-4">
+            <div className="mt-4">
                 <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
+              <div className="flex items-center h-5">
+                <input
                       id="hasSignedForm"
                       name="hasSignedForm"
-                      type="checkbox"
+                  type="checkbox"
                       checked={hasSignedForm}
                       onChange={handleChange}
                       className={`h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded ${
                         errors.hasSignedForm ? "border-red-500" : ""
                       }`}
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
+                />
+              </div>
+              <div className="ml-3 text-sm">
                     <Label htmlFor="hasSignedForm" className="font-medium text-gray-700">
                       Signed Form Confirmation <span className="text-red-500">*</span>
                     </Label>
@@ -405,8 +405,8 @@ const AddOfficerForm: React.FC<AddOfficerFormProps> = ({ isOpen, onClose, onSave
                     {errors.hasSignedForm && (
                       <p className="mt-1 text-xs text-red-600">{errors.hasSignedForm}</p>
                     )}
-                  </div>
-                </div>
+              </div>
+            </div>
               </div>
             </>
           )}

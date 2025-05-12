@@ -228,8 +228,8 @@ export const OfficersPage: React.FC = () => {
     }
   };
 
-  // Handler for Edit click (passed to OfficerList)
-  const handleEditClick = (officerId: string) => {
+   // Handler for Edit click (passed to OfficerList)
+   const handleEditClick = (officerId: string) => {
     const officerToEdit = officers.find(o => o.id === officerId);
     if (officerToEdit) {
         setSelectedOfficerForEdit(officerToEdit);
@@ -281,9 +281,18 @@ export const OfficersPage: React.FC = () => {
     setIsAddInterestModalOpen(false);
   };
 
+  const handleDeleteOfficer = (officerId: string) => {
+    setOfficers(prev => prev.filter(o => o.id !== officerId));
+    setInterests(prev => prev.filter(i => i.officerName !== officers.find(o=>o.id === officerId)?.fullName)); // Also remove related interests
+  };
+
+  const handleDeleteInterest = (interestId: string) => {
+    setInterests(prev => prev.filter(i => i.id !== interestId));
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-6 flex justify-between items-center"> {/* Use flex to align title and button */}
+      <div className="mb-6 flex justify-between items-center"> 
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">
             Officer Management 
@@ -291,23 +300,27 @@ export const OfficersPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Blue information box */}
-      <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-100 flex mb-6">
-        <div className="flex-shrink-0 mr-3">
+      {/* Blue information box - reduce padding and bottom margin */}
+      <div className="mt-4 bg-blue-50 p-3 rounded-lg border border-blue-100 flex mb-4"> {/* Reduced mt, p, mb */}
+        <div className="flex-shrink-0 mr-2"> {/* Reduced mr */}
           <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
         </div>
-        <div className="text-sm text-blue-700">
+        <div className="text-xs text-blue-700"> {/* Reduced font size from text-sm to text-xs */}
           <p>
             This page allows you to maintain two important registers for your society:
           </p>
-          <ol className="mt-2 list-decimal pl-5 space-y-1">
+          {/* Reduced top margin and font size for list items */}
+          <ol className="mt-1 list-decimal pl-4 space-y-0.5"> {/* Reduced mt, pl, space-y */}
             <li>The <strong>Officer Register</strong> tracks key office holders and their details. All officers need to provide consent to be appointed. When adding a new officer, they will receive an email invitation to complete a digital consent form. If an officer needs help accessing their form, please contact support.</li>
             <li>The <strong>Interests Register</strong> records any conflicts of interest that officers have declared to ensure transparency and proper governance.</li>
           </ol>
         </div>
       </div>
+      
+      {/* Render ComplianceActivities component here, above the Tabs */}
+      <ComplianceActivities />
 
       {/* Tabs and Content Area */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -346,9 +359,10 @@ export const OfficersPage: React.FC = () => {
               onViewDetailsClick={handleViewDetailsClick}
               onEditClick={handleEditClick}
               onViewConsentFormClick={handleViewConsentFormClick}
+              onDelete={handleDeleteOfficer}
             />}
           {activeTab === 'interests-register' && (
-            <InterestsRegister interests={interests} />
+            <InterestsRegister interests={interests} onDelete={handleDeleteInterest} />
           )}
           {activeTab === 'committees' && (
             <div className="text-gray-500 text-center py-12 bg-white rounded-b-lg border border-t-0 border-gray-200">
@@ -397,7 +411,8 @@ export const OfficersPage: React.FC = () => {
         isOpen={isAddInterestModalOpen}
         onClose={handleCloseAddInterestModal}
         onSave={handleSaveInterest}
-        onSendRequest={handleSendDisclosureRequest}
+        officers={officers} // Pass officer list for selection
+        onSendDisclosureRequest={handleSendDisclosureRequest}
       />
     </div>
   );

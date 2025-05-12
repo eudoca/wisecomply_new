@@ -7,7 +7,7 @@ import { Card, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge'; // Keep used Badge
 import { Tooltip } from '../wizard/Tooltip';
 import { cn } from '../../utils/cn';
-import Step1SocietyInfo from './activities/Step1SocietyInfo';
+// import Step1SocietyInfo from './activities/Step1SocietyInfo'; // Remove import
 import Step2Committee from './activities/Step2Committee';
 import Step3ContactPerson from './activities/Step3ContactPerson';
 import Step4Membership from './activities/Step4Membership';
@@ -198,9 +198,9 @@ const ComplianceActivities: React.FC = () => {
                      className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${ 
                        // Use conditional class application + style for ID 1
                        activity.id !== 1 ? (
-                         activity.status === 'completed' ? 'bg-purple-600 text-white' : 
-                         activity.status === 'in-progress' ? 'border-2 border-purple-600 text-purple-600' : 
-                         'bg-gray-200 text-gray-600'
+                      activity.status === 'completed' ? 'bg-purple-600 text-white' : 
+                      activity.status === 'in-progress' ? 'border-2 border-purple-600 text-purple-600' : 
+                      'bg-gray-200 text-gray-600'
                        ) : 'text-white' // For ID 1, ensure text is white
                      }`}
                      // Apply specific background color for ID 1 using inline style
@@ -250,12 +250,14 @@ const ComplianceActivities: React.FC = () => {
                </div>
              </div>
             
-            {/* Accordion Content - Render Step1SocietyInfo if activity.id is 1 and isOpen */}
+            {/* Accordion Content - Removed rendering for Step1SocietyInfo */}
+            {/* 
             {isOpen && activity.id === 1 && (
               <div className="p-6 border-t border-gray-200">
                 <Step1SocietyInfo onComplete={() => handleCompleteStep(1)} />
               </div>
             )}
+            */}
             {isOpen && activity.id === 2 && (
               <div className="p-6 border-t border-gray-200">
                 <Step2Committee onComplete={() => handleCompleteStep(2)} />

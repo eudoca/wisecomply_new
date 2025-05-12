@@ -158,20 +158,20 @@ export const DisputesPage: React.FC = () => {
             />
           </div>
           <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => alert('Filter functionality not implemented yet.')}
-            leftIcon={<FilterIcon className="h-4 w-4" />}
+             variant="outline" 
+             size="sm" 
+             onClick={() => alert('Filter functionality not implemented yet.')}
+             leftIcon={<FilterIcon className="h-4 w-4" />}
           >
             Filter
           </Button>
-          <Button 
-            size="sm" 
-            onClick={handleOpenAddModal}
-            leftIcon={<PlusIcon className="h-4 w-4" />}
-          >
-            Add Case
-          </Button>
+           <Button 
+             size="sm" 
+             onClick={handleOpenAddModal}
+             leftIcon={<PlusIcon className="h-4 w-4" />}
+           >
+             Add Case
+           </Button>
         </div>
       )}
 
@@ -184,25 +184,25 @@ export const DisputesPage: React.FC = () => {
               onTabChange={setSelectedTab}
               tabs={tabs}
             />
-          </div>
-          
-          {selectedCase ? (
-            <CaseDetails 
-              caseId={selectedCase.id} 
-              onBack={() => setSelectedCase(null)} 
-              onUpdateCase={handleUpdateCase} 
-            />
-          ) : (
+      </div>
+
+        {selectedCase ? (
+          <CaseDetails 
+            caseId={selectedCase.id} 
+            onBack={() => setSelectedCase(null)} 
+            onUpdateCase={handleUpdateCase} 
+          />
+        ) : (
             <div className="p-6">
-              <CaseList 
-                cases={disputes} 
-                onSelectCase={handleSelectCase} // Use the renamed handler
-                filterTab={selectedTab} 
-                searchQuery={searchQuery} 
-              />
+          <CaseList 
+            cases={disputes} 
+            onSelectCase={handleSelectCase} // Use the renamed handler
+            filterTab={selectedTab} 
+            searchQuery={searchQuery} 
+          />
             </div>
-          )}
-        </div>
+        )}
+      </div>
       )}
 
       {/* Display when disputes management is disabled */}

@@ -110,7 +110,7 @@ export const CalendarPage = () => {
         <div className="text-sm text-blue-700">
           <p>
             This page helps you schedule and track important events, deadlines, and meetings for your Society.
-          </p>
+        </p>
         </div>
       </div>
       

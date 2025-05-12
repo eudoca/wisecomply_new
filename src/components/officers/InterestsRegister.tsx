@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { cn } from '../../utils/cn';
+import { Trash2Icon, EditIcon, EyeIcon } from 'lucide-react';
 
 // Define interest types with colors
 const interestTypes = [
@@ -73,9 +74,10 @@ interface InterestDisclosure {
 
 interface InterestsRegisterProps {
   interests: InterestDisclosure[];
+  onDelete: (id: string) => void;
 }
 
-const InterestsRegister: React.FC<InterestsRegisterProps> = ({ interests }) => {
+const InterestsRegister: React.FC<InterestsRegisterProps> = ({ interests, onDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [interestType, setInterestType] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -250,8 +252,9 @@ const InterestsRegister: React.FC<InterestsRegisterProps> = ({ interests }) => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(interest.dateOfAwareness)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(interest.disclosureDate)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 space-x-2">
-                    <button className="hover:text-blue-800">View</button>
-                    <button className="hover:text-blue-800">Edit</button>
+                    <Button variant="ghost" size="sm" onClick={() => onDelete(interest.id)} title="Delete Interest" className="text-red-600 hover:text-red-800">
+                      <Trash2Icon className="h-4 w-4" />
+                    </Button>
                   </td>
                 </tr>
               ))

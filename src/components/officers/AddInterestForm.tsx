@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Officer } from '../../types/officer';
 
 interface InterestDisclosure {
   officerName: string;
@@ -25,7 +27,8 @@ interface AddInterestFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (interest: InterestDisclosure) => void;
-  onSendRequest: (request: DisclosureRequest) => void;
+  onSendDisclosureRequest: (request: DisclosureRequest) => void;
+  officers: Officer[];
 }
 
 type CompletionMode = 'self' | 'officer';
@@ -39,11 +42,8 @@ const interestTypes = [
   { id: 'other', label: 'Other' }
 ];
 
-const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSave, onSendRequest }) => {
-  // Track who will complete the form
+const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSave, onSendDisclosureRequest, officers }) => {
   const [completionMode, setCompletionMode] = useState<CompletionMode>('self');
-  
-  // Form for admin completing the disclosure directly
   const [formData, setFormData] = useState<InterestDisclosure>({
     officerName: '',
     position: '',
@@ -54,8 +54,6 @@ const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSa
     additionalNotes: '',
     confirmationAccuracy: false
   });
-  
-  // Form for sending a request to the officer
   const [requestData, setRequestData] = useState<DisclosureRequest>({
     officerName: '',
     officerEmail: '',
@@ -65,9 +63,48 @@ const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSa
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (completionMode === 'self' && formData.officerName) {
+      const selectedOfficer = officers.find(o => o.id === formData.officerName);
+      if (selectedOfficer) {
+        setFormData(prev => ({ ...prev, position: selectedOfficer.position }));
+      }
+    }
+  }, [formData.officerName, completionMode, officers]);
+
   const handleCompletionModeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCompletionMode(e.target.value as CompletionMode);
     setErrors({});
+    setFormData({
+      officerName: '', position: '', natureOfInterest: '', extentOfInterest: '',
+      monetaryValue: '', dateOfAwareness: '', additionalNotes: '', confirmationAccuracy: false
+    });
+    setRequestData({ officerName: '', officerEmail: '', message: '' });
+  };
+
+  const handleSelectChange = (name: keyof InterestDisclosure | keyof DisclosureRequest) => (value: string) => {
+    const fieldName = name as string;
+    if (completionMode === 'self') {
+      setFormData((prev) => ({
+        ...prev,
+        [fieldName]: value,
+      }));
+      if (fieldName === 'officerName') {
+        setFormData(prev => ({...prev, position: ''}));
+      }
+    } else {
+      setRequestData((prev) => ({
+        ...prev,
+        [fieldName]: value,
+      }));
+    }
+    if (errors[fieldName]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
   };
 
   const handleChange = (
@@ -75,34 +112,19 @@ const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSa
   ) => {
     const { name, value, type } = e.target;
     const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
-
-    // Update the appropriate form data based on completion mode
     if (completionMode === 'self') {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: val
-      }));
+      setFormData((prev) => ({ ...prev, [name]: val }));
     } else {
-      setRequestData((prev) => ({
-        ...prev,
-        [name]: val
-      }));
+      setRequestData((prev) => ({ ...prev, [name]: val }));
     }
-
-    // Clear error for this field when changed
     if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
+      setErrors((prev) => { delete prev[name]; return { ...prev }; });
     }
   };
 
   const validateSelfForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     
-    // Validate required fields
     if (!formData.officerName.trim()) {
       newErrors.officerName = 'Officer Name is required';
     }
@@ -127,7 +149,6 @@ const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSa
       newErrors.confirmationAccuracy = 'You must confirm the accuracy of the disclosure';
     }
     
-    // Validate monetary value as a number if provided
     if (formData.monetaryValue && !/^\d+(\.\d{1,2})?$/.test(formData.monetaryValue.replace(/[^0-9.]/g, ''))) {
       newErrors.monetaryValue = 'Monetary Value must be a valid currency amount';
     }
@@ -155,13 +176,16 @@ const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSa
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (completionMode === 'self') {
       if (validateSelfForm()) {
         setIsSubmitting(true);
-        
+        const selectedOfficer = officers.find(o => o.id === formData.officerName);
+        const dataToSave = {
+          ...formData,
+          officerName: selectedOfficer ? selectedOfficer.fullName : 'Unknown Officer',
+        };
         try {
-          onSave(formData);
+          onSave(dataToSave);
           resetForm();
           onClose();
         } catch (err) {
@@ -175,7 +199,7 @@ const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSa
         setIsSubmitting(true);
         
         try {
-          onSendRequest(requestData);
+          onSendDisclosureRequest(requestData);
           resetForm();
           onClose();
         } catch (err) {
@@ -227,7 +251,6 @@ const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSa
           </button>
         </div>
 
-        {/* Completion mode selector */}
         <div className="mb-6">
           <p className="text-sm font-medium text-gray-700 mb-2">Who will complete this disclosure?</p>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -263,83 +286,25 @@ const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSa
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
-          {/* Common fields for both modes */}
-          <div>
-            <Label htmlFor="officerName" className="block text-sm font-medium text-gray-700">
-              Officer Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="officerName"
-              name="officerName"
-              value={completionMode === 'self' ? formData.officerName : requestData.officerName}
-              onChange={handleChange}
-              className={errors.officerName ? "border-red-500" : ""}
-            />
-            {errors.officerName && (
-              <p className="mt-1 text-xs text-red-600">{errors.officerName}</p>
-            )}
-          </div>
-
-          {/* Fields for officer completion mode */}
-          {completionMode === 'officer' && (
-            <>
-              <div>
-                <Label htmlFor="officerEmail" className="block text-sm font-medium text-gray-700">
-                  Officer Email Address <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="officerEmail"
-                  name="officerEmail"
-                  type="email"
-                  value={requestData.officerEmail}
-                  onChange={handleChange}
-                  className={errors.officerEmail ? "border-red-500" : ""}
-                  placeholder="email@example.com"
-                />
-                {errors.officerEmail && (
-                  <p className="mt-1 text-xs text-red-600">{errors.officerEmail}</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="message" className="block text-sm font-medium text-gray-700">
-                  Message to Officer (Optional)
-                </Label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  value={requestData.message}
-                  onChange={handleChange}
-                  rows={4}
-                  placeholder="Include any additional instructions or context for the officer..."
-                />
-              </div>
-              <div className="bg-blue-50 p-4 rounded border border-blue-100 mt-4">
-                <h4 className="text-sm font-medium text-blue-800 mb-2">What happens next?</h4>
-                <p className="text-sm text-blue-700">
-                  The officer will receive an email with a link to complete the interest disclosure form. 
-                  You'll be notified when they submit their response.
-                </p>
-              </div>
-            </>
-          )}
-
-          {/* Fields for self completion mode */}
           {completionMode === 'self' && (
             <>
-              <div>
-                <Label htmlFor="position" className="block text-sm font-medium text-gray-700">
-                  Position/Role <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="position"
-                  name="position"
-                  value={formData.position}
-                  onChange={handleChange}
-                  className={errors.position ? "border-red-500" : ""}
-                />
-                {errors.position && (
-                  <p className="mt-1 text-xs text-red-600">{errors.position}</p>
-                )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="officerName">Officer</Label>
+                  <Select name="officerName" value={formData.officerName} onValueChange={handleSelectChange('officerName')}>
+                    <SelectTrigger id="officerName"><SelectValue placeholder="Select Officer..." /></SelectTrigger>
+                    <SelectContent>
+                      {officers.map(officer => (
+                        <SelectItem key={officer.id} value={officer.id}>{officer.fullName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.officerName && <p className="text-sm text-red-500">{errors.officerName}</p>}
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="position">Position</Label>
+                  <Input id="position" name="position" value={formData.position} readOnly className="bg-gray-100" />
+                </div>
               </div>
 
               <div>
@@ -470,7 +435,48 @@ const AddInterestForm: React.FC<AddInterestFormProps> = ({ isOpen, onClose, onSa
             </>
           )}
 
-          {/* Action Buttons */}
+          {completionMode === 'officer' && (
+            <>
+              <div>
+                <Label htmlFor="officerEmail" className="block text-sm font-medium text-gray-700">
+                  Officer Email Address <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="officerEmail"
+                  name="officerEmail"
+                  type="email"
+                  value={requestData.officerEmail}
+                  onChange={handleChange}
+                  className={errors.officerEmail ? "border-red-500" : ""}
+                  placeholder="email@example.com"
+                />
+                {errors.officerEmail && (
+                  <p className="mt-1 text-xs text-red-600">{errors.officerEmail}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="message" className="block text-sm font-medium text-gray-700">
+                  Message to Officer (Optional)
+                </Label>
+                <Textarea
+                  id="message"
+                  name="message"
+                  value={requestData.message}
+                  onChange={handleChange}
+                  rows={4}
+                  placeholder="Include any additional instructions or context for the officer..."
+                />
+              </div>
+              <div className="bg-blue-50 p-4 rounded border border-blue-100 mt-4">
+                <h4 className="text-sm font-medium text-blue-800 mb-2">What happens next?</h4>
+                <p className="text-sm text-blue-700">
+                  The officer will receive an email with a link to complete the interest disclosure form. 
+                  You'll be notified when they submit their response.
+                </p>
+              </div>
+            </>
+          )}
+
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
             <Button
               type="button"

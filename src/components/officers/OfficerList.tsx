@@ -53,20 +53,21 @@ const officers: Officer[] = [
   },
 ];
 
-// Define props for OfficerList (to receive officers from parent later if needed)
+// Define props for OfficerList
 interface OfficerListProps {
-   officers: Officer[]; // Expect officers array from parent
-   onViewDetailsClick: (id: string) => void; // Handler for View Details button
-   onEditClick: (id: string) => void; // Handler for Edit button
-   onViewConsentFormClick: (id: string) => void; // Handler for View Consent Form button
+   officers: Officer[];
+   onViewDetailsClick: (id: string) => void;
+   onEditClick: (id: string) => void;
+   onViewConsentFormClick: (id: string) => void;
+   onDelete: (id: string) => void; // Added onDelete prop
 }
 
-// Update component signature if props are added
 const OfficerList: React.FC<OfficerListProps> = ({ 
   officers, 
   onViewDetailsClick, 
   onEditClick,
-  onViewConsentFormClick 
+  onViewConsentFormClick,
+  onDelete // Destructure onDelete
 }) => {
   // Remove local handleViewDetails and handleEdit, use props instead
   // const handleViewDetails = (officerId: string) => { ... };
@@ -95,8 +96,8 @@ const OfficerList: React.FC<OfficerListProps> = ({
                 </p>
                 {officer.termEndDate && (
                   <p className="text-sm text-gray-600 mt-1">
-                    Term End: {officer.termEndDate}
-                  </p>
+                      Term End: {officer.termEndDate}
+                   </p>
                 )}
               </div>
               <div className="flex gap-2 flex-shrink-0">
@@ -109,11 +110,20 @@ const OfficerList: React.FC<OfficerListProps> = ({
                   <ClipboardIcon className="h-4 w-4" />
                   <span>View Consent Form</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => onViewDetailsClick(officer.id)}>
+                 <Button variant="outline" size="sm" onClick={() => onViewDetailsClick(officer.id)}>
                   View Details
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => onEditClick(officer.id)}>
                   Edit
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={() => onDelete(officer.id)} 
+                  className="flex items-center gap-1"
+                >
+                  <Trash2Icon className="h-4 w-4" />
+                  <span>Delete</span>
                 </Button>
               </div>
             </div>

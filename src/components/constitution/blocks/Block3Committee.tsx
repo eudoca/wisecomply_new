@@ -1,889 +1,365 @@
-import React, { useState, useEffect } from 'react';
-import { Info, HelpCircle, AlertCircle, AlertTriangle } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { StepProps, ConstitutionFormData } from '../ConstitutionWizard';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Tooltip } from '../../wizard/Tooltip';
-import { Textarea } from '@/components/ui/textarea';
+import React from 'react';
+import { StepProps } from '../ConstitutionWizard';
+import { ExternalLinkIcon, HelpCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
-// Standard Tailwind classes for inputs
-const baseInputClasses = "shadow-sm focus:ring-brand-primary focus:border-brand-primary block w-full sm:text-sm border-gray-300 rounded-md";
-const checkboxClasses = "h-4 w-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary";
-const labelClass = "block text-sm font-medium text-gray-700 mb-1"; // Standard label size for inputs/selects etc.
-const taskTitleClass = "text-base font-semibold text-gray-800 mb-1"; // Consistent task title
-const descriptionClass = "text-sm text-gray-600 mt-1 mb-3"; // Consistent description
-const errorClass = "mt-1 text-xs text-red-600"; // Error message class
-
-// Placeholder standard texts for role descriptions
-const standardGeneralDutiesText = "Committee members must act in good faith and in what they believe to be the best interests of the Society. They must exercise their powers for a proper purpose and with the care and diligence that a reasonable person with the same responsibilities would exercise in the same circumstances. They must comply with the Act and this Constitution."; // Based on Act s54-59
-const standardGeneralPowersText = "Subject to this Constitution and the Act, the Committee is responsible for the governance and management of the Society's affairs, property, and funds. The Committee may exercise all the Society's powers that are not required by the Act or this Constitution to be exercised by the members at a General Meeting.";
-
-// Define the props for the component
-interface Block3CommitteeProps extends StepProps {
-  onSaveProgress: (blockNumber: number) => void;
-  blockNumber: number;
+interface SubSectionData {
+  id: string;
+  number: string;
+  title: string;
+  isS26Compulsory: boolean;
+  actReferenceLabel?: string;
+  actReferenceLink?: string;
+  helpText: string;
 }
 
-// Define local validation error state type
-type LocalValidationErrors = Partial<Record<keyof ConstitutionFormData, string>>;
+const subSectionsForBlock3: SubSectionData[] = [
+  {
+    id: '3.01',
+    number: '3.01',
+    title: 'Number of officers',
+    isS26Compulsory: true,
+    actReferenceLabel: 'S45',
+    actReferenceLink: 'https://www.legislation.govt.nz/act/public/2022/0012/latest/LMS100956.html?search=sw_096be8ed81dce6e4_76_25_se&p=1&sr=2', // Link seems to be for S76 from image, S45 is officer qualifications
+    helpText: `The Incorporated Societies Act 2022 requires every society to have a committee made up of at least three officers. This sets the legal minimum to ensure proper oversight and accountability.\nYou can choose to either fix the number of officers or allow a range. A fixed number offers predictability but less flexibility. A range (e.g. between 3 and 7) gives your society room to grow while still meeting the minimum requirement.\nWhichever option you choose, the rules should reflect how your society operates in practice and be easy to update if your committee structure changes over time.`
+  },
+  {
+    id: '3.02',
+    number: '3.02',
+    title: 'Committee composition',
+    isS26Compulsory: true,
+    actReferenceLabel: 'S46',
+    actReferenceLink: 'https://www.legislation.govt.nz/act/public/2022/0012/latest/LMS100956.html?search=sw_096be8ed81dce6e4_76_25_se&p=1&sr=2', // Link seems to be for S76 from image, S46 is committee management
+    helpText: `The Incorporated Societies Act 2022 requires that a majority of the COMMITTEE must be either MEMBERs of the Society or representatives of body corporates that are MEMBERs. This ensures the COMMITTEE is primarily accountable to the society's membership.\nThis rule supports democratic governance and avoids situations where outsiders could control decision-making without having a direct connection to the Society. It ties voting power to those with a stake in the organisation.\nWhen setting your COMMITTEE rules, make sure this majority requirement is preserved - even if some external expertise is added to the COMMITTEE for operational or advisory reasons.`
+  },
+  {
+    id: '3.03',
+    number: '3.03',
+    title: 'Committee functions and powers',
+    isS26Compulsory: true,
+    actReferenceLabel: 'S46',
+    actReferenceLink: 'https://www.legislation.govt.nz/act/public/2022/0012/latest/LMS100956.html?search=sw_096be8ed81dce6e4_76_25_se&p=1&sr=2', // Link seems to be for S76
+    helpText: `Under the Incorporated Societies Act 2022, the committee is responsible for managing, or directing and supervising the management of, the society's operations and affairs. This ensures that the society has continuous governance throughout the year, not just at AGM points, maintaining operational stability and legal compliance.\nThe committee holds all powers necessary for managing the society, but these powers are bounded by the Act and the society's constitution. This framework prevents unauthorised or rogue decision-making, anchoring the committee's actions firmly within statutory and constitutional boundaries.\nEach committee member, as an officer of the society, must act in good faith and in the best interests of the society when performing their functions. This duty reinforces the main function of your committee and ensures that decisions are made with integrity and accountability.`
+  },
+  {
+    id: '3.04',
+    number: '3.04',
+    title: 'Sub-committees (if any)',
+    isS26Compulsory: false,
+    helpText: `Please note: There is no direct reference in the Act that requires or regulates sub-committees. This is a constitution-level governance choice.\nSocieties may wish to set up sub-committees to carry out specific tasks or provide advice to the main COMMITTEE. This clause makes clear that the COMMITTEE has the power to establish sub-committees and choose their members - whether or not those individuals are Society MEMBERs.\nTo ensure good governance, this clause places clear limits on sub-committees. They can't spend money or make financial commitments without express approval. They also can't delegate their powers further or co-opt others. These safeguards help the COMMITTEE retain oversight and prevent unauthorised actions.\nSetting quorum rules and membership restrictions for sub-committees helps ensure accountability and prevents decisions being made by too few people or by those with no link to the Society.`
+  },
+  {
+    id: '3.05',
+    number: '3.05',
+    title: 'General matters',
+    isS26Compulsory: false,
+    helpText: `Please note: There is no direct reference in the Act that requires or regulates committee proceedings. This is a constitution-level governance choice.\nThe COMMITTEE can appoint sub-committees and decide who serves on them - including people who are not Society MEMBERs. This gives flexibility to bring in skills or experience relevant to specific tasks or projects.\nThe clause sets boundaries to keep governance clear and controlled. Sub-committees must not commit the Society to any financial expenditure without COMMITTEE approval, cannot co-opt additional members, and must not further delegate powers. A minimum quorum ensures decisions are made with proper participation.\nThis structure is optional but widely used. It enables committees to delegate work without diluting accountability. It also reinforces that ultimate decision-making power stays with the full COMMITTEE, not sub-groups.`
+  },
+];
 
-// Validation logic specific to Block 3
-const validateBlock3 = (data: ConstitutionFormData): LocalValidationErrors => {
-  const errors: LocalValidationErrors = {};
+const clause302 = `A majority of the OFFICERs on the COMMITTEE must be either: \n• MEMBERs of the Society, or \n• representatives of bodies corporate that are MEMBERs of the Society.`;
+const clause303 = `From the end of each ANNUAL GENERAL MEETING until the end of the next, the Society shall be managed by, or under the direction or supervision of, the COMMITTEE in accordance with the Incorporated Societies Act 2022, any Regulations made under that ACT, and this CONSTITUTION.\n\nThe COMMITTEE has all the powers necessary for managing - and for directing and supervising the management of - the operation and affairs of the Society.`;
+const clause304 = `The COMMITTEE may appoint sub-committees consisting of such persons (whether or not MEMBERs of the Society) and for such purposes as it thinks fit. Unless otherwise resolved by the COMMITTEE—\n• the quorum of every sub-committee is half the members of the sub-committee but not less than 2,\n• no sub-committee shall have power to co-opt additional members,\n• a sub-committee must not commit the Society to any financial expenditure without express authority from the COMMITTEE, and\n• a sub-committee must not further delegate any of its powers.`;
+const clause305 = `The COMMITTEE and any sub-committee may act by resolution approved during a conference call using audio and/or audio-visual technology or through a written ballot conducted by email, electronic voting system, or post.\n\nAny such resolution shall be recorded in the minutes of the next COMMITTEE or sub-committee meeting.\n\nOther than as prescribed by the Act or this CONSTITUTION, the COMMITTEE or any sub-committee may regulate its proceedings as it thinks fit.`;
 
-  // Task 3.1
-  if (!data.block3_officerRoles || data.block3_officerRoles.length < 3) {
-    errors.block3_officerRoles = 'Select at least 3 officer roles (or minimum committee size).';
-  }
-  if (data.block3_officerRoles?.includes('add_custom_role') && !data.block3_officerRolesOther?.trim()) {
-    errors.block3_officerRolesOther = 'Please specify the custom role name.';
-  }
-  if (!data.block3_committeeMinSize || data.block3_committeeMinSize < 3) {
-    errors.block3_committeeMinSize = 'Minimum committee size must be at least 3.';
-  }
-  if (data.block3_committeeMaxSize && data.block3_committeeMinSize && data.block3_committeeMaxSize < data.block3_committeeMinSize) {
-    errors.block3_committeeMaxSize = 'Maximum size cannot be less than minimum size.';
-  }
-  // Potentially add validation for role description textareas if 'Yes' is selected
-
-  // Task 3.2
-  if (!data.block3_electionMethod) {
-    errors.block3_electionMethod = 'Select an election method.';
-  }
-  if ((data.block3_electionMethod === 'Appointed' || data.block3_electionMethod === 'Mix' || data.block3_electionMethod === 'Other') && !data.block3_electionMethodOther?.trim()) {
-    errors.block3_electionMethodOther = 'Specify details for the selected election method.';
-  }
-  if (data.block3_electionMethod === 'Elected' && !data.block3_electionProcess?.trim()) {
-    errors.block3_electionProcess = 'Describe the nomination and election process.';
-  }
-  if (!data.block3_termOfOffice) {
-    errors.block3_termOfOffice = 'Select the term of office.';
-  }
-  if (data.block3_termOfOffice === 'Other' && !data.block3_termOfOfficeOther?.trim()) {
-    errors.block3_termOfOfficeOther = 'Specify the other term of office.';
-  }
-  if (data.block3_reElectionLimits === true && !data.block3_reElectionLimitDetails?.trim()) {
-    errors.block3_reElectionLimitDetails = 'Specify the re-election limits.';
-  }
-  if (data.block3_canCoOpt === true) {
-    if (!data.block3_coOptDuration) {
-      errors.block3_coOptDuration = 'Select the co-option duration.';
-    }
-    if ((data.block3_coOptDuration === 'fixed' || data.block3_coOptDuration === 'Other') && !data.block3_coOptDurationOther?.trim()) {
-      errors.block3_coOptDurationOther = 'Specify the co-option duration details.';
-    }
-  }
-  if (!data.block3_casualVacancyMethod) {
-    errors.block3_casualVacancyMethod = 'Select how casual vacancies are filled.';
-  }
-  if (data.block3_casualVacancyMethod === 'Other' && !data.block3_casualVacancyMethodOther?.trim()) {
-    errors.block3_casualVacancyMethodOther = 'Specify the other method for filling vacancies.';
-  }
-
-  // Task 3.3
-  if (!data.block3_committeePowers) {
-    errors.block3_committeePowers = 'Select how committee powers are stated.';
-  }
-  if (data.block3_committeePowers === 'list' && !data.block3_committeePowersList?.trim()) {
-    errors.block3_committeePowersList = 'Provide the list of committee powers.';
-  }
-  if (data.block3_stateGeneralDuties === null || data.block3_stateGeneralDuties === undefined){
-    errors.block3_stateGeneralDuties = 'Please specify whether to state general duties.';
-  }
-
-  // Task 3.4
-  if (!data.block3_removalGrounds || data.block3_removalGrounds.length === 0) {
-    errors.block3_removalGrounds = 'Select at least one ground for removal.';
-  }
-  if (data.block3_removalGrounds?.includes('removal_absence') && (!data.block3_removalAbsenceNumber || data.block3_removalAbsenceNumber < 1)) {
-    errors.block3_removalAbsenceNumber = 'Specify a valid number of meetings for absence.';
-  }
-  if (!data.block3_removalProcedure) {
-    errors.block3_removalProcedure = 'Select the procedure for removal.';
-  }
-  if ((data.block3_removalProcedure === 'committee_res' || data.block3_removalProcedure === 'gm_res' || data.block3_removalProcedure === 'Other') && !data.block3_removalProcedureOther?.trim()) {
-    errors.block3_removalProcedureOther = 'Specify the majority or other procedure details.';
-  }
-
-  // Task 3.5
-  if (!data.block3_meetingFrequency) {
-    errors.block3_meetingFrequency = 'Select the meeting frequency.';
-  }
-  if (data.block3_meetingFrequency === 'Other' && (!data.block3_meetingFrequencyNumber || data.block3_meetingFrequencyNumber < 1)) {
-    errors.block3_meetingFrequencyNumber = 'Specify a valid number for meeting frequency.';
-  }
-  if (!data.block3_committeeQuorumType) {
-    errors.block3_committeeQuorumType = 'Select the quorum type.';
-  }
-  if (!data.block3_committeeQuorumValue || data.block3_committeeQuorumValue < 1) {
-    errors.block3_committeeQuorumValue = 'Specify a valid quorum value.';
-  }
-  if (data.block3_committeeQuorumType === 'percentage' && data.block3_committeeQuorumValue && data.block3_committeeQuorumValue > 100) {
-    errors.block3_committeeQuorumValue = 'Quorum percentage cannot exceed 100.';
-  }
-  if (!data.block3_committeeChair) {
-    errors.block3_committeeChair = 'Select who chairs committee meetings.';
-  }
-  if (data.block3_committeeChair === 'Other' && !data.block3_committeeChairOther?.trim()) {
-    errors.block3_committeeChairOther = 'Specify the other chair details.';
-  }
-  if (data.block3_chairCastingVote === null || data.block3_chairCastingVote === undefined){
-    errors.block3_chairCastingVote = 'Please specify if the Chairperson has a casting vote.';
-  }
-  if (data.block3_remoteMeetings === null || data.block3_remoteMeetings === undefined){
-    errors.block3_remoteMeetings = 'Please specify if remote meetings are allowed.';
-  }
-  if (data.block3_writtenResolutions === null || data.block3_writtenResolutions === undefined){
-    errors.block3_writtenResolutions = 'Please specify if written resolutions are allowed.';
-  }
-  if (data.block3_writtenResolutions === true && !data.block3_writtenResolutionApproval){
-    errors.block3_writtenResolutionApproval = 'Please specify the approval needed for written resolutions.';
-  }
-  if (data.block3_writtenResolutionApproval === 'Other' && !data.block3_writtenResolutionApprovalOther?.trim()){
-    errors.block3_writtenResolutionApprovalOther = 'Please specify the other approval method.';
-  }
-  if (!data.block3_conflictOfInterestMethod){
-    errors.block3_conflictOfInterestMethod = 'Please specify how conflicts of interest are managed.';
-  }
-  if (data.block3_conflictOfInterestMethod === 'Other' && !data.block3_conflictOfInterestMethodOther?.trim()){
-    errors.block3_conflictOfInterestMethodOther = 'Please specify the other conflict management method.';
-  }
-
-  // Task 3.6
-  if (!data.block3_contactPersonAppointment) {
-    errors.block3_contactPersonAppointment = 'Select how the contact person is appointed.';
-  }
-  if (data.block3_contactPersonAppointment === 'Other' && !data.block3_contactPersonAppointmentOther?.trim()) {
-    errors.block3_contactPersonAppointmentOther = 'Specify the other appointment method.';
-  }
-
-  return errors;
-};
-
-const Block3Committee: React.FC<Block3CommitteeProps> = ({ 
-    formData, 
-    updateFormData, 
-    onComplete,
-    onSaveProgress,
-    blockNumber
-}) => {
-  const [localErrors, setLocalErrors] = useState<LocalValidationErrors>({});
-
-  useEffect(() => {
-    const errors = validateBlock3(formData);
-    setLocalErrors(errors);
-  }, [formData]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    let processedValue: any = value;
-
-    if (type === 'number') {
-        processedValue = value === '' ? undefined : Number(value);
-    } else if (type === 'checkbox') {
-        return;
-    }
-
-    updateFormData(name as keyof ConstitutionFormData, processedValue);
-
-    if (localErrors[name as keyof ConstitutionFormData]) {
-        setLocalErrors(prev => {
-            const next = { ...prev };
-            delete next[name as keyof ConstitutionFormData];
-            return next;
-        });
-    }
+const Block3Committee: React.FC<StepProps> = ({ blockNumber, formData, updateFormData, onComplete, onSaveProgress }) => {
+  const handleGenericCheckboxChange = (field: keyof typeof formData, checked: boolean | 'indeterminate') => {
+    updateFormData(field, checked === true);
   };
-
-  const handleCheckboxGroupChange = (field: keyof ConstitutionFormData, value: string, checked: boolean) => {
-    const currentValues = (formData[field] as string[] | undefined) || [];
-    let newValues = checked ? [...currentValues, value] : currentValues.filter((item) => item !== value);
-    
-    if (field === 'block3_officerRoles') {
-        if (value === 'add_custom_role' && !checked) {
-            updateFormData('block3_officerRolesOther', '');
-            updateFormData('block3_roleDescriptionOther', '');
-            setLocalErrors(prev => {
-                const next = {...prev};
-                delete next.block3_officerRolesOther;
-                delete next.block3_roleDescriptionOther;
-                return next;
-            });
-        }
-    }
-     if (field === 'block3_removalGrounds') {
-        if (value === 'removal_absence' && !checked) {
-            updateFormData('block3_removalAbsenceNumber', undefined);
-            setLocalErrors(prev => { const next = {...prev}; delete next.block3_removalAbsenceNumber; return next; });
-        }
-         if (value === 'other' && !checked) {
-            updateFormData('block3_removalGroundsOther', '');
-            setLocalErrors(prev => { const next = {...prev}; delete next.block3_removalGroundsOther; return next; });
-        }
-     }
-
-    updateFormData(field, newValues);
-
-    if (localErrors[field]) {
-        setLocalErrors(prev => { const next = {...prev}; delete next[field]; return next; });
-    }
+  const handleNumberInputChange = (field: keyof typeof formData, value: string) => {
+    const num = parseInt(value, 10);
+    updateFormData(field, isNaN(num) ? undefined : num);
   };
-
-  const handleRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
-    if (field === 'block3_committeePowers' && value === 'general') {
-        updateFormData('block3_committeePowersList', '');
-        setLocalErrors(prev => { const next = {...prev}; delete next.block3_committeePowersList; return next; });
-    }
-
-    updateFormData(field, value);
-    if (localErrors[field]) {
-        setLocalErrors(prev => {
-          const next = { ...prev };
-          delete next[field];
-          return next;
-        });
-    }
-  };
-
-  const handleBooleanRadioChange = (field: keyof ConstitutionFormData, value: string | number | boolean) => {
-    const booleanValue = value === 'yes' || value === true ? true : value === 'no' || value === false ? false : null;
-
-    if (field === 'block3_includeRoleDescriptions' && booleanValue === false) {
-         updateFormData('block3_roleDescriptionPresident', '');
-         updateFormData('block3_roleDescriptionSecretary', '');
-         updateFormData('block3_roleDescriptionTreasurer', '');
-         updateFormData('block3_roleDescriptionOther', '');
-         setLocalErrors(prev => {
-             const next = {...prev};
-             delete next.block3_roleDescriptionPresident;
-             delete next.block3_roleDescriptionSecretary;
-             delete next.block3_roleDescriptionTreasurer;
-             delete next.block3_roleDescriptionOther;
-             return next;
-         });
-    }
-     if (field === 'block3_reElectionLimits' && booleanValue === false) {
-         updateFormData('block3_reElectionLimitDetails', '');
-         setLocalErrors(prev => { const next = {...prev}; delete next.block3_reElectionLimitDetails; return next; });
-     }
-     if (field === 'block3_canCoOpt' && booleanValue === false) {
-         updateFormData('block3_coOptDuration', '');
-         updateFormData('block3_coOptDurationOther', '');
-         setLocalErrors(prev => {
-             const next = {...prev};
-             delete next.block3_coOptDuration;
-             delete next.block3_coOptDurationOther;
-             return next;
-         });
-     }
-      if (field === 'block3_writtenResolutions' && booleanValue === false) {
-         updateFormData('block3_writtenResolutionApproval', '');
-         updateFormData('block3_writtenResolutionApprovalOther', '');
-         setLocalErrors(prev => {
-             const next = {...prev};
-             delete next.block3_writtenResolutionApproval;
-             delete next.block3_writtenResolutionApprovalOther;
-             return next;
-         });
-     }
-
-    updateFormData(field, booleanValue);
-    if (localErrors[field]) {
-        setLocalErrors(prev => { const next = {...prev}; delete next[field]; return next; });
-    }
-  };
-
-  const handleSave = () => {
-    const errors = validateBlock3(formData);
-    setLocalErrors(errors);
-    if (Object.keys(errors).length === 0) {
-      console.log('Block 3 Validation Passed');
-      onSaveProgress(blockNumber);
-      onComplete(blockNumber);
-    } else {
-      console.log('Block 3 Validation Failed', errors);
-      const firstErrorField = Object.keys(errors)[0];
-      const element = document.getElementById(firstErrorField);
-      if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element.focus();
-      }
-    }
-  };
-
-  const renderRoleDescription = (role: string) => {
-    let fieldKey: keyof ConstitutionFormData;
-    switch (role.toLowerCase()) {
-        case 'president': fieldKey = 'block3_roleDescriptionPresident'; break;
-        case 'secretary': fieldKey = 'block3_roleDescriptionSecretary'; break;
-        case 'treasurer': fieldKey = 'block3_roleDescriptionTreasurer'; break;
-        case 'add_custom_role': fieldKey = 'block3_roleDescriptionOther'; break;
-        default: return null;
-    }
-
-    const roleName = role === 'add_custom_role' ? formData.block3_officerRolesOther || 'Custom Role' : role;
-
-    return (
-        <textarea
-            id={fieldKey}
-            name={fieldKey}
-            value={formData[fieldKey] || ''}
-            onChange={handleInputChange}
-            className={`${baseInputClasses} mt-1 w-full ${localErrors[fieldKey] ? 'border-red-500' : ''}`}
-            placeholder={`Describe the duties of the ${roleName}`}
-            rows={3}
-        />
-    );
+  const handleOfficerNumberOptionChange = (value: string) => {
+    updateFormData('block3_01_officerNumberOption', value as 'fixed' | 'range');
+    if (value === 'fixed') updateFormData('block3_01_maxOfficerCount', undefined);
+    if (value === 'range') updateFormData('block3_01_fixedOfficerCount', undefined);
   };
 
   return (
     <div className="space-y-6">
-        <div> 
-            <div className="flex items-center gap-2">
-                <label className={taskTitleClass}>3.1 Committee Composition & Roles (Mandatory)
-                  <Tooltip text="Define the structure and roles of your committee. Minimum 3 members required.">
-                    <HelpCircle className="inline-block ml-1 h-4 w-4 text-gray-500 cursor-help" />
-                  </Tooltip>
-                </label>
-            </div>
-            <p className={descriptionClass}>Select all required roles. President/Secretary/Treasurer are common. Minimum 3 officers needed. (Ref: Act s45, s27(1)(f)(i))</p>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Select Officer Roles:</label>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" className={checkboxClasses} checked={formData.block3_officerRoles?.includes('President') || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCheckboxGroupChange('block3_officerRoles', 'President', e.target.checked)} /> President/Chairperson
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" className={checkboxClasses} checked={formData.block3_officerRoles?.includes('Secretary') || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCheckboxGroupChange('block3_officerRoles', 'Secretary', e.target.checked)} /> Secretary
-                </label>
-                 <label className="flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" className={checkboxClasses} checked={formData.block3_officerRoles?.includes('Treasurer') || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCheckboxGroupChange('block3_officerRoles', 'Treasurer', e.target.checked)} /> Treasurer
-                </label>
-                 <label className="flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" className={checkboxClasses} checked={formData.block3_officerRoles?.includes('Vice-President') || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCheckboxGroupChange('block3_officerRoles', 'Vice-President', e.target.checked)} /> Vice-President/Chair
-                </label>
-                 <label className="flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" className={checkboxClasses} checked={formData.block3_officerRoles?.includes('General Member') || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCheckboxGroupChange('block3_officerRoles', 'General Member', e.target.checked)} /> General Committee Member(s)
-                </label>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                     <input type="checkbox" className={checkboxClasses} checked={formData.block3_officerRoles?.includes('add_custom_role') || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCheckboxGroupChange('block3_officerRoles', 'add_custom_role', e.target.checked)} />
-                     <Input 
-                         type="text" 
-                         placeholder="Add Custom Role Name..." 
-                         value={formData.block3_officerRolesOther || ''}
-                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_officerRolesOther', e.target.value)}
-                         disabled={!formData.block3_officerRoles?.includes('add_custom_role')} 
-                         className={`flex-1 text-sm ${!formData.block3_officerRoles?.includes('add_custom_role') ? 'bg-gray-100 cursor-not-allowed' : ''} ${localErrors.block3_officerRolesOther ? 'border-red-500' : ''}`}
-                     />
-                 </div>
-            </div>
-            {localErrors.block3_officerRoles && <p className={errorClass}>{localErrors.block3_officerRoles}</p>}
-             {localErrors.block3_officerRolesOther && <p className={errorClass}>{localErrors.block3_officerRolesOther}</p>}
-
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                 <div>
-                    <label htmlFor="block3_committeeMinSize" className="block text-sm font-medium text-gray-700 mb-1">Minimum number on Committee?</label>
-                    <Input id="block3_committeeMinSize" name="block3_committeeMinSize" type="number" min="3" value={formData.block3_committeeMinSize || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_committeeMinSize', e.target.valueAsNumber)} className={localErrors.block3_committeeMinSize ? 'border-red-500' : ''} />
-                    {localErrors.block3_committeeMinSize && <p className={errorClass}>{localErrors.block3_committeeMinSize}</p>}
-                 </div>
-                 <div>
-                    <label htmlFor="block3_committeeMaxSize" className="block text-sm font-medium text-gray-700 mb-1">Maximum number on Committee?</label>
-                    <Input id="block3_committeeMaxSize" name="block3_committeeMaxSize" type="number" min={formData.block3_committeeMinSize || 3} value={formData.block3_committeeMaxSize || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_committeeMaxSize', e.target.valueAsNumber)} className={localErrors.block3_committeeMaxSize ? 'border-red-500' : ''} />
-                     {localErrors.block3_committeeMaxSize && <p className={errorClass}>{localErrors.block3_committeeMaxSize}</p>}
-                 </div>
-             </div>
-
-            <div className="pt-4 border-t border-gray-100">
-                 <Label className={labelClass}>Include descriptions of the duties for key officers? (Optional / Good Practice)</Label>
-                 <RadioGroup
-                     name="block3_includeRoleDescriptions"
-                     value={formData.block3_includeRoleDescriptions === true ? 'yes' : formData.block3_includeRoleDescriptions === false ? 'no' : ''}
-                     onValueChange={(value: string) => handleBooleanRadioChange('block3_includeRoleDescriptions', value)}
-                     className="flex space-x-4 mt-2"
-                 >
+      {subSectionsForBlock3.map((subSection) => (
+        <div key={subSection.id} className="p-4 rounded-lg bg-gray-50 shadow-sm space-y-4">
+          {/* Sub-section Header */}
+          <div className="flex justify-between items-center">
+            <h3 className="text-md font-semibold text-gray-800">{subSection.number} {subSection.title}</h3>
                      <div className="flex items-center space-x-2">
-                         <RadioGroupItem value="yes" id="b3-roles-yes" />
-                         <Label htmlFor="b3-roles-yes">Yes</Label>
-                     </div>
-                     <div className="flex items-center space-x-2">
-                         <RadioGroupItem value="no" id="b3-roles-no" />
-                         <Label htmlFor="b3-roles-no">No</Label>
-                     </div>
-                 </RadioGroup>
-                 {localErrors.block3_includeRoleDescriptions && <p className={errorClass}>{localErrors.block3_includeRoleDescriptions}</p>}
-                 <p className={descriptionClass}>Defining duties provides clarity for officers and members. (See example: Clauses 18, 19)</p>
-                 {formData.block3_includeRoleDescriptions === true && (
-                     <div className="mt-3 space-y-3">
-                         {formData.block3_officerRoles?.includes('President') && <div><label htmlFor="block3_roleDescriptionPresident" className="block text-sm font-medium text-gray-700 mb-1">President/Chairperson Duties:</label>{renderRoleDescription('President')}</div>}
-                         {formData.block3_officerRoles?.includes('Secretary') && <div><label htmlFor="block3_roleDescriptionSecretary" className="block text-sm font-medium text-gray-700 mb-1">Secretary Duties:</label>{renderRoleDescription('Secretary')}</div>}
-                         {formData.block3_officerRoles?.includes('Treasurer') && <div><label htmlFor="block3_roleDescriptionTreasurer" className="block text-sm font-medium text-gray-700 mb-1">Treasurer Duties:</label>{renderRoleDescription('Treasurer')}</div>}
-                          {formData.block3_officerRoles?.includes('add_custom_role') && formData.block3_officerRolesOther?.trim() && <div><label htmlFor="block3_roleDescriptionOther" className="block text-sm font-medium text-gray-700 mb-1">{formData.block3_officerRolesOther} Duties:</label>{renderRoleDescription('add_custom_role')}</div>}
-                         {localErrors.block3_roleDescriptionPresident && <p className={errorClass}>{localErrors.block3_roleDescriptionPresident}</p>}
-                         {localErrors.block3_roleDescriptionSecretary && <p className={errorClass}>{localErrors.block3_roleDescriptionSecretary}</p>}
-                         {localErrors.block3_roleDescriptionTreasurer && <p className={errorClass}>{localErrors.block3_roleDescriptionTreasurer}</p>}
-                         {localErrors.block3_roleDescriptionOther && <p className={errorClass}>{localErrors.block3_roleDescriptionOther}</p>}
-                     </div>
+              <span className={cn("flex items-center justify-center h-6 w-6 rounded-full text-xs font-medium border", subSection.isS26Compulsory ? "bg-[#8065F2] text-white border-[#8065F2]" : "bg-gray-200 text-gray-500 border-gray-300")} title={subSection.isS26Compulsory ? "Compulsory under Section 26 ISA 2022" : "Not compulsory under Section 26 ISA 2022"}>S26</span>
+              {subSection.actReferenceLabel && subSection.actReferenceLink && (
+                <a href={subSection.actReferenceLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 hover:text-gray-800 transition-colors" title={`View ${subSection.actReferenceLabel} in the Act`}>{subSection.actReferenceLabel}<ExternalLinkIcon className="w-3 h-3 ml-1 flex-shrink-0" /></a>
                  )}
             </div>
         </div>
 
-        <hr className="border-gray-200" /> 
+          <div className="pl-1 space-y-3">
+            <Accordion type="single" collapsible className="w-full bg-white rounded-md border mb-3">
+              <AccordionItem value={`help-${subSection.id}`} className="border-b-0">
+                <AccordionTrigger className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-md"><div className="flex items-center"><HelpCircle className="w-4 h-4 mr-2 text-purple-600" />Helpful information for this question</div></AccordionTrigger>
+                <AccordionContent className="px-4 pb-3 pt-1 text-sm text-gray-600">
+                  {subSection.helpText.split(/\n+/).map((p, i) => (
+                    <p key={i} className={i > 0 ? "mt-2" : ""}>{p.trim()}</p>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
-        <div> 
-             <div className="flex items-center gap-2">
-                 <label className={taskTitleClass}>3.2 Committee Election, Appointment & Terms
-                   <Tooltip text="How are committee members elected or appointed, and for how long?">
-                     <HelpCircle className="inline-block ml-1 h-4 w-4 text-gray-500 cursor-help" />
-                 </Tooltip>
-                 </label>
-             </div>
-             <p className={descriptionClass}>Detail the cycle of your committee. Consider eligibility (Act s47(3) restrictions apply automatically regarding bankruptcy, dishonesty convictions etc.). (Ref: Act s27(1)(f)(ii), (iii))</p>
-             <div className="space-y-4">
-                 <div>
-                     <label htmlFor="block3_electionMethod" className="block text-sm font-medium text-gray-700 mb-1">How are Committee members chosen?</label>
-                     <select id="block3_electionMethod" name="block3_electionMethod" className={`${baseInputClasses} ${localErrors.block3_electionMethod ? 'border-red-500' : ''}`} value={formData.block3_electionMethod || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFormData('block3_electionMethod', e.target.value)}>
-                         <option value="" disabled>Select...</option>
-                         <option value="Elected">Elected at the AGM</option>
-                         <option value="Appointed">Appointed by [Specify Body/Person]</option>
-                         <option value="Mix">Mix [Specify]</option>
-                         <option value="Other">Other [Specify]</option>
-                     </select>
-                     {(formData.block3_electionMethod === 'Appointed' || formData.block3_electionMethod === 'Mix' || formData.block3_electionMethod === 'Other') && (
-                         <Input type="text" className={`mt-1 block w-full ${localErrors.block3_electionMethodOther ? 'border-red-500' : ''}`} value={formData.block3_electionMethodOther || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_electionMethodOther', e.target.value)} placeholder="Specify details..."/>
-                     )}
-                     {localErrors.block3_electionMethod && <p className={errorClass}>{localErrors.block3_electionMethod}</p>}
-                     {localErrors.block3_electionMethodOther && <p className={errorClass}>{localErrors.block3_electionMethodOther}</p>}
-                 </div>
-                 {formData.block3_electionMethod === 'Elected' && (
-                     <div>
-                         <label htmlFor="block3_electionProcess" className="block text-sm font-medium text-gray-700 mb-1">Describe the nomination and election process:</label>
-                         <textarea id="block3_electionProcess" name="block3_electionProcess" rows={3} className={`${baseInputClasses} ${localErrors.block3_electionProcess ? 'border-red-500' : ''}`} value={formData.block3_electionProcess || ''} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFormData('block3_electionProcess', e.target.value)} placeholder="e.g., Call for nominations 4 weeks before AGM, nominations close 2 weeks prior, voting by secret ballot if contested."/>
-                          {localErrors.block3_electionProcess && <p className={errorClass}>{localErrors.block3_electionProcess}</p>}
+            {subSection.id === '3.01' && (
+              <>
+                <p className="text-sm text-gray-700">Choose the clause to include in your constitution</p>
+                <RadioGroup value={formData.block3_01_officerNumberOption} onValueChange={handleOfficerNumberOptionChange} className="space-y-2 pt-1">
+                  <div className="flex items-start space-x-3 p-3 rounded-md border bg-slate-100 border-slate-200 hover:border-purple-300 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
+                    <RadioGroupItem value="fixed" id={`${subSection.id}-fixed`} className="mt-1" />
+                    <Label htmlFor={`${subSection.id}-fixed`} className="flex-1 text-sm font-normal text-gray-700">
+                      The COMMITTEE will consist of <Input 
+                        type="number" 
+                        min={3} 
+                        max={20} 
+                        value={formData.block3_01_fixedOfficerCount === undefined ? '' : formData.block3_01_fixedOfficerCount} 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const value = parseInt(e.target.value, 10);
+                          if (!isNaN(value) && value >= 3 && value <= 20) {
+                            handleNumberInputChange('block3_01_fixedOfficerCount', e.target.value);
+                          } else if (e.target.value === '') {
+                            updateFormData('block3_01_fixedOfficerCount', undefined);
+                          }
+                        }} 
+                        disabled={formData.block3_01_officerNumberOption !== 'fixed'} 
+                        className="inline-block w-20 h-7 px-2 text-xs mx-1 align-baseline bg-white border-gray-300 rounded-sm p-2" 
+                      /> OFFICERs.
+                    </Label>
                      </div>
-                 )}
- 
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                     <div>
-                         <label htmlFor="block3_termOfOffice" className="block text-sm font-medium text-gray-700 mb-1">Term of office for Committee members?</label>
-                          <select id="block3_termOfOffice" name="block3_termOfOffice" className={`${baseInputClasses} ${localErrors.block3_termOfOffice ? 'border-red-500' : ''}`} value={formData.block3_termOfOffice || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFormData('block3_termOfOffice', e.target.value)}>
-                             <option value="" disabled>Select...</option>
-                             <option value="1">1 year</option>
-                             <option value="2">2 years</option>
-                             <option value="3">3 years</option>
-                             <option value="Other">Other (Specify)</option>
-                         </select>
-                         {formData.block3_termOfOffice === 'Other' && (
-                             <Input type="text" className={`mt-1 block w-full ${localErrors.block3_termOfOfficeOther ? 'border-red-500' : ''}`} value={formData.block3_termOfOfficeOther || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_termOfOfficeOther', e.target.value)} placeholder="Specify other term..."/>
-                         )}
-                         {localErrors.block3_termOfOffice && <p className={errorClass}>{localErrors.block3_termOfOffice}</p>}
-                         {localErrors.block3_termOfOfficeOther && <p className={errorClass}>{localErrors.block3_termOfOfficeOther}</p>}
-                     </div>
-                     <div>
-                         <Label className={labelClass}>Are there limits on re-election?</Label>
-                         <RadioGroup
-                             name="block3_reElectionLimits"
-                             value={formData.block3_reElectionLimits === true ? 'yes' : formData.block3_reElectionLimits === false ? 'no' : ''}
-                             onValueChange={(value: string) => handleBooleanRadioChange('block3_reElectionLimits', value)}
-                             className="flex space-x-4 mt-2"
-                         >
-                              <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="yes" id="b3-reElect-yes" />
-                                  <Label htmlFor="b3-reElect-yes">Yes</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="no" id="b3-reElect-no" />
-                                  <Label htmlFor="b3-reElect-no">No</Label>
-                              </div>
-                         </RadioGroup>
-                         {localErrors.block3_reElectionLimits && <p className={errorClass}>{localErrors.block3_reElectionLimits}</p>}
-                          {formData.block3_reElectionLimits === true && (
-                             <Input
-                                 id="block3_reElectionLimitDetails"
-                                 name="block3_reElectionLimitDetails"
-                                 type="text"
-                                 className={`mt-1 block w-full ${localErrors.block3_reElectionLimitDetails ? 'border-red-500' : ''}`}
-                                 value={formData.block3_reElectionLimitDetails || ''}
-                                 onChange={handleInputChange}
-                                 placeholder="Specify limit (e.g., Max 3 consecutive terms)"
-                             />
-                         )}
-                     </div>
-                 </div>
- 
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                      <div>
-                         <Label className={labelClass}>Can the Committee co-opt members between AGMs?</Label>
-                         <RadioGroup
-                             name="block3_canCoOpt"
-                             value={formData.block3_canCoOpt === true ? 'yes' : formData.block3_canCoOpt === false ? 'no' : ''}
-                             onValueChange={(value: string) => handleBooleanRadioChange('block3_canCoOpt', value)}
-                             className="flex space-x-4 mt-2"
-                         >
-                              <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="yes" id="b3-coopt-yes" />
-                                  <Label htmlFor="b3-coopt-yes">Yes</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="no" id="b3-coopt-no" />
-                                  <Label htmlFor="b3-coopt-no">No</Label>
-                              </div>
-                         </RadioGroup>
-                         {localErrors.block3_canCoOpt && <p className={errorClass}>{localErrors.block3_canCoOpt}</p>}
-                          {formData.block3_canCoOpt === true && (
-                              <div>
-                                 <label htmlFor="block3_coOptDuration" className="block text-sm font-medium text-gray-700 mb-1">For how long can they be co-opted?</label>
-                                  <select id="block3_coOptDuration" name="block3_coOptDuration" className={`${baseInputClasses} ${localErrors.block3_coOptDuration ? 'border-red-500' : ''}`} value={formData.block3_coOptDuration || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFormData('block3_coOptDuration', e.target.value)}>
-                                     <option value="" disabled>Select...</option>
-                                     <option value="next_agm">Until the next AGM</option>
-                                     <option value="fixed">Fixed period [Specify]</option>
-                                     <option value="Other">Other [Specify]</option>
-                                 </select>
-                                 {(formData.block3_coOptDuration === 'fixed' || formData.block3_coOptDuration === 'Other') && (
-                                     <Input type="text" className={`mt-1 block w-full ${localErrors.block3_coOptDurationOther ? 'border-red-500' : ''}`} value={formData.block3_coOptDurationOther || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_coOptDurationOther', e.target.value)} placeholder="Specify duration..."/>
-                                 )}
-                                 {localErrors.block3_coOptDuration && <p className={errorClass}>{localErrors.block3_coOptDuration}</p>}
-                                 {localErrors.block3_coOptDurationOther && <p className={errorClass}>{localErrors.block3_coOptDurationOther}</p>}
-                             </div>
-                          )}
-                     </div>
-                     <div>
-                         <label htmlFor="block3_casualVacancyMethod" className="block text-sm font-medium text-gray-700 mb-1">How are casual vacancies filled?</label>
-                          <select id="block3_casualVacancyMethod" name="block3_casualVacancyMethod" className={`${baseInputClasses} ${localErrors.block3_casualVacancyMethod ? 'border-red-500' : ''}`} value={formData.block3_casualVacancyMethod || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFormData('block3_casualVacancyMethod', e.target.value)}>
-                             <option value="" disabled>Select...</option>
-                             <option value="committee_appoints">Committee appoints replacement until next AGM</option>
-                             <option value="vacant">Position left vacant until next AGM</option>
-                             <option value="sgm_election">SGM called to elect replacement</option>
-                             <option value="Other">Other (Specify)</option>
-                         </select>
-                         {formData.block3_casualVacancyMethod === 'Other' && (
-                             <Input type="text" className={`mt-1 block w-full ${localErrors.block3_casualVacancyMethodOther ? 'border-red-500' : ''}`} value={formData.block3_casualVacancyMethodOther || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_casualVacancyMethodOther', e.target.value)} placeholder="Specify other method..."/>
-                         )}
-                         {localErrors.block3_casualVacancyMethod && <p className={errorClass}>{localErrors.block3_casualVacancyMethod}</p>}
-                         {localErrors.block3_casualVacancyMethodOther && <p className={errorClass}>{localErrors.block3_casualVacancyMethodOther}</p>}
-                     </div>
-                 </div>
-             </div>
-        </div>
-
-        <hr className="border-gray-200" /> 
-
-        <div> 
-            <div className="flex items-center gap-2">
-                <label className={taskTitleClass}>3.3 Committee Powers & Functions
-                  <Tooltip text="Define what the committee is responsible for.">
-                    <HelpCircle className="inline-block ml-1 h-4 w-4 text-gray-500 cursor-help" />
-                  </Tooltip>
-                </label>
-            </div>
-            <p className={descriptionClass}>Define the committee&apos;s role. General powers usually suffice. Stating duties reminds officers of obligations under Act s46, s54-59. (Ref: s27(1)(f)(iv))</p>
-            <div className="space-y-4">
-                 <div>
-                     <RadioGroup
-                         name="block3_committeePowers"
-                         value={formData.block3_committeePowers || 'general'}
-                         onValueChange={(value) => handleRadioChange('block3_committeePowers', value as string)}
-                         className="flex flex-col space-y-2 mt-2"
-                     >
-                         <Label className={labelClass}>How do you want to state the Committee&apos;s powers and functions?</Label>
-                         <div className="flex items-center space-x-2">
-                             <RadioGroupItem value="list" id="b3-power-list" />
-                             <Label htmlFor="b3-power-list">Include a detailed list of powers (Editable template below)</Label>
-                         </div>
-                         <div className="flex items-center space-x-2">
-                             <RadioGroupItem value="general" id="b3-power-general" />
-                             <Label htmlFor="b3-power-general">State general powers of governance (Recommended standard clause below)</Label>
-                         </div>
-                     </RadioGroup>
-                     {localErrors.block3_committeePowers && <p className={errorClass}>{localErrors.block3_committeePowers}</p>}
-                     
-                     <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded text-xs">
-                         {formData.block3_committeePowers === 'list' ? (
-                             <textarea
-                                className={`${baseInputClasses} text-xs ${localErrors.block3_committeePowersList ? 'border-red-500' : ''}`}
-                                rows={5}
-                                value={formData.block3_committeePowersList || 'Example: Employ staff, Enter contracts, Manage finances...'}
-                                onChange={handleInputChange}
-                             />
-                         ) : (
-                             <p>{standardGeneralPowersText}</p>
-                         )}
-                     </div>
-                      {localErrors.block3_committeePowersList && <p className={errorClass}>{localErrors.block3_committeePowersList}</p>}
-                 </div>
-                 <div className="pt-4 border-t border-gray-100">
-                     <RadioGroup
-                         name="block3_stateGeneralDuties"
-                         value={formData.block3_stateGeneralDuties === true ? 'yes' : formData.block3_stateGeneralDuties === false ? 'no' : 'yes'}
-                         onValueChange={(value) => handleBooleanRadioChange('block3_stateGeneralDuties', value)}
-                         className="flex flex-col space-y-2 mt-2"
-                     >
-                         <Label className={labelClass}>Do you want to explicitly state the general duties of Committee members (acting in good faith, care/diligence, etc.)?</Label>
-                          <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="yes" id="b3-duties-yes" />
-                              <Label htmlFor="b3-duties-yes">Yes (Recommended - Standard text below)</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="no" id="b3-duties-no" />
-                              <Label htmlFor="b3-duties-no">No</Label>
-                          </div>
-                     </RadioGroup>
-                     {localErrors.block3_stateGeneralDuties && <p className={errorClass}>{localErrors.block3_stateGeneralDuties}</p>}
-                     {formData.block3_stateGeneralDuties === true && (
-                         <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded text-xs">
-                             <p>{standardGeneralDutiesText}</p>
-                         </div>
-                     )}
-                 </div>
-            </div>
-        </div>
-
-        <hr className="border-gray-200" /> 
-
-        <div> 
-             <div className="flex items-center gap-2">
-                <label className={taskTitleClass}>3.4 Grounds and Procedure for Removal from Committee
-                   <Tooltip text="Define how committee members can be removed, ensuring fairness.">
-                    <HelpCircle className="inline-block ml-1 h-4 w-4 text-gray-500 cursor-help" />
-                  </Tooltip>
-                </label>
-            </div>
-             <p className={descriptionClass}>Must include grounds and procedure, ensuring the process is fair (natural justice - the person should have a chance to respond). (Ref: Act s50, s27(1)(f)(v))</p>
-             <div className="space-y-4">
-                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Grounds for removal before term ends?</label>
-                     <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" className={checkboxClasses} checked={formData.block3_removalGrounds?.includes('misconduct') || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCheckboxGroupChange('block3_removalGrounds', 'misconduct', e.target.checked)} />
-                            Breach of duties / Serious misconduct
-                        </label>
-                         <div className="flex items-center gap-2 text-sm text-gray-700">
-                             <input type="checkbox" className={checkboxClasses} checked={formData.block3_removalGrounds?.includes('removal_absence') || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCheckboxGroupChange('block3_removalGrounds', 'removal_absence', e.target.checked)} />
-                             Extended unexplained absence from meetings (Specify number):
-                             {formData.block3_removalGrounds?.includes('removal_absence') && (
-                                 <Input 
-                                     type="number" 
-                                     className={`w-16 ml-1 ${localErrors.block3_removalAbsenceNumber ? 'border-red-500' : ''}`} 
-                                     min="1" 
-                                     value={formData.block3_removalAbsenceNumber || ''} 
-                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_removalAbsenceNumber', e.target.valueAsNumber)} 
-                                 />
-                             )}
-                        </div>
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" className={checkboxClasses} checked={formData.block3_removalGrounds?.includes('ineligible') || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCheckboxGroupChange('block3_removalGrounds', 'ineligible', e.target.checked)} />
-                            Becomes ineligible under the Act (e.g., bankrupt)
-                        </label>
-                         <div className="flex items-start gap-2">
-                             <label className="flex items-center gap-2 text-sm text-gray-700 pt-1">
-                                 <input type="checkbox" className={checkboxClasses} checked={formData.block3_removalGrounds?.includes('other') || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCheckboxGroupChange('block3_removalGrounds', 'other', e.target.checked)} />
-                                 Other:
-                             </label>
-                             {formData.block3_removalGrounds?.includes('other') && (
-                                 <textarea rows={2} className={`flex-1 ${baseInputClasses} ${localErrors.block3_removalGroundsOther ? 'border-red-500' : ''}`} value={formData.block3_removalGroundsOther || ''} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFormData('block3_removalGroundsOther', e.target.value)} placeholder="Describe other grounds..."/>
-                             )}
-                         </div>
-                     </div>
-                     {localErrors.block3_removalGrounds && <p className={errorClass}>{localErrors.block3_removalGrounds}</p>}
+                  <div className="flex items-start space-x-3 p-3 rounded-md border bg-slate-100 border-slate-200 hover:border-purple-300 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
+                    <RadioGroupItem value="range" id={`${subSection.id}-range`} className="mt-1" />
+                    <Label htmlFor={`${subSection.id}-range`} className="flex-1 text-sm font-normal text-gray-700">
+                      The COMMITTEE will consist of at least 3 OFFICERs and no more than <Input 
+                        type="number" 
+                        min={4} 
+                        max={20} 
+                        value={formData.block3_01_maxOfficerCount === undefined ? '' : formData.block3_01_maxOfficerCount} 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const value = parseInt(e.target.value, 10);
+                          if (!isNaN(value) && value >= 4 && value <= 20) {
+                            handleNumberInputChange('block3_01_maxOfficerCount', e.target.value);
+                          } else if (e.target.value === '') {
+                            updateFormData('block3_01_maxOfficerCount', undefined);
+                          }
+                        }} 
+                        disabled={formData.block3_01_officerNumberOption !== 'range'} 
+                        className="inline-block w-20 h-7 px-2 text-xs mx-1 align-baseline bg-white border-gray-300 rounded-sm p-2" 
+                      /> OFFICERs.
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </>
+            )}
+            {subSection.id === '3.02' && (
+              <>
+                <p className="text-sm text-gray-700">Select to include the clause in your constitution</p>
+                <div className="flex items-center space-x-2 py-2">
+                  <Checkbox id={`${subSection.id}-includeClause`} checked={!!formData.block3_02_includeCompositionClause} onCheckedChange={(checked: boolean | 'indeterminate') => handleGenericCheckboxChange('block3_02_includeCompositionClause', checked)} />
+                  <Label htmlFor={`${subSection.id}-includeClause`} className="text-sm font-medium leading-none">Include clause for committee composition</Label>
                 </div>
-                 <div className="pt-4 border-t border-gray-100">
-                    <label htmlFor="block3_removalProcedure" className="block text-sm font-medium text-gray-700 mb-1">Procedure for removal?</label>
-                     <select id="block3_removalProcedure" name="block3_removalProcedure" className={`${baseInputClasses} ${localErrors.block3_removalProcedure ? 'border-red-500' : ''}`} value={formData.block3_removalProcedure || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFormData('block3_removalProcedure', e.target.value)}>
-                         <option value="" disabled>Select...</option>
-                         <option value="committee_res">Resolution of the Committee (specify majority)</option>
-                         <option value="gm_res">Resolution at a General Meeting (specify majority)</option>
-                         <option value="Other">Other (Specify)</option>
-                     </select>
-                     {(formData.block3_removalProcedure === 'committee_res' || formData.block3_removalProcedure === 'gm_res' || formData.block3_removalProcedure === 'Other') && (
-                         <Input type="text" className={`mt-1 block w-full ${localErrors.block3_removalProcedureOther ? 'border-red-500' : ''}`} value={formData.block3_removalProcedureOther || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_removalProcedureOther', e.target.value)} placeholder="Specify majority needed or other procedure..."/>
-                     )}
-                      {localErrors.block3_removalProcedure && <p className={errorClass}>{localErrors.block3_removalProcedure}</p>}
-                     {localErrors.block3_removalProcedureOther && <p className={errorClass}>{localErrors.block3_removalProcedureOther}</p>}
+                <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-2">Committee Composition Requirements</h4>
+                <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-700 mb-3">
+                  <div className="break-inside-avoid border-l-4 border-violet-300 px-3 py-2">
+                    {clause302.split(/\n+/).map((line, idx) => {
+                      const trimmedLine = line.trim(); 
+                      if (trimmedLine === "") return null;
+                      
+                      if (trimmedLine.startsWith('•')) { 
+                        return (
+                          <div 
+                            key={idx} 
+                            className="block text-xs text-gray-700 font-normal leading-snug pl-4 mt-1"
+                          >
+                            <span className="mr-1 text-violet-400">&bull;</span>
+                            <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
+                          </div>
+                        ); 
+                      } else if (trimmedLine.startsWith('o')) {
+                        return (
+                          <div 
+                            key={idx} 
+                            className="block text-xs text-gray-700 font-normal leading-snug pl-8 mt-1"
+                          >
+                            <span className="mr-1 text-violet-400">○</span>
+                            <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`block text-xs text-gray-700 font-normal leading-snug ${idx > 0 ? "mt-2" : ""}`}
+                          dangerouslySetInnerHTML={{ __html: trimmedLine }} 
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-            </div>
-        </div>
-
-        <hr className="border-gray-200" /> 
-
-        <div> 
-             <div className="flex items-center gap-2">
-                <label className={taskTitleClass}>3.5 Committee Meetings & Procedures
-                   <Tooltip text="Define how the committee holds meetings and makes decisions.">
-                         <HelpCircle className="inline-block ml-1 h-4 w-4 text-gray-500 cursor-help" />
-                     </Tooltip>
-                </label>
-             </div>
-             <p className={descriptionClass}>Define the basic rules for how your committee operates. (Ref: Act s27(1)(f)(vii))</p>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div>
-                     <label htmlFor="block3_meetingFrequency" className="block text-sm font-medium text-gray-700 mb-1">How often should the Committee aim to meet?</label>
-                     <select id="block3_meetingFrequency" name="block3_meetingFrequency" className={`${baseInputClasses} ${localErrors.block3_meetingFrequency ? 'border-red-500' : ''}`} value={formData.block3_meetingFrequency || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFormData('block3_meetingFrequency', e.target.value)}>
-                         <option value="" disabled>Select...</option>
-                         <option value="Monthly">Monthly</option>
-                         <option value="Bi-Monthly">Bi-Monthly</option>
-                         <option value="Quarterly">Quarterly</option>
-                         <option value="number_per_year">At least [Number] times per year</option>
-                         <option value="As required">As required</option>
-                         <option value="Other">Other (Specify)</option> 
-                     </select>
-                     {formData.block3_meetingFrequency === 'number_per_year' && (
-                         <Input type="number" min="1" className={`mt-1 block w-24 ${localErrors.block3_meetingFrequencyNumber ? 'border-red-500' : ''}`} value={formData.block3_meetingFrequencyNumber || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_meetingFrequencyNumber', e.target.valueAsNumber)} placeholder="Number"/>
-                     )}
-                 </div>
-                 <div>
-                     <label htmlFor="block3_committeeQuorumValue" className="block text-sm font-medium text-gray-700 mb-1">Quorum for Committee meetings?</label>
-                     <div className="flex items-center gap-2">
-                        <Input id="block3_committeeQuorumValue" name="block3_committeeQuorumValue" type="number" min="1" className={`w-24 ${localErrors.block3_committeeQuorumValue ? 'border-red-500' : ''}`} value={formData.block3_committeeQuorumValue || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_committeeQuorumValue', e.target.valueAsNumber)} placeholder="Number"/>
-                        <select className={baseInputClasses + " flex-1 py-1 text-sm"} value={formData.block3_committeeQuorumType || 'number'} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFormData('block3_committeeQuorumType', e.target.value)}>
-                             <option value="number">members</option>
-                             <option value="percentage">percent (%) of members</option>
-                         </select>
-                     </div>
-                     {localErrors.block3_committeeQuorumValue && <p className={errorClass}>{localErrors.block3_committeeQuorumValue}</p>}
-                 </div>
-             </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                 <div>
-                    <label htmlFor="block3_committeeChair" className="block text-sm font-medium text-gray-700 mb-1">Who chairs Committee meetings?</label>
-                     <select id="block3_committeeChair" name="block3_committeeChair" className={`${baseInputClasses} ${localErrors.block3_committeeChair ? 'border-red-500' : ''}`} value={formData.block3_committeeChair || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFormData('block3_committeeChair', e.target.value)}>
-                         <option value="" disabled>Select...</option>
-                         <option value="President">President/Chairperson chairs; if absent, Committee elects chair for meeting</option>
-                         <option value="Other">Other (Specify)</option>
-                     </select>
-                      {formData.block3_committeeChair === 'Other' && (
-                        <Input type="text" className={`mt-1 block w-full ${localErrors.block3_committeeChairOther ? 'border-red-500' : ''}`} value={formData.block3_committeeChairOther || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_committeeChairOther', e.target.value)} placeholder="Specify other chair arrangement..."/>
-                     )}
-                     {localErrors.block3_committeeChair && <p className={errorClass}>{localErrors.block3_committeeChair}</p>}
-                     {localErrors.block3_committeeChairOther && <p className={errorClass}>{localErrors.block3_committeeChairOther}</p>}
-                 </div>
-                 <div>
-                      <Label className={labelClass}>Is a casting vote allowed for the Chairperson?</Label>
-                     <RadioGroup
-                         name="block3_chairCastingVote"
-                         value={formData.block3_chairCastingVote === true ? 'yes' : formData.block3_chairCastingVote === false ? 'no' : ''}
-                         onValueChange={(value) => handleBooleanRadioChange('block3_chairCastingVote', value)}
-                         className="flex space-x-4 mt-2"
-                     >
-                          <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="yes" id="b3-castvote-yes" />
-                              <Label htmlFor="b3-castvote-yes">Yes</Label>
+              </>
+            )}
+            {subSection.id === '3.03' && (
+              <>
+                <p className="text-sm text-gray-700">Select to include the clause in your constitution</p>
+                <div className="flex items-center space-x-2 py-2">
+                  <Checkbox id={`${subSection.id}-includeClause`} checked={!!formData.block3_03_includeFunctionsPowersClause} onCheckedChange={(checked: boolean | 'indeterminate') => handleGenericCheckboxChange('block3_03_includeFunctionsPowersClause', checked)} />
+                  <Label htmlFor={`${subSection.id}-includeClause`} className="text-sm font-medium leading-none">Include clause for committee functions and powers</Label>
+                </div>
+                <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-2">Committee Functions and Powers</h4>
+                <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-700 mb-3">
+                  <div className="break-inside-avoid border-l-4 border-violet-300 px-3 py-2">
+                    {clause303.split(/\n+/).map((line, idx) => {
+                      const trimmedLine = line.trim(); 
+                      if (trimmedLine === "") return null;
+                      
+                      if (trimmedLine.startsWith('•')) { 
+                        return (
+                          <div 
+                            key={idx} 
+                            className="block text-xs text-gray-700 font-normal leading-snug pl-4 mt-1"
+                          >
+                            <span className="mr-1 text-violet-400">&bull;</span>
+                            <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
                           </div>
-                          <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="no" id="b3-castvote-no" />
-                              <Label htmlFor="b3-castvote-no">No</Label>
+                        ); 
+                      } else if (trimmedLine.startsWith('o')) {
+                        return (
+                          <div 
+                            key={idx} 
+                            className="block text-xs text-gray-700 font-normal leading-snug pl-8 mt-1"
+                          >
+                            <span className="mr-1 text-violet-400">○</span>
+                            <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
                           </div>
-                     </RadioGroup>
-                     {localErrors.block3_chairCastingVote && <p className={errorClass}>{localErrors.block3_chairCastingVote}</p>}
-                 </div>
-             </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                 <div>
-                     <Label className={labelClass}>Allow meetings via electronic means (teleconference, video)?</Label>
-                     <RadioGroup
-                         name="block3_remoteMeetings"
-                         value={formData.block3_remoteMeetings === true ? 'yes' : formData.block3_remoteMeetings === false ? 'no' : 'yes'}
-                         onValueChange={(value) => handleBooleanRadioChange('block3_remoteMeetings', value)}
-                         className="flex space-x-4 mt-2"
-                     >
-                          <div className="flex items-center space-x-2">
-                               <RadioGroupItem value="yes" id="b3-remote-yes" />
-                               <Label htmlFor="b3-remote-yes">Yes</Label>
-                           </div>
-                           <div className="flex items-center space-x-2">
-                               <RadioGroupItem value="no" id="b3-remote-no" />
-                               <Label htmlFor="b3-remote-no">No</Label>
-                           </div>
-                      </RadioGroup>
-                      {localErrors.block3_remoteMeetings && <p className={errorClass}>{localErrors.block3_remoteMeetings}</p>}
-                 </div>
-                 <div>
-                      <Label className={labelClass}>Allow decisions by written resolution (without meeting)?</Label>
-                     <RadioGroup
-                         name="block3_writtenResolutions"
-                         value={formData.block3_writtenResolutions === true ? 'yes' : formData.block3_writtenResolutions === false ? 'no' : ''}
-                         onValueChange={(value) => handleBooleanRadioChange('block3_writtenResolutions', value)}
-                         className="flex space-x-4 mt-2"
-                     >
-                           <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="yes" id="b3-writtenres-yes" />
-                                <Label htmlFor="b3-writtenres-yes">Yes</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="no" id="b3-writtenres-no" />
-                                <Label htmlFor="b3-writtenres-no">No</Label>
-                            </div>
-                       </RadioGroup>
-                       {localErrors.block3_writtenResolutions && <p className={errorClass}>{localErrors.block3_writtenResolutions}</p>}
-                 </div>
-             </div>
-             <div className="pt-4 border-t border-gray-100">
-                 <label htmlFor="block3_conflictOfInterestMethod" className="block text-sm font-medium text-gray-700 mb-1">How will conflicts of interest be managed in meetings?</label>
-                 <select id="block3_conflictOfInterestMethod" name="block3_conflictOfInterestMethod" className={`${baseInputClasses} ${localErrors.block3_conflictOfInterestMethod ? 'border-red-500' : ''}`} value={formData.block3_conflictOfInterestMethod || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFormData('block3_conflictOfInterestMethod', e.target.value)}>
-                     <option value="" disabled>Select...</option>
-                     <option value="declare_abstain">Member declares interest and does not vote/participate on matter</option>
-                     <option value="declare_discuss_not_vote">Member declares interest, may discuss but not vote</option>
-                     <option value="follow_policy">Follow specific Society Conflict of Interest policy</option>
-                     <option value="Other">Other (Specify)</option>
-                 </select>
-                 {formData.block3_conflictOfInterestMethod === 'Other' && (
-                    <Input type="text" className={`mt-1 block w-full ${localErrors.block3_conflictOfInterestMethodOther ? 'border-red-500' : ''}`} value={formData.block3_conflictOfInterestMethodOther || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_conflictOfInterestMethodOther', e.target.value)} placeholder="Specify other method..."/>
-                 )}
-                 {localErrors.block3_conflictOfInterestMethod && <p className={errorClass}>{localErrors.block3_conflictOfInterestMethod}</p>}
-                 {localErrors.block3_conflictOfInterestMethodOther && <p className={errorClass}>{localErrors.block3_conflictOfInterestMethodOther}</p>}
+                        );
+                      }
+                      
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`block text-xs text-gray-700 font-normal leading-snug ${idx > 0 ? "mt-2" : ""}`}
+                          dangerouslySetInnerHTML={{ __html: trimmedLine }} 
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+            {subSection.id === '3.04' && (
+              <>
+                <p className="text-sm text-gray-700">Select to include the clause in your constitution</p>
+                <div className="flex items-center space-x-2 py-2">
+                  <Checkbox id={`${subSection.id}-includeClause`} checked={!!formData.block3_04_includeSubcommitteesClause} onCheckedChange={(checked: boolean | 'indeterminate') => handleGenericCheckboxChange('block3_04_includeSubcommitteesClause', checked)} />
+                  <Label htmlFor={`${subSection.id}-includeClause`} className="text-sm font-medium leading-none">Include clause for sub-committees</Label>
+                </div>
+                <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-2">Sub-Committee Requirements</h4>
+                <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-700 mb-3">
+                  <div className="break-inside-avoid border-l-4 border-violet-300 px-3 py-2">
+                    {clause304.split(/\n+/).map((line, idx) => {
+                      const trimmedLine = line.trim(); 
+                      if (trimmedLine === "") return null;
+                      
+                      if (trimmedLine.startsWith('•')) { 
+                        return (
+                          <div 
+                            key={idx} 
+                            className="block text-xs text-gray-700 font-normal leading-snug pl-4 mt-1"
+                          >
+                            <span className="mr-1 text-violet-400">&bull;</span>
+                            <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
+                          </div>
+                        ); 
+                      } else if (trimmedLine.startsWith('o')) {
+                        return (
+                          <div 
+                            key={idx} 
+                            className="block text-xs text-gray-700 font-normal leading-snug pl-8 mt-1"
+                          >
+                            <span className="mr-1 text-violet-400">○</span>
+                            <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`block text-xs text-gray-700 font-normal leading-snug ${idx > 0 ? "mt-2" : ""}`}
+                          dangerouslySetInnerHTML={{ __html: trimmedLine }} 
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+            {subSection.id === '3.05' && (
+              <>
+                <p className="text-sm text-gray-700">Select to include the clause in your constitution</p>
+                <div className="flex items-center space-x-2 py-2">
+                  <Checkbox id={`${subSection.id}-includeClause`} checked={!!formData.block3_05_includeGeneralProvisionsClause} onCheckedChange={(checked: boolean | 'indeterminate') => handleGenericCheckboxChange('block3_05_includeGeneralProvisionsClause', checked)} />
+                  <Label htmlFor={`${subSection.id}-includeClause`} className="text-sm font-medium leading-none">Include clause for general committee provisions</Label>
+                </div>
+                <h4 className="text-xs font-semibold text-violet-800 mb-2 mt-2">General Committee Provisions</h4>
+                <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg shadow-sm text-xs text-gray-700 mb-3">
+                  <div className="break-inside-avoid border-l-4 border-violet-300 px-3 py-2">
+                    {clause305.split(/\n+/).map((line, idx) => {
+                      const trimmedLine = line.trim(); 
+                      if (trimmedLine === "") return null;
+                      
+                      if (trimmedLine.startsWith('•')) { 
+                        return (
+                          <div 
+                            key={idx} 
+                            className="block text-xs text-gray-700 font-normal leading-snug pl-4 mt-1"
+                          >
+                            <span className="mr-1 text-violet-400">&bull;</span>
+                            <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
+                          </div>
+                        ); 
+                      } else if (trimmedLine.startsWith('o')) {
+                        return (
+                          <div 
+                            key={idx} 
+                            className="block text-xs text-gray-700 font-normal leading-snug pl-8 mt-1"
+                          >
+                            <span className="mr-1 text-violet-400">○</span>
+                            <span dangerouslySetInnerHTML={{ __html: trimmedLine.substring(1).trim() }} />
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`block text-xs text-gray-700 font-normal leading-snug ${idx > 0 ? "mt-2" : ""}`}
+                          dangerouslySetInnerHTML={{ __html: trimmedLine }} 
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!['3.01', '3.02', '3.03', '3.04', '3.05'].includes(subSection.id) && (<p>Questions for {subSection.title} will be built here.</p>)}
+            <div className="flex justify-end mt-4"><button onClick={() => console.log(`Update constitution for ${subSection.number}. Data:`, formData)} className="px-4 py-2 bg-[#8065F2] text-white text-sm font-medium rounded-md hover:bg-[#6d54d1]">Update Constitution</button></div>
              </div>
         </div>
-
-        <hr className="border-gray-200" /> 
-
-        <div> 
-             <div className="flex items-center gap-2">
-                 <label className={taskTitleClass}>3.6 Appointing Contact Person
-                   <Tooltip text="This person is the official contact for the Registrar of Incorporated Societies.">
-                     <HelpCircle className="inline-block ml-1 h-4 w-4 text-gray-500 cursor-help" />
-                 </Tooltip>
-                 </label>
-             </div>
-            <p className={descriptionClass}>This person is the main contact for the Registrar. They don&apos;t need to be an officer. (Ref: Act s113, s27(1)(g))</p>
-            <select 
-                id="block3_contactPersonAppointment" 
-                name="block3_contactPersonAppointment" 
-                className={`${baseInputClasses} ${localErrors.block3_contactPersonAppointment ? 'border-red-500' : ''}`} 
-                value={formData.block3_contactPersonAppointment || ''} 
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFormData('block3_contactPersonAppointment', e.target.value)}
-            >
-                 <option value="" disabled>Select...</option>
-                 <option value="committee_appoints">Appointed annually by the Committee</option>
-                 <option value="agm_election">Elected at the AGM</option>
-                 <option value="Other">Other (Specify)</option>
-             </select>
-              {formData.block3_contactPersonAppointment === 'Other' && (
-                <Input 
-                    type="text" 
-                    className={`mt-1 block w-full ${localErrors.block3_contactPersonAppointmentOther ? 'border-red-500' : ''}`} 
-                    value={formData.block3_contactPersonAppointmentOther || ''} 
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData('block3_contactPersonAppointmentOther', e.target.value)} 
-                    placeholder="Specify other appointment method..."
-                />
-                     )}
-             {localErrors.block3_contactPersonAppointment && <p className={errorClass}>{localErrors.block3_contactPersonAppointment}</p>}
-             {localErrors.block3_contactPersonAppointmentOther && <p className={errorClass}>{localErrors.block3_contactPersonAppointmentOther}</p>}
-        </div>
-
-        <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-            <Button
-                variant="secondary"
-                onClick={() => onSaveProgress(blockNumber)}
-            >
-                Save Progress
-            </Button>
-            <Button
-                onClick={handleSave}
-            >
-                Mark as Complete
-            </Button>
+      ))}
+      <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end">
+        <button onClick={() => onSaveProgress(blockNumber)} className="mr-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Save Progress</button>
+        <button onClick={() => onComplete(blockNumber)} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">Mark Block as Complete</button>
         </div>
     </div>
   );
 };
-
 export default Block3Committee; 

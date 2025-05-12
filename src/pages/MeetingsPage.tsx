@@ -104,14 +104,14 @@ export const MeetingsPage: React.FC = () => {
           Schedule Meeting
         </Button>
       </div>
-      
+
       {/* Blue information box */}
       <div className="mt-6 mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100 flex">
         <div className="flex-shrink-0 mr-3">
           <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
-        </div>
+             </div>
         <div className="text-sm text-blue-700">
           <p>
             This page helps you manage all aspects of your society's meetings:
@@ -122,8 +122,8 @@ export const MeetingsPage: React.FC = () => {
             <li>Plan and prepare for your Annual General Meeting (AGM)</li>
             <li>Monitor implementation of decisions made in meetings</li>
           </ul>
-        </div>
-      </div>
+         </div>
+       </div>
 
       {/* Tabs and Content Area */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
