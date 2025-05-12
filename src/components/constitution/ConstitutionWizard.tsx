@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { InfoIcon, PlusCircle, MinusCircle } from 'lucide-react';
+import { InfoIcon, PlusCircle, MinusCircle, CheckCircleIcon, HelpCircle } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 // Import new block placeholders
@@ -20,7 +20,15 @@ import Block12CommonSealAndBylaws from './blocks/Block12CommonSealAndBylaws';
 
 import { Accordion, AccordionContent, AccordionItem } from '@/components/ui/accordion';
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import ConstitutionStatus from './ConstitutionStatus';
+
+// Define the completion stats interface
+export interface CompletionStats {
+  totalSectionsCompleted: number;
+  totalSections: number;
+  completedCompulsorySections: number;
+  totalCompulsorySections: number;
+  overallPercentage: number;
+}
 
 // Add new field for Block 11.01
 export interface ConstitutionFormData {
@@ -51,6 +59,7 @@ export interface ConstitutionFormData {
   block1_03b_primaryPurposesDescription?: string;
 
   // Fields for Block 1: Society Information - Sub-section 1.04 Definitions
+  block1_04_includeDefinitionsClause?: boolean;
   block1_04_additionalTerms?: Array<{ id: string; term: string; definition: string; }>;
 
   // Fields for Block 1: Society Information - Sub-section 1.05 Contact person
@@ -68,6 +77,7 @@ export interface ConstitutionFormData {
   block1_08_balanceDateMonth?: string; // 0-indexed: "0" for Jan, "11" for Dec
 
   // Fields for Block 1: Society Information - Sub-section 1.09 Tikanga
+  block1_09_includeTikangaClause?: boolean;
   block1_09_tikangaDescription?: string;
 
   // Fields for Block 2: Members - Sub-sections 2.01, 2.02, 2.03
@@ -315,10 +325,29 @@ const blocksConfig: WizardStep[] = [
 
 type BlockStatusType = 'incomplete' | 'in-progress' | 'complete';
 
-const ConstitutionWizard: React.FC = () => {
+// Define the props interface for the component
+export interface ConstitutionWizardProps {
+  onCompletionStatsChange?: (stats: CompletionStats) => void;
+}
+
+// Define the ref interface
+export interface ConstitutionWizardRef {
+  openBlock: (blockNumber: number) => void;
+}
+
+const ConstitutionWizard = forwardRef<ConstitutionWizardRef, ConstitutionWizardProps>(({ onCompletionStatsChange }, ref) => {
   const [formData, setFormData] = useState<ConstitutionFormData>({});
   const [activeBlock, setActiveBlock] = useState<number | null>(null);
   const [blockStatus, setBlockStatus] = useState<Record<number, BlockStatusType>>({});
+
+  // Expose methods via the ref
+  useImperativeHandle(ref, () => ({
+    openBlock: (blockNumber: number) => {
+      if (blockNumber >= 1 && blockNumber <= blocksConfig.length) {
+        setActiveBlock(blockNumber);
+      }
+    }
+  }));
 
   const updateFormData = useCallback((field: keyof ConstitutionFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -354,17 +383,98 @@ const ConstitutionWizard: React.FC = () => {
       return (blockConfig?.mandatoryFields as string[] | undefined) || [];
   };
 
+  // Calculate completion statistics
+  const completionStats = useMemo(() => {
+    // Calculate total sections
+    const totalSections = blocksConfig.reduce((acc, block) => {
+      let subSectionCount = 0;
+      if (block.number === 1) subSectionCount = 9;
+      else if (block.number === 2) subSectionCount = 8;
+      else if (block.number === 3) subSectionCount = 5;
+      else if (block.number === 4) subSectionCount = 7;
+      else if (block.number === 5) subSectionCount = 4;
+      else if (block.number === 6) subSectionCount = 9;
+      else if (block.number === 7) subSectionCount = 1;
+      else if (block.number === 8) subSectionCount = 3;
+      else if (block.number === 9) subSectionCount = 1;
+      else if (block.number === 10) subSectionCount = 3;
+      else if (block.number === 11) subSectionCount = 1;
+      else if (block.number === 12) subSectionCount = 2;
+      return acc + subSectionCount;
+    }, 0);
+
+    // Estimate sections completed based on block status
+    // This is a simple approximation - in a real application, we'd track individual subsection completion
+    const totalSectionsCompleted = Object.values(blockStatus).filter(status => status === 'complete').length * 5;
+
+    // Calculate compulsory fields stats
+    const allMandatoryFields = blocksConfig.flatMap(block => block.mandatoryFields || []);
+    const totalCompulsorySections = allMandatoryFields.length;
+    
+    const completedCompulsorySections = allMandatoryFields.filter(field => 
+      isFieldFilled(field as string, formData)
+    ).length;
+
+    // Calculate overall percentage
+    const overallPercentage = Math.min(
+      Math.round(
+        ((totalSectionsCompleted / totalSections) * 0.6 + 
+        (completedCompulsorySections / totalCompulsorySections) * 0.4) * 100
+      ), 
+      100
+    );
+
+    return {
+      totalSectionsCompleted: Math.min(totalSectionsCompleted, totalSections),
+      totalSections,
+      completedCompulsorySections,
+      totalCompulsorySections,
+      overallPercentage: isNaN(overallPercentage) ? 0 : overallPercentage
+    };
+  }, [blockStatus, formData]);
+
+  // Notify parent component when completion stats change
+  React.useEffect(() => {
+    if (onCompletionStatsChange) {
+      onCompletionStatsChange(completionStats);
+    }
+  }, [completionStats, onCompletionStatsChange]);
+
   return (
     <div className="container mx-auto px-2 py-4 md:px-4 md:py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Constitution Builder</h1>
-        <ConstitutionStatus />
+      </div>
+
+      {/* New top sticky navigation bar for quick section jumping */}
+      <div className="mb-6 sticky top-0 z-10 bg-white p-3 border border-gray-200 rounded-lg shadow-sm">
+        <h2 className="text-sm font-medium text-gray-700 mb-2">Jump to Section:</h2>
+        <div className="flex flex-wrap gap-2">
+          {blocksConfig.map((block) => {
+            const status = blockStatus[block.number] || 'incomplete';
+            return (
+              <button
+                key={block.number}
+                onClick={() => setActiveBlock(activeBlock === block.number ? null : block.number)}
+                className={cn(
+                  "px-2 py-1 text-xs font-medium rounded-full border transition-all duration-200",
+                  activeBlock === block.number ? "bg-purple-600 text-white" : 
+                  status === 'complete' ? "bg-green-100 text-green-800 border-green-300" :
+                  status === 'in-progress' ? "bg-amber-100 text-amber-800 border-amber-300" :
+                  "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200"
+                )}
+              >
+                {block.number}. {block.shortTitle}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <Accordion
         type="single"
         collapsible
-        className="w-full space-y-2"
+        className="w-full space-y-4"
         value={activeBlock !== null ? `item-${activeBlock}` : undefined}
         onValueChange={(value) => {
           const newActiveBlock = value ? parseInt(value.split('-')[1]) : null;
@@ -374,78 +484,116 @@ const ConstitutionWizard: React.FC = () => {
         {blocksConfig.map((block) => {
           const BlockComponent = block.component as React.FC<any>;
           const isCurrentBlockOpen = activeBlock === block.number;
+          const status = blockStatus[block.number] || 'incomplete';
 
           const mandatoryFields = getMandatoryFieldsForBlock(block.number);
           const completedCount = mandatoryFields.filter(key => isFieldFilled(key, formData)).length;
           const totalMandatory = mandatoryFields.length;
-          const fieldsProgressText = totalMandatory > 0 ? `(${completedCount}/${totalMandatory} Fields)` : '(0 Fields)';
+          const fieldsProgressText = totalMandatory > 0 ? `${completedCount}/${totalMandatory}` : '0';
           
-          let subSectionsProgressText = '(0/0 Sub-sections)'; 
-          if (block.number === 1) {
-            subSectionsProgressText = '(0/9 Sub-sections)'; 
-          } else if (block.number === 2) {
-            subSectionsProgressText = '(0/8 Sub-sections)'; 
-          } else if (block.number === 3) {
-            subSectionsProgressText = '(0/5 Sub-sections)'; 
-          } else if (block.number === 4) {
-            subSectionsProgressText = '(0/7 Sub-sections)'; 
-          } else if (block.number === 5) {
-            subSectionsProgressText = '(0/4 Sub-sections)'; 
-          } else if (block.number === 6) {
-            subSectionsProgressText = '(0/9 Sub-sections)'; 
-          } else if (block.number === 7) {
-            subSectionsProgressText = '(0/1 Sub-sections)'; 
-          } else if (block.number === 8) {
-            subSectionsProgressText = '(0/3 Sub-sections)'; 
-          } else if (block.number === 9) {
-            subSectionsProgressText = '(0/1 Sub-sections)'; 
-          } else if (block.number === 10) {
-            subSectionsProgressText = '(0/3 Sub-sections)'; 
-          } else if (block.number === 11) {
-            subSectionsProgressText = '(0/1 Sub-sections)'; 
-          } else if (block.number === 12) {
-            subSectionsProgressText = '(0/2 Sub-sections)';
-          }
-          // Add logic for other blocks' sub-section counts here as they are defined
+          let subSectionsProgressText = '0'; 
+          if (block.number === 1) subSectionsProgressText = '0/9'; 
+          else if (block.number === 2) subSectionsProgressText = '0/8'; 
+          else if (block.number === 3) subSectionsProgressText = '0/5'; 
+          else if (block.number === 4) subSectionsProgressText = '0/7'; 
+          else if (block.number === 5) subSectionsProgressText = '0/4'; 
+          else if (block.number === 6) subSectionsProgressText = '0/9'; 
+          else if (block.number === 7) subSectionsProgressText = '0/1'; 
+          else if (block.number === 8) subSectionsProgressText = '0/3'; 
+          else if (block.number === 9) subSectionsProgressText = '0/1'; 
+          else if (block.number === 10) subSectionsProgressText = '0/3'; 
+          else if (block.number === 11) subSectionsProgressText = '0/1'; 
+          else if (block.number === 12) subSectionsProgressText = '0/2';
+
+          const progressPercentage = totalMandatory > 0 
+            ? Math.round((completedCount / totalMandatory) * 100) 
+            : 0;
 
           return (
-            <AccordionItem value={`item-${block.number}`} key={block.number} className="overflow-hidden bg-white rounded-md">
+            <AccordionItem 
+              value={`item-${block.number}`} 
+              key={block.number} 
+              className={cn(
+                "overflow-hidden rounded-lg border transition-all duration-200",
+                status === 'complete' ? "border-green-300 bg-green-50" :
+                status === 'in-progress' ? "border-amber-300 bg-amber-50" :
+                "border-gray-200 bg-white"
+              )}
+            >
               <AccordionPrimitive.Header className="flex">
                 <AccordionPrimitive.Trigger asChild>
-              <button
+                  <button
                     type="button"
-                    className="group flex items-center justify-between w-full p-4 text-left hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 rounded-md"
+                    className="group flex items-center justify-between w-full p-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 rounded-t-lg"
                   >
                     <div className="flex items-center flex-shrink-0">
-                      {isCurrentBlockOpen ? (
-                        <MinusCircle className="h-5 w-5 text-white rounded-full mr-3 flex-shrink-0" style={{ backgroundColor: '#8065F2' }} />
+                      {status === 'complete' ? (
+                        <CheckCircleIcon className="h-5 w-5 text-green-600 mr-3 flex-shrink-0" />
+                      ) : isCurrentBlockOpen ? (
+                        <MinusCircle className="h-5 w-5 text-purple-600 mr-3 flex-shrink-0" />
                       ) : (
-                        <PlusCircle className="h-5 w-5 text-white rounded-full mr-3 flex-shrink-0" style={{ backgroundColor: '#8065F2' }} />
+                        <PlusCircle className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0 group-hover:text-purple-600" />
                       )}
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-purple-600">
+                      <span className={cn(
+                        "text-base font-medium group-hover:text-purple-600",
+                        status === 'complete' ? "text-green-800" :
+                        status === 'in-progress' ? "text-amber-800" :
+                        "text-gray-700"
+                      )}>
                         {block.number}. {block.shortTitle}
                       </span>
-                </div>
-                    <div className="flex items-center space-x-2 text-xs ml-auto">
-                      <span 
-                        className="px-2.5 py-1 text-white rounded-full border text-xs font-medium"
-                        style={{ backgroundColor: '#8065F2', borderColor: '#8065F2' }} 
-                      >
-                        {subSectionsProgressText}
+                    </div>
+                    <div className="flex items-center space-x-3 ml-auto">
+                      {/* Status label */}
+                      <span className={cn(
+                        "px-2.5 py-1 rounded-full text-xs font-medium hidden sm:inline-block",
+                        status === 'complete' ? "bg-green-100 text-green-800" :
+                        status === 'in-progress' ? "bg-amber-100 text-amber-800" :
+                        "bg-gray-100 text-gray-600"
+                      )}>
+                        {status === 'complete' ? "Complete" :
+                         status === 'in-progress' ? "In Progress" :
+                         "Not Started"}
                       </span>
-                      <span 
-                        className="px-2.5 py-1 text-white rounded-full border text-xs font-medium"
-                        style={{ backgroundColor: '#8065F2', borderColor: '#8065F2' }} 
-                      >
-                        {fieldsProgressText}
-                      </span>
-                 </div>
-              </button>
+                      
+                      {/* Progress indicators */}
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center space-y-1 sm:space-y-0 sm:space-x-3">
+                        <div className="flex flex-col items-end sm:items-center">
+                          <span className="text-xs text-gray-500">Sections</span>
+                          <span className="text-sm font-medium text-gray-700">{subSectionsProgressText}</span>
+                        </div>
+                        <div className="flex flex-col items-end sm:items-center">
+                          <span className="text-xs text-gray-500">Required</span>
+                          <span className="text-sm font-medium text-gray-700">{fieldsProgressText}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
                 </AccordionPrimitive.Trigger>
               </AccordionPrimitive.Header>
+              
+              {/* Progress bar below header */}
+              <div className="h-1 w-full bg-gray-200">
+                <div 
+                  className={cn(
+                    "h-full transition-all duration-500 ease-in-out",
+                    status === 'complete' ? "bg-green-500" :
+                    status === 'in-progress' ? "bg-amber-500" :
+                    "bg-purple-500"
+                  )} 
+                  style={{ width: `${progressPercentage}%` }}
+                ></div>
+              </div>
+              
               <AccordionContent className="p-0 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-              {isCurrentBlockOpen && (
-                  <div className="p-6">
+                {isCurrentBlockOpen && (
+                  <div className="p-6 border-t border-gray-200">
+                    <div className="mb-6">
+                      <h2 className="text-xl font-semibold text-gray-900">{block.screenTitle}</h2>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Complete all required fields to move forward. Your progress is automatically saved.
+                      </p>
+                    </div>
                     <BlockComponent
                       blockNumber={block.number}
                       formData={formData}
@@ -453,15 +601,29 @@ const ConstitutionWizard: React.FC = () => {
                       onComplete={handleCompleteBlock}
                       onSaveProgress={handleSaveProgress}
                     />
-                </div>
-              )}
+                  </div>
+                )}
               </AccordionContent>
             </AccordionItem>
           );
         })}
       </Accordion>
+      
+      {/* Floating help button */}
+      <div className="fixed bottom-6 right-6">
+        <button 
+          type="button"
+          aria-label="Get help"
+          className="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition-colors"
+        >
+          <HelpCircle className="h-6 w-6" />
+        </button>
+      </div>
     </div>
   );
-};
+});
+
+// Add display name for better debugging
+ConstitutionWizard.displayName = 'ConstitutionWizard';
 
 export default ConstitutionWizard;
