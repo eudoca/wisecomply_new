@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 { color: #8065F2; }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        .success { color: green; }
+        .time { font-style: italic; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Static HTML Test</h1>
+    <div class="card">
+        <p class="success">✓ If you can see this page, your browser is working correctly!</p>
+        <p>This is a simple static HTML file that doesn't require any server to display.</p>
+        <p class="time">This page was created at: <span id="creation-time">April 18, 2025, 12:00:00</span></p>
+        <p>Current time: <span id="current-time">Loading...</span></p>
+    </div>
+
+    <div class="card">
+        <h2>Browser Information:</h2>
+        <pre id="browser-info">Loading...</pre>
+    </div>
+
+    <script>
+        // Update the current time
+        function updateTime() {
+            document.getElementById('current-time').textContent = new Date().toLocaleString();
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Display browser information
+        const browserInfo = {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            vendor: navigator.vendor,
+            language: navigator.language,
+            cookiesEnabled: navigator.cookieEnabled
+        };
+        document.getElementById('browser-info').textContent = JSON.stringify(browserInfo, null, 2);
+    </script>
+</body>
+</html>
