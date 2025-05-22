@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { CalendarIcon, ClipboardIcon, CheckCircleIcon, ClockIcon, UserCheckIcon, EditIcon } from 'lucide-react'; // Added icons
+import { CalendarIcon, ClipboardIcon, CheckCircleIcon, ClockIcon, UserCheckIcon, EditIcon, MessageSquare } from 'lucide-react'; // Added icons
 import { Button } from '@/components/ui/button'; // Standardized path
 import { cn } from '../utils/cn'; // Import cn utility
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { PlusIcon, ListFilterIcon, CheckSquareIcon } from 'lucide-react';
 import { Tabs, Tab } from '../components/ui/Tabs';
+import { MeetingActivityDashboard } from '../components/meetings/MeetingActivityDashboard';
 
 // Renamed component
 export const MeetingsPage: React.FC = () => {
@@ -95,10 +96,9 @@ export const MeetingsPage: React.FC = () => {
     <div className="max-w-7xl mx-auto">
       {/* Header and Actions */}
       <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Meetings & Decisions Management
-          </h1>
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-6 w-6 text-purple-600" />
+          <h1 className="text-2xl font-semibold text-purple-600">Meetings and AGM</h1>
         </div>
         <Button size="sm" onClick={handleScheduleMeeting} leftIcon={<CalendarIcon className="h-4 w-4" />}>
           Schedule Meeting
@@ -124,6 +124,11 @@ export const MeetingsPage: React.FC = () => {
           </ul>
          </div>
        </div>
+
+      {/* Meeting Activity Dashboard */}
+      <div className="mb-6">
+        <MeetingActivityDashboard />
+      </div>
 
       {/* Tabs and Content Area */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">

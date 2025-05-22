@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { SearchIcon, FilterIcon, PlusIcon, CheckCircleIcon, ToggleLeftIcon } from 'lucide-react';
+import { SearchIcon, FilterIcon, PlusIcon, CheckCircleIcon, ToggleLeftIcon, AlertTriangle, FileText, MessageSquare } from 'lucide-react';
 import CaseList from '../components/disputes/CaseList';
 import CaseDetails from '../components/disputes/CaseDetails';
-import { Button } from '@/components/ui/button.tsx';
+import { Button } from '@/components/ui/button';
 import { cn } from '../utils/cn';
 import { DisputeCase } from '../types/dispute';
 import AddDisputeForm from '../components/disputes/AddDisputeForm';
 import { Tabs, Tab } from '../components/ui/Tabs';
+import { DisputeActivityDashboard } from '../components/disputes/DisputeActivityDashboard';
 
 // --- Child Component Placeholders ---
 // Removed ViewManageDisputeModal placeholder definition
@@ -83,13 +84,27 @@ export const DisputesPage: React.FC = () => {
     }
   };
 
+  // Placeholder handlers
+  const handleNewDispute = () => {
+    console.log('Creating new dispute...');
+    alert('New dispute functionality not implemented yet.');
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Dispute & Complaints Management
-          </h1>
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-6 w-6 text-purple-600" />
+          <h1 className="text-2xl font-semibold text-purple-600">Disputes</h1>
+        </div>
+        <div className="flex gap-2 flex-shrink-0">
+          <Button 
+            size="sm" 
+            onClick={handleNewDispute}
+            leftIcon={<AlertTriangle className="h-4 w-4" />}
+          >
+            New Dispute
+          </Button>
         </div>
       </div>
       
@@ -102,9 +117,19 @@ export const DisputesPage: React.FC = () => {
         </div>
         <div className="text-sm text-blue-700">
           <p>
-            This page helps you manage, track, and resolve disputes and complaints across your Society.
+            This page helps you manage and track dispute resolution processes within your society.
           </p>
+          <ul className="mt-2 list-disc pl-5 space-y-1">
+            <li>Process and track formal complaints</li>
+            <li>Document dispute resolution outcomes</li>
+            <li>Maintain records of all disputes and resolutions</li>
+          </ul>
         </div>
+      </div>
+
+      {/* Dispute Activity Dashboard */}
+      <div className="mb-6">
+        <DisputeActivityDashboard />
       </div>
 
       {/* Disputes Management Toggle */}

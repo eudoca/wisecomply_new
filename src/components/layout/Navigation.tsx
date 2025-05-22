@@ -11,7 +11,9 @@ import {
   BuildingIcon,
   Users2Icon,
   BarChart4Icon,
-  ArchiveIcon
+  ArchiveIcon,
+  Bot,
+  LayoutDashboard
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -25,9 +27,9 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     id: 'compliance',
-    title: 'Compliance Activities',
-    path: '/compliance',
-    icon: <ClipboardListIcon className="w-5 h-5" />
+    title: 'Dashboard',
+    path: '/dashboard',
+    icon: <LayoutDashboard className="w-5 h-5" />
   },
   {
     id: 'society-info',
@@ -37,15 +39,9 @@ const navItems: NavItem[] = [
   },
   {
     id: 'officers',
-    title: 'Officers & Interests',
+    title: 'Officers and Committees',
     path: '/officers',
     icon: <UserCogIcon className="w-5 h-5" />
-  },
-  {
-    id: 'committee',
-    title: 'Committee',
-    path: '/committee',
-    icon: <Users2Icon className="w-5 h-5" />
   },
   {
     id: 'meetings',
@@ -55,7 +51,7 @@ const navItems: NavItem[] = [
   },
   {
     id: 'membership',
-    title: 'Members',
+    title: 'Membership',
     path: '/membership',
     icon: <UsersIcon className="w-5 h-5" />
   },
@@ -91,9 +87,9 @@ const navItems: NavItem[] = [
   },
   {
     id: 'advice',
-    title: 'Advice and Support',
+    title: 'Ask WiseComply Ai',
     path: '/advice',
-    icon: <MessageSquareIcon className="w-5 h-5" />
+    icon: <Bot className="w-5 h-5" />
   }
 ];
 

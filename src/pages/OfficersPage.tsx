@@ -9,8 +9,9 @@ import PreviewConsentFormModal from '../components/officers/PreviewConsentFormMo
 import AddInterestForm from '../components/officers/AddInterestForm'; // Import the interest form
 import InterestsRegister from '../components/officers/InterestsRegister'; // Import the new component
 import { Officer } from '../types/officer'; // Assuming a type definition exists or will be created
-import { ClipboardIcon } from 'lucide-react';
+import { ClipboardIcon, UserCog } from 'lucide-react';
 import { Tabs, Tab } from '../components/ui/Tabs';
+import { ActivityDashboard } from '../components/officers/compliance/ActivityDashboard';
 
 // Sample data moved here from OfficerList for state management
 const initialOfficers: Officer[] = [
@@ -292,67 +293,49 @@ export const OfficersPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-6 flex justify-between items-center"> 
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Officer Management 
-          </h1>
+      {/* Header */}
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center gap-2">
+          <UserCog className="h-6 w-6 text-purple-600" />
+          <h1 className="text-2xl font-semibold text-purple-600">Officers and Committees</h1>
         </div>
+        <Button onClick={handleAddOfficerClick} leftIcon={<ClipboardIcon className="h-4 w-4" />}>
+          Add Officer
+        </Button>
       </div>
-      
-      {/* Blue information box - reduce padding and bottom margin */}
-      <div className="mt-4 bg-blue-50 p-3 rounded-lg border border-blue-100 flex mb-4"> {/* Reduced mt, p, mb */}
-        <div className="flex-shrink-0 mr-2"> {/* Reduced mr */}
-          <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-          </svg>
-        </div>
-        <div className="text-xs text-blue-700"> {/* Reduced font size from text-sm to text-xs */}
-          <p>
-            This page allows you to maintain two important registers for your society:
-          </p>
-          {/* Reduced top margin and font size for list items */}
-          <ol className="mt-1 list-decimal pl-4 space-y-0.5"> {/* Reduced mt, pl, space-y */}
-            <li>The <strong>Officer Register</strong> tracks key office holders and their details. All officers need to provide consent to be appointed. When adding a new officer, they will receive an email invitation to complete a digital consent form. If an officer needs help accessing their form, please contact support.</li>
-            <li>The <strong>Interests Register</strong> records any conflicts of interest that officers have declared to ensure transparency and proper governance.</li>
-          </ol>
-        </div>
-      </div>
-      
-      {/* Render ComplianceActivities component here, above the Tabs */}
-      <ComplianceActivities />
 
-      {/* Tabs and Content Area */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex justify-between items-center">
-          <Tabs
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            tabs={tabs}
-          />
-
-          <div className="px-6">
-            {activeTab === 'officer-register' && (
-              <div className="flex space-x-2">
-                <Button 
-                  variant="ghost"
-                  onClick={handlePreviewConsentFormClick}
-                  className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200"
-                >
-                  <ClipboardIcon className="h-4 w-4" />
-                  <span>Preview Consent Form</span>
-                </Button>
-                <Button onClick={handleAddOfficerClick}>Add Officer</Button>
-              </div>
-            )}
-            {activeTab === 'interests-register' && (
-              <Button onClick={handleAddInterestClick}>Add Interest</Button>
-            )}
+      {/* Info Box */}
+      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-blue-700">
+              This page helps you manage your society's officers and committees. You can:
+            </p>
+            <ul className="mt-2 list-disc list-inside text-sm text-blue-700 space-y-1">
+              <li>Add and manage officers</li>
+              <li>Track officer compliance requirements</li>
+              <li>Manage committee structures</li>
+              <li>Record and monitor conflicts of interest</li>
+            </ul>
           </div>
         </div>
+      </div>
 
+      {/* Activity Dashboard */}
+      <div className="mb-8">
+        <ActivityDashboard />
+      </div>
+
+      {/* Tabs and Content */}
+      <div className="bg-white rounded-lg shadow">
+        <Tabs activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
+        
         <div className="p-6">
-          {/* Pass officers and handlers down to OfficerList */}
           {activeTab === 'officer-register' && 
             <OfficerList 
               officers={officers} 
@@ -364,58 +347,44 @@ export const OfficersPage: React.FC = () => {
           {activeTab === 'interests-register' && (
             <InterestsRegister interests={interests} onDelete={handleDeleteInterest} />
           )}
-          {activeTab === 'committees' && (
-            <div className="text-gray-500 text-center py-12 bg-white rounded-b-lg border border-t-0 border-gray-200">
-              <p>Committee management features coming soon.</p>
-            </div>
-          )}
-          {activeTab === 'governance-tasks' && (
-            <div className="text-gray-500 text-center py-12 bg-white rounded-b-lg border border-t-0 border-gray-200">
-              <p>Governance tasks features coming soon.</p>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Render the Add Officer Modal - also used for editing */}
+      {/* Modals */}
       <AddOfficerForm
         isOpen={isAddOfficerModalOpen}
         onClose={handleCloseAddModal}
         onSave={handleSaveOfficer}
         onSendInvite={handleSendOfficerInvite}
-        initialData={selectedOfficerForEdit} // Pass selected officer for editing
+        initialData={selectedOfficerForEdit}
       />
 
-      {/* Render the View Details Modal */} 
       <ViewOfficerDetailsModal 
         isOpen={isViewDetailsModalOpen} 
         onClose={handleCloseViewDetailsModal} 
         officer={selectedOfficerForDetails} 
       />
 
-      {/* Render the View Consent Form Modal */}
       <ViewConsentFormModal
         isOpen={isViewConsentFormModalOpen}
         onClose={handleCloseConsentFormModal}
         officer={selectedOfficerForConsent}
       />
 
-      {/* Render the Preview Consent Form Modal */}
       <PreviewConsentFormModal
         isOpen={isPreviewConsentFormModalOpen}
         onClose={handleClosePreviewConsentFormModal}
       />
 
-      {/* Render the Add Interest Modal */}
       <AddInterestForm
         isOpen={isAddInterestModalOpen}
         onClose={handleCloseAddInterestModal}
         onSave={handleSaveInterest}
-        officers={officers} // Pass officer list for selection
+        officers={officers}
         onSendDisclosureRequest={handleSendDisclosureRequest}
       />
     </div>
   );
 };
 
-// export default OfficersPage; // Optional default export 
+export default OfficersPage; 

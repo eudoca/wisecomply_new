@@ -15,8 +15,7 @@ import { WizardPage } from './pages/WizardPage';
 import OfficerConsentPage from './pages/OfficerConsentPage';
 
 // Dashboard Pages
-// import { DashboardPage } from './pages/DashboardPage'; // Removed
-import { ComplianceActivitiesPage } from './pages/ComplianceActivitiesPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { DocumentsPage } from './pages/DocumentsPage';
 import { OfficersPage } from './pages/OfficersPage';
@@ -27,7 +26,6 @@ import { MeetingsPage } from './pages/MeetingsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdviceSupportPage } from './pages/AdviceSupportPage';
 import { SocietyInfoPage } from './pages/SocietyInfoPage';
-import { CommitteePage } from './pages/CommitteePage';
 import { FinancesPage } from './pages/FinancesPage';
 
 const App: React.FC = () => {
@@ -58,12 +56,10 @@ const App: React.FC = () => {
           isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" replace />
         }
       >
-        {/* <Route path="/dashboard" element={<DashboardPage />} /> */}
-        <Route path="/dashboard" element={<Navigate to="/compliance" replace />} />
-        <Route path="/compliance" element={<ComplianceActivitiesPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/compliance" element={<Navigate to="/dashboard" replace />} />
         <Route path="/society-info" element={<SocietyInfoPage />} />
         <Route path="/officers" element={<OfficersPage />} />
-        <Route path="/committee" element={<CommitteePage />} />
         <Route path="/meetings" element={<MeetingsPage />} />
         <Route path="/membership" element={<MembershipPage />} />
         <Route path="/disputes" element={<DisputesPage />} />

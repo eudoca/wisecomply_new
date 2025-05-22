@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button'; // Standardized path
-import { DownloadIcon, UserPlusIcon, CheckCircleIcon, UsersIcon, ToggleLeftIcon } from 'lucide-react'; // Added ToggleLeftIcon
+import { DownloadIcon, UserPlusIcon, CheckCircleIcon, UsersIcon, ToggleLeftIcon, Users } from 'lucide-react'; // Added ToggleLeftIcon and Users
 import MemberDirectorySimple from '../components/membership/MemberDirectorySimple'; // Changed import
 import { Tabs, Tab } from '../components/ui/Tabs';
+import { MembershipActivityDashboard } from '../components/membership/MembershipActivityDashboard';
 
 // Renamed component
 export const MembershipPage: React.FC = () => {
@@ -31,10 +32,9 @@ export const MembershipPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Members and Membership Management
-          </h1>
+        <div className="flex items-center gap-2">
+          <Users className="h-6 w-6 text-purple-600" />
+          <h1 className="text-2xl font-semibold text-purple-600">Membership</h1>
         </div>
         <div className="flex gap-2 flex-shrink-0">
           <Button 
@@ -67,6 +67,11 @@ export const MembershipPage: React.FC = () => {
             This page helps you manage and maintain a register of members.
           </p>
         </div>
+      </div>
+      
+      {/* Membership Activity Dashboard */}
+      <div className="mb-6">
+        <MembershipActivityDashboard />
       </div>
       
       {/* Membership Management Toggle */}

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { CheckCircleIcon, ToggleLeftIcon } from 'lucide-react';
+import { CheckCircleIcon, ToggleLeftIcon, BarChart4 } from 'lucide-react';
+import { FinanceActivityDashboard } from '@/components/finances/FinanceActivityDashboard';
 
 export const FinancesPage: React.FC = () => {
   const [manageFinances, setManageFinances] = useState(true);
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Finances</h1>
+      <div className="flex items-center gap-2 mb-6">
+        <BarChart4 className="h-6 w-6 text-purple-600" />
+        <h1 className="text-2xl font-semibold text-purple-600">Finances</h1>
       </div>
       
       {/* Blue information box */}
@@ -63,26 +65,10 @@ export const FinancesPage: React.FC = () => {
         )}
       </div>
 
-      {/* Content Area - Only display if finances management is enabled */}
-      {manageFinances ? (
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg mt-6">
-          <div className="p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Financial Management Dashboard</h2>
-            <p className="text-gray-600">Full financial management features coming soon.</p>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-gray-50 rounded-lg border border-gray-200 p-8 text-center mt-6">
-          <div className="flex justify-center">
-            <ToggleLeftIcon className="h-12 w-12 text-gray-400" />
-          </div>
-          <h3 className="mt-2 text-lg font-medium text-gray-900">Financial Management Disabled</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            You've chosen not to use WiseComply for financial management. <br />
-            Toggle the switch above to enable this feature.
-          </p>
-        </div>
-      )}
+      {/* Activity Dashboard */}
+      <div className="mt-6">
+        <FinanceActivityDashboard />
+      </div>
     </div>
   );
 };
